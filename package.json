@@ -1,0 +1,24 @@
+{
+  "name": "product-health-dynamics",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "simulate": "tsx src/cli.ts",
+    "simulate:ai": "tsx src/cli.ts --scenario ai-vibe",
+    "simulate:guardrails": "tsx src/cli.ts --scenario ai-guardrails",
+    "simulate:senior": "tsx src/cli.ts --scenario senior-engineers"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.2",
+    "tsx": "^4.21.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.2.4",
+    "vitest": "^4.0.15"
+  }
+}
