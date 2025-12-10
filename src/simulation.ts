@@ -11,6 +11,7 @@ export type ScenarioConfig = {
   probabilities: RegionProbabilities;
   nChanges: number;
   phStart: number;
+  couplingGain?: number;
   optimalDelta?: number;
   neutralDelta?: number;
   catastrophicDelta?: number;
@@ -34,6 +35,31 @@ const average = (values: number[]): number =>
 
 const minValue = (values: number[]): number =>
   values.reduce((current, value) => Math.min(current, value));
+
+const adjustProbabilities = (
+  base: RegionProbabilities,
+  currentHealth: number,
+  couplingGain: number
+): RegionProbabilities => {
+  const healthFactor = clamp((10 - currentHealth) / 9, 0, 1);
+  const drag = healthFactor * healthFactor;
+  const catMultiplier = 1 + couplingGain * drag;
+  const optMultiplier = Math.max(0, 1 - 0.6 * couplingGain * drag);
+  const neuMultiplier = Math.max(0, 1 - 0.3 * couplingGain * drag);
+
+  const weighted = {
+    optimal: base.optimal * optMultiplier,
+    neutral: base.neutral * neuMultiplier,
+    catastrophic: base.catastrophic * catMultiplier,
+  };
+
+  const total = weighted.optimal + weighted.neutral + weighted.catastrophic;
+  return {
+    optimal: weighted.optimal / total,
+    neutral: weighted.neutral / total,
+    catastrophic: weighted.catastrophic / total,
+  };
+};
 
 const nextHealth = (
   current: number,
@@ -66,13 +92,25 @@ export const simulateTrajectory = (
     neutral: config.neutralDelta ?? defaultDeltas.neutral,
     catastrophic: config.catastrophicDelta ?? defaultDeltas.catastrophic,
   };
+  const couplingGain = config.couplingGain ?? 0.6;
   const history: number[] = [config.phStart];
   for (let i = 0; i < config.nChanges; i += 1) {
+    const adjustedProbabilities = adjustProbabilities(
+      config.probabilities,
+      history[history.length - 1],
+      couplingGain
+    );
+    const healthFactor = clamp((10 - history[history.length - 1]) / 9, 0, 1);
+    const severityScale = 0.4 + 0.6 * healthFactor;
+    const effectiveDeltas = {
+      ...deltas,
+      catastrophic: deltas.catastrophic * severityScale,
+    };
     const next = nextHealth(
       history[history.length - 1],
-      config.probabilities,
+      adjustedProbabilities,
       rng,
-      deltas
+      effectiveDeltas
     );
     history.push(next);
   }
@@ -104,19 +142,22 @@ export const scenarios: Record<ScenarioKey, ScenarioConfig> = {
     probabilities: { optimal: 0.1, neutral: 0.2, catastrophic: 0.7 },
     nChanges: 50,
     phStart: 8,
+    couplingGain: 1,
   },
   "ai-guardrails": {
     label: "AI with Guardrails",
-    probabilities: { optimal: 0.35, neutral: 0.35, catastrophic: 0.3 },
+    probabilities: { optimal: 0.28, neutral: 0.38, catastrophic: 0.34 },
     nChanges: 50,
     phStart: 8,
     catastrophicDelta: -0.7,
+    couplingGain: 0.9,
   },
   "senior-engineers": {
     label: "Senior Engineers",
-    probabilities: { optimal: 0.6, neutral: 0.3, catastrophic: 0.1 },
+    probabilities: { optimal: 0.45, neutral: 0.4, catastrophic: 0.15 },
     nChanges: 50,
     phStart: 8,
+    couplingGain: 0.6,
   },
 };
 
@@ -158,7 +199,10 @@ export const runSimulation = () => {
     const expectedValue = calculateExpectedValue(config.probabilities, deltas);
     const result = simulateScenario(key);
     console.log(`Scenario: ${config.label}`);
-    console.log(`Expected Δ per Change Event: ${expectedValue.toFixed(3)}`);
+    console.log(
+      `Base expected Δ per Change Event: ${expectedValue.toFixed(3)}`
+    );
+    console.log(`Coupling gain: ${config.couplingGain ?? 0.6}`);
     console.log(
       `Probabilities: Optimal=${config.probabilities.optimal}, Neutral=${config.probabilities.neutral}, Catastrophic=${config.probabilities.catastrophic}`
     );

@@ -103,8 +103,7 @@ const renderChart = () => {
         },
         tooltip: {
           callbacks: {
-            title: (items) =>
-              `Change ${items[0]?.parsed?.x ?? 0}`,
+            title: (items) => `Change ${items[0]?.parsed?.x ?? 0}`,
             label: (item) =>
               `${item.dataset.label}: ${item.parsed.y.toFixed(2)}`,
           },

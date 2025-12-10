@@ -14,6 +14,7 @@
 | **Change Event**           | The actual implementation chosen from Solution Space. The code that gets written.                                                                                                                               |
 | **Engineering Rigor (ER)** | The degree to which a Change Event applies principles of managing complexity: modularity, cohesion, separation of concerns, information hiding, and coupling management. Scale: 0 (no rigor) to 1 (full rigor). |
 | **Decay Rate**             | The rate at which Product Health degrades per Change Event when Engineering Rigor is insufficient.                                                                                                              |
+| **Coupling Drag**          | The compounding effect where low Product Health increases the probability of catastrophic outcomes and decreases the probability of optimal outcomes in future Change Events.                                   |
 
 ## The Model
 
@@ -29,19 +30,34 @@ Where: P(Optimal) + P(Neutral) + P(Catastrophic) = 1
 
 ### Engineering Rigor Effect
 
-Engineering Rigor shifts the probability distribution:
+Engineering Rigor shifts the base probability distribution:
 
 **High ER (Senior Engineers)**:
 
-- P(Optimal) = 0.6
-- P(Neutral) = 0.3
-- P(Catastrophic) = 0.1
+- P(Optimal) = 0.45
+- P(Neutral) = 0.4
+- P(Catastrophic) = 0.15
 
 **Low ER (AI "Vibe Coding")**:
 
 - P(Optimal) = 0.1
 - P(Neutral) = 0.2
 - P(Catastrophic) = 0.7
+
+### Coupling Drag (State-Dependent Risk)
+
+As Product Health falls, the probability distribution shifts dynamically through two mechanisms:
+
+1. **Probability shift**: Catastrophic probability increases, optimal probability decreases (harder to make good changes in tangled code)
+2. **Severity scaling**: Catastrophic damage itself becomes worse as health drops (changes break more things in fragile systems)
+
+This is controlled by a **Coupling Gain** parameter:
+
+- High coupling gain (1.0): AI vibe coding creates severe coupling, accelerating decay
+- Medium coupling gain (0.9): AI with guardrails reduces but doesn't eliminate coupling
+- Low coupling gain (0.6): Senior engineers maintain manageable coupling
+
+The coupling drag is quadratic (health factor squared), so risk and damage accelerate as health falls. Bad changes make future bad changes both more likely and more damaging unless Engineering Rigor is applied.
 
 ### Product Health Evolution
 
@@ -57,7 +73,7 @@ Where Δ is determined by which region the Change Event lands in:
 
 ### Expected Value
 
-The expected change in Product Health per Change Event:
+The base expected change in Product Health per Change Event (before coupling drag):
 
 `E[Δ] = P(Optimal) × 0.5 + P(Neutral) × 0 + P(Catastrophic) × (-1.0)`
 
@@ -65,7 +81,7 @@ The expected change in Product Health per Change Event:
 `E[Δ] = 0.1 × 0.5 + 0.2 × 0 + 0.7 × (-1.0) = -0.65`
 
 **For Senior Engineers**:
-`E[Δ] = 0.6 × 0.5 + 0.3 × 0 + 0.1 × (-1.0) = +0.2`
+`E[Δ] = 0.45 × 0.5 + 0.4 × 0 + 0.15 × (-1.0) = +0.075`
 
 ### The "Guardrails" Fallacy
 
@@ -81,12 +97,16 @@ The math:
 
 **The expected value remains negative.** Even with better tools, without sufficient Engineering Rigor, the system mathematically trends toward failure (PH → 1).
 
+Worse, coupling drag amplifies this effect: as PH drops, the effective probability of catastrophic outcomes increases and catastrophic damage becomes more severe, accelerating decay beyond the base E[Δ].
+
 ### Conclusion
 
 1. Low Engineering Rigor produces negative expected value per Change Event.
-2. "Improved AI" is not enough. As long as E[Δ] < 0, Product Health trends to 1.
-3. Only sufficient Engineering Rigor (E[Δ] > 0) maintains or improves Product Health.
-4. The Scale Phase requires sustained positive E[Δ] to remain economically viable.
+2. Coupling drag is quadratic, causing accelerating decay as Product Health falls.
+3. Catastrophic damage severity increases as health drops, compounding the degradation.
+4. "Improved AI" alone is not enough. As long as the effective E[Δ] stays negative, Product Health trends to 1.
+5. Only sufficient Engineering Rigor (E[Δ] > 0 with coupling drag considered) maintains or improves Product Health.
+6. The Scale Phase requires sustained positive E[Δ] to remain economically viable.
 
 ## Running the simulation
 
