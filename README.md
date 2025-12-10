@@ -31,13 +31,13 @@ Where: P(Optimal) + P(Neutral) + P(Catastrophic) = 1
 
 Engineering Rigor shifts the probability distribution:
 
-**High ER (senior engineers, ER ≈ 0.8-1.0)**:
+**High ER (Senior Engineers)**:
 
 - P(Optimal) = 0.6
 - P(Neutral) = 0.3
 - P(Catastrophic) = 0.1
 
-**Low ER (AI vibe coding, ER ≈ 0.1-0.3)**:
+**Low ER (AI "Vibe Coding")**:
 
 - P(Optimal) = 0.1
 - P(Neutral) = 0.2
@@ -61,43 +61,43 @@ The expected change in Product Health per Change Event:
 
 `E[Δ] = P(Optimal) × 0.5 + P(Neutral) × 0 + P(Catastrophic) × (-1.0)`
 
-**For low ER (AI vibe coding)**:
+**For AI Vibe Coding (Ralph)**:
 `E[Δ] = 0.1 × 0.5 + 0.2 × 0 + 0.7 × (-1.0) = -0.65`
 
-**For high ER (senior engineers)**:
+**For Senior Engineers**:
 `E[Δ] = 0.6 × 0.5 + 0.3 × 0 + 0.1 × (-1.0) = +0.2`
 
-### The Key Insight
+### The "Guardrails" Fallacy
 
-Even if AI improves over time and P(Catastrophic) drops from 0.7 to 0.4:
+Even if we implement strict linting and improved AI prompts ("AI with Guardrails"):
 
-`E[Δ] = 0.2 × 0.5 + 0.4 × 0 + 0.4 × (-1.0) = -0.3`
+- P(Optimal) increases to 0.35
+- P(Neutral) increases to 0.35
+- P(Catastrophic) drops to 0.30
+- We even assume Catastrophic damage is mitigated to Δ = -0.7 instead of -1.0
 
-**The expected value remains negative.** Over n Change Events, Product Health trends toward 1.
+The math:
+`E[Δ] = 0.35 × 0.5 + 0.35 × 0 + 0.30 × (-0.7) = 0.175 - 0.21 = -0.035`
 
-### Time to Failure
+**The expected value remains negative.** Even with better tools, without sufficient Engineering Rigor, the system mathematically trends toward failure (PH → 1).
 
-Starting from PH₀ = 8:
+### Conclusion
 
-**Low ER (E[Δ] = -0.65)**:
+1. Low Engineering Rigor produces negative expected value per Change Event.
+2. "Improved AI" is not enough. As long as E[Δ] < 0, Product Health trends to 1.
+3. Only sufficient Engineering Rigor (E[Δ] > 0) maintains or improves Product Health.
+4. The Scale Phase requires sustained positive E[Δ] to remain economically viable.
 
-- Expected Change Events until PH = 1: ~11 changes
+## Running the simulation
 
-**Improved AI (E[Δ] = -0.3)**:
+- `npm run simulate` (all scenarios)
+- `npm run simulate:ai`
+- `npm run simulate:guardrails`
+- `npm run simulate:senior`
 
-- Expected Change Events until PH = 1: ~23 changes
+The module also executes when run directly with Node: `node src/simulation.ts` (or `npx tsx src/simulation.ts`).
 
-**Senior Engineers (E[Δ] = +0.2)**:
+## Visualizing trajectories
 
-- Product Health improves over time, approaches 10
-
-## Conclusion
-
-The mathematical model demonstrates:
-
-1. Low Engineering Rigor produces negative expected value per Change Event
-2. Even with AI improvement, as long as E[Δ] < 0, Product Health trends to 1
-3. Only sufficient Engineering Rigor (E[Δ] > 0) maintains or improves Product Health
-4. The Scale Phase requires sustained positive E[Δ] to remain economically viable
-
-AI vibe coding may improve, but unless it achieves E[Δ] ≥ 0, it will inevitably drive systems toward unmaintainability.
+- `npm run dev` then open the Vite app to see Chart.js line plots of average PH trajectories for all scenarios.
+- Uses Monte Carlo averages (n=800 per scenario) to keep the chart fast and legible.

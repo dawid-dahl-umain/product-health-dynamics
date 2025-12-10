@@ -5,14 +5,17 @@ describe("simulation", () => {
   it("caps health within bounds with optimal-only outcomes", () => {
     // Given
     const config = {
+      label: "deterministic",
       probabilities: { optimal: 1, neutral: 0, catastrophic: 0 },
       nChanges: 3,
       phStart: 9,
       optimalDelta: 0.5,
     };
     const rng = () => 0;
+
     // When
     const run = simulateTrajectory(config, rng);
+
     // Then
     expect(run).toEqual([9, 9.5, 10, 10]);
   });
@@ -23,8 +26,10 @@ describe("simulation", () => {
       [8, 9, 10],
       [8, 7, 6],
     ];
+
     // When
     const stats = summarizeRuns(runs);
+
     // Then
     expect(stats).toEqual({
       averageFinal: 8,
