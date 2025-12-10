@@ -2,7 +2,7 @@
 
 ## Overview
 
-Teams debate whether fast, AI-heavy "vibe coding" is good enough. A common scenario: a prospect or client has a non-technical employee, let's call him “Ralph”, who says he can do everything faster and cheaper with AI and prompt hacking.
+Teams debate whether fast, AI-heavy "vibe coding" is good enough. A common scenario: a prospect or client has a non-technical employee, let's call him “Ralph”, who says he can do everything faster and cheaper by generating the code using AI.
 
 This simulation starts at the handoff from Shape Phase (initial build) into Scale Phase (ongoing change).
 
