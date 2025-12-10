@@ -1,8 +1,24 @@
 # Product Health Dynamics
 
+> **Vibe coding**:
+>
+> You’ve built an app. It works. And one day as you are polishing some styling, the AI accidentally deletes 40% of the tests in the backend part of the app. You do not notice, because you are vibe coding, and in the process of making coffee in another room.
+>
+> You happily go about your day, blissfully unaware of all what is going on inside the code realms.
+>
+> Fast forward two weeks. You now ask the AI to add a new feature. It does. Worked yet again, “vibe coding is great!”
+>
+> Then suddenly, BOOM! 💥
+>
+> Apparently feature x and y broke, now when feature z was added. If we only had tests that would have prevented this…
+>
+> Now we’re in a bad situation. Because when I vibe-asked the AI to fix feature x and y while also keeping feature z working, they all started working… but then feature a, b and c suddenly broke, and feature d breaks also, but not always.
+>
+> This is the situation I predict every vibe coded project will eventually end up in, if one keeps doing it.
+
 ## Overview
 
-Teams debate whether fast, AI-heavy "vibe coding" is good enough. A common scenario: a prospect or client has a non-technical employee, let's call him “Ralph”, who says he can do everything faster and cheaper by generating the code using AI.
+Teams debate whether fast, AI-heavy "vibe coding" is good enough. A common scenario: a prospect or client has a non-technical employee who says they can do everything faster and cheaper by generating the code using AI.
 
 This simulation starts at the handoff from Shape Phase (initial build) into Scale Phase (ongoing change).
 

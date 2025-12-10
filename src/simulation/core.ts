@@ -21,9 +21,7 @@ const average = (values: number[]): number =>
 const minValue = (values: number[]): number =>
   values.reduce((current, value) => Math.min(current, value));
 
-export const simulateTrajectory = (
-  config: TrajectoryConfig
-): SimulationRun => {
+export const simulateTrajectory = (config: TrajectoryConfig): SimulationRun => {
   const history: number[] = [config.startValue ?? 0];
   for (let i = 0; i < config.nChanges; i += 1) {
     history.push(history[history.length - 1]);

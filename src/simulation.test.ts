@@ -9,10 +9,9 @@ describe("simulation", () => {
       nChanges: 3,
       startValue: 9,
     };
-    const rng = () => 0;
 
     // When
-    const run = simulateTrajectory(config, rng);
+    const run = simulateTrajectory(config);
 
     // Then
     expect(run).toEqual([9, 9, 9, 9]);
