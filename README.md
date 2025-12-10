@@ -1,5 +1,19 @@
 # Product Health Dynamics
 
+## Why this exists
+
+Teams debate whether fast, AI-heavy "vibe coding" is good enough. A common scenario: a prospect or client has a non-technical employee, let's call him “Ralph”, who says he can do everything faster and cheaper with AI and prompt hacking.
+
+This simulation shows what happens next in the Scale Phase: low rigor creates negative expected change, coupling drag compounds it, and Product Health trends toward 1. It gives you a concrete way to counter the “Ralph can do it” argument and to explain why sustained engineering rigor preserves long-term product health.
+
+## TL;DR (non-math)
+
+- Product Health measures how easy it is to change the code (1 = impossible, 10 = easy).
+- Each change can help, do nothing, or hurt. With low rigor, the expected effect is negative (Decay Rate).
+- As health drops, bad changes get more likely and more harmful (Coupling Drag).
+- "AI with guardrails" still trends down because the expected effect stays negative.
+- Senior engineers keep expected effect positive, so health stays high.
+
 ## Terms
 
 | Term                       | Definition                                                                                                                                                                                                      |
@@ -13,8 +27,8 @@
 | **Quality Gradient**       | The distribution of implementations within Solution Space from those preserving Product Health (optimal, toward 10) to those destroying Product Health (catastrophic, toward 1).                                |
 | **Change Event**           | The actual implementation chosen from Solution Space. The code that gets written.                                                                                                                               |
 | **Engineering Rigor (ER)** | The degree to which a Change Event applies principles of managing complexity: modularity, cohesion, separation of concerns, information hiding, and coupling management. Scale: 0 (no rigor) to 1 (full rigor). |
-| **Decay Rate**             | The rate at which Product Health degrades per Change Event when Engineering Rigor is insufficient.                                                                                                              |
-| **Coupling Drag**          | The compounding effect where low Product Health increases the probability of catastrophic outcomes and decreases the probability of optimal outcomes in future Change Events.                                   |
+| **Decay Rate**             | The per-change expected movement of Product Health given the current probabilities/deltas. Negative when Engineering Rigor is insufficient.                                                                     |
+| **Coupling Drag**          | State-dependent risk: as Product Health drops, catastrophic outcomes become more likely and more damaging, while optimal outcomes become less likely.                                                           |
 
 ## The Model
 
@@ -87,13 +101,13 @@ The base expected change in Product Health per Change Event (before coupling dra
 
 Even if we implement strict linting and improved AI prompts ("AI with Guardrails"):
 
-- P(Optimal) increases to 0.35
-- P(Neutral) increases to 0.35
-- P(Catastrophic) drops to 0.30
+- P(Optimal) increases to 0.28
+- P(Neutral) increases to 0.38
+- P(Catastrophic) drops to 0.34
 - We even assume Catastrophic damage is mitigated to Δ = -0.7 instead of -1.0
 
 The math:
-`E[Δ] = 0.35 × 0.5 + 0.35 × 0 + 0.30 × (-0.7) = 0.175 - 0.21 = -0.035`
+`E[Δ] = 0.28 × 0.5 + 0.38 × 0 + 0.34 × (-0.7) = 0.14 - 0.238 = -0.098`
 
 **The expected value remains negative.** Even with better tools, without sufficient Engineering Rigor, the system mathematically trends toward failure (PH → 1).
 
@@ -121,3 +135,5 @@ The module also executes when run directly with Node: `node src/simulation.ts` (
 
 - `npm run dev` then open the Vite app to see Chart.js line plots of average PH trajectories for all scenarios.
 - Uses Monte Carlo averages (n=800 per scenario) to keep the chart fast and legible.
+
+![Product Health Trajectories](./assets/Screenshot%202025-12-10%20at%2001.53.42.png)

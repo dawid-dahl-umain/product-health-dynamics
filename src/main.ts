@@ -1,4 +1,5 @@
 import Chart from "chart.js/auto";
+import annotationPlugin from "chartjs-plugin-annotation";
 import {
   scenarioKeys,
   scenarios,
@@ -73,6 +74,7 @@ const buildDatasets = () =>
 const renderChart = () => {
   const ctx = document.getElementById("trend") as HTMLCanvasElement | null;
   if (!ctx) return;
+  Chart.register(annotationPlugin);
 
   return new Chart(ctx, {
     type: "line",
@@ -106,6 +108,32 @@ const renderChart = () => {
             title: (items) => `Change ${items[0]?.parsed?.x ?? 0}`,
             label: (item) =>
               `${item.dataset.label}: ${item.parsed.y.toFixed(2)}`,
+          },
+        },
+        annotation: {
+          annotations: {
+            shapeScale: {
+              type: "line",
+              xMin: 0,
+              xMax: 0,
+              borderColor: "rgba(148, 163, 184, 0.8)",
+              borderDash: [6, 6],
+              borderWidth: 1,
+              label: {
+                display: true,
+                content: "Shape → Scale start",
+                color: "#cbd5e1",
+                backgroundColor: "rgba(15, 23, 42, 0.9)",
+                position: "start",
+                xAdjust: 20,
+                yAdjust: -12,
+                font: {
+                  size: 10,
+                  weight: "600",
+                },
+                padding: 4,
+              },
+            },
           },
         },
       },
