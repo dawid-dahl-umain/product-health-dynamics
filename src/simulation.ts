@@ -1,9 +1,8 @@
 import {
-  calculateExpectedValue,
   simulateTrajectory,
+  simulatePhasedTrajectory,
   summarizeRuns,
-  buildBaseDeltas,
-  type RegionProbabilities,
+  type PhaseConfig,
   type SimulationRun,
   type SimulationStats,
   type TrajectoryConfig,
@@ -16,14 +15,14 @@ import {
 } from "./simulation/scenarios";
 
 export {
-  calculateExpectedValue,
   simulateTrajectory,
+  simulatePhasedTrajectory,
   summarizeRuns,
   scenarios,
   scenarioKeys,
 };
 export type {
-  RegionProbabilities,
+  PhaseConfig,
   ScenarioConfig,
   ScenarioKey,
   SimulationRun,
@@ -39,7 +38,9 @@ export const simulateScenario = (
   const nSimulations = options?.nSimulations ?? 1000;
   const rngFactory = options?.rngFactory ?? (() => Math.random);
   const runs = Array.from({ length: nSimulations }, () =>
-    simulateTrajectory(config, rngFactory())
+    config.phases?.length
+      ? simulatePhasedTrajectory(config.phases, config.phStart, rngFactory())
+      : simulateTrajectory(config, rngFactory())
   );
   return summarizeRuns(runs, config.failureThreshold ?? 3);
 };
@@ -47,17 +48,8 @@ export const simulateScenario = (
 export const runSimulation = () => {
   scenarioKeys.forEach((key) => {
     const config = scenarios[key];
-    const deltas = buildBaseDeltas(config);
-    const expectedValue = calculateExpectedValue(config.probabilities, deltas);
     const result = simulateScenario(key);
     console.log(`Scenario: ${config.label}`);
-    console.log(
-      `Base expected Δ per Change Event: ${expectedValue.toFixed(3)}`
-    );
-    console.log(`Coupling gain: ${config.couplingGain ?? 0.6}`);
-    console.log(
-      `Probabilities: Optimal=${config.probabilities.optimal}, Neutral=${config.probabilities.neutral}, Catastrophic=${config.probabilities.catastrophic}`
-    );
     console.log(`Average Final Health: ${result.averageFinal}`);
     console.log(`Average Lowest Point: ${result.averageMin}`);
     console.log(

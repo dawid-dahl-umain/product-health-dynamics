@@ -52,6 +52,7 @@ const colorByScenario: Record<ScenarioKey, string> = {
   "ai-vibe": "#f87171",
   "ai-guardrails": "#fbbf24",
   "senior-engineers": "#34d399",
+  "ai-handoff": "#60a5fa",
 };
 
 const buildDatasets = () =>

@@ -12,7 +12,8 @@
     "simulate": "tsx src/cli.ts",
     "simulate:ai": "tsx src/cli.ts --scenario ai-vibe",
     "simulate:guardrails": "tsx src/cli.ts --scenario ai-guardrails",
-    "simulate:senior": "tsx src/cli.ts --scenario senior-engineers"
+    "simulate:senior": "tsx src/cli.ts --scenario senior-engineers",
+    "simulate:handoff": "tsx src/cli.ts --scenario ai-handoff"
   },
   "devDependencies": {
     "@types/node": "^24.10.2",

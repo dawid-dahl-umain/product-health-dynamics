@@ -6,10 +6,8 @@ describe("simulation", () => {
     // Given
     const config = {
       label: "deterministic",
-      probabilities: { optimal: 1, neutral: 0, catastrophic: 0 },
       nChanges: 3,
-      phStart: 9,
-      optimalDelta: 0.5,
+      startValue: 9,
     };
     const rng = () => 0;
 
@@ -17,7 +15,7 @@ describe("simulation", () => {
     const run = simulateTrajectory(config, rng);
 
     // Then
-    expect(run).toEqual([9, 9.5, 10, 10]);
+    expect(run).toEqual([9, 9, 9, 9]);
   });
 
   it("summarizes runs with averages and failure rate", () => {
