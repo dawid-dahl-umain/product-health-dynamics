@@ -1,10 +1,12 @@
 # Product Health Dynamics
 
-## Why this exists
+## Overview
 
 Teams debate whether fast, AI-heavy "vibe coding" is good enough. A common scenario: a prospect or client has a non-technical employee, let's call him “Ralph”, who says he can do everything faster and cheaper with AI and prompt hacking.
 
-This simulation shows what happens next in the Scale Phase: low rigor creates negative expected change, coupling drag compounds it, and Product Health trends toward 1. It gives you a concrete way to counter the “Ralph can do it” argument and to explain why sustained engineering rigor preserves long-term product health.
+This simulation starts at the handoff from Shape Phase (initial build) into Scale Phase (ongoing change).
+
+Low engineering rigor (no modularity, weak testing, rising coupling) makes changes more likely to damage the system. Coupling drag compounds over time. Product Health trends toward 1 unless sustained engineering rigor keeps it viable over the long term.
 
 ## TL;DR (non-math)
 
