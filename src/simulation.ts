@@ -32,15 +32,14 @@ export type {
 
 export const simulateScenario = (
   scenario: ScenarioKey,
-  options?: { nSimulations?: number; rngFactory?: () => () => number }
+  options?: { nSimulations?: number }
 ): SimulationStats => {
   const config = scenarios[scenario];
   const nSimulations = options?.nSimulations ?? 1000;
-  const rngFactory = options?.rngFactory ?? (() => Math.random);
   const runs = Array.from({ length: nSimulations }, () =>
     config.phases?.length
-      ? simulatePhasedTrajectory(config.phases, config.phStart, rngFactory())
-      : simulateTrajectory(config, rngFactory())
+      ? simulatePhasedTrajectory(config.phases, config.startValue ?? 0)
+      : simulateTrajectory(config)
   );
   return summarizeRuns(runs, config.failureThreshold ?? 3);
 };

@@ -22,8 +22,7 @@ const minValue = (values: number[]): number =>
   values.reduce((current, value) => Math.min(current, value));
 
 export const simulateTrajectory = (
-  config: TrajectoryConfig,
-  rng: () => number = Math.random
+  config: TrajectoryConfig
 ): SimulationRun => {
   const history: number[] = [config.startValue ?? 0];
   for (let i = 0; i < config.nChanges; i += 1) {
@@ -34,8 +33,7 @@ export const simulateTrajectory = (
 
 export const simulatePhasedTrajectory = (
   phases: PhaseConfig[],
-  phStart: number,
-  rng: () => number = Math.random
+  phStart: number
 ): SimulationRun => {
   const history: number[] = [phStart ?? 0];
   phases.forEach((phase) => {
