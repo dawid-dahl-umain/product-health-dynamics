@@ -50,13 +50,13 @@ This model is consistent with Lehman's Laws of Software Evolution. **Software Qu
 
 **Engineering Rigor** is the single input variable that defines an agent (human or AI). The base properties are:
 
-| Derived Property   | Formula              | Intuition                                                    |
-| ------------------ | -------------------- | ------------------------------------------------------------ |
-| **Base Impact**    | μ = ER × 0.4 − 0.2   | High ER → positive impact; Low ER → negative impact.         |
-| **Base Sigma**     | σ = σ_max × (1 − ER) | High ER → consistent outcomes; Low ER → erratic swings.      |
-| **Maximum Health** | maxPH = 5 + 5 × ER   | High ER → higher **Maximum Health** (e.g., seniors reach 9). |
+| Derived Property   | Formula                                | Intuition                                                    |
+| ------------------ | -------------------------------------- | ------------------------------------------------------------ |
+| **Base Impact**    | μ = ER × 0.4 − 0.2                     | High ER → positive impact; Low ER → negative impact.         |
+| **Base Sigma**     | σ = σ_min + (σ_max − σ_min) × (1 − ER) | High ER → consistent outcomes; Low ER → erratic swings.      |
+| **Maximum Health** | maxPH = 5 + 5 × ER                     | High ER → higher **Maximum Health** (e.g., seniors reach 9). |
 
-See [Model Parameters](#model-parameters) for the rationale behind the constants (0.4, 0.2, 0.5, 5).
+See [Model Parameters](#model-parameters) for the rationale behind the constants.
 
 ### System State Modifies Outcomes
 
@@ -88,10 +88,10 @@ Only **ER** is configured. The other columns are derived using the formulas abov
 
 | Agent         | ER (input) | → Base Impact | → Base Sigma | → Maximum Health |
 | ------------- | ---------- | ------------- | ------------ | ---------------- |
-| AI Vibe       | 0.1        | −0.16         | 0.45         | 5.5              |
-| AI Guardrails | 0.3        | −0.08         | 0.35         | 6.5              |
-| Junior        | 0.4        | −0.04         | 0.30         | 7.0              |
-| Senior        | 0.8        | +0.12         | 0.10         | 9.0              |
+| AI Vibe       | 0.1        | −0.16         | 0.46         | 5.5              |
+| AI Guardrails | 0.3        | −0.08         | 0.37         | 6.5              |
+| Junior        | 0.4        | −0.04         | 0.32         | 7.0              |
+| Senior        | 0.8        | +0.12         | 0.14         | 9.0              |
 
 ### What You'll See
 
@@ -137,6 +137,7 @@ The formulas contain calibration parameters. These are design choices, not deriv
 | ---------------- | ----- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
 | Impact slope     | 0.4   | Sets sensitivity of impact to rigor. Produces ±0.2 max per change. | How much rigor matters. Higher = bigger difference between good and bad.       |
 | Impact intercept | 0.2   | Places breakeven at ER = 0.5. Above = improve; below = degrade.    | "Average" skill (0.5) breaks even. Below average makes things worse.           |
+| σ_min            | 0.05  | Minimum standard deviation at ER = 1.                              | Even the best have some unpredictability. Nobody is perfectly consistent.      |
 | σ_max            | 0.5   | Maximum standard deviation at ER = 0.                              | How wild the swings get with zero discipline. Roughly ±0.5 per change.         |
 | Ceiling base     | 5     | Minimum achievable ceiling (at ER = 0).                            | Even the worst human or AI has a theoretical "best they could do" at midscale. |
 | Ceiling slope    | 5     | Makes ceiling range from 5 (ER = 0) to 10 (ER = 1).                | Perfect rigor can achieve perfect health; zero rigor caps at half.             |

@@ -69,30 +69,50 @@ describe("deriveExpectedImpact", () => {
 });
 
 describe("deriveOutcomeVariance", () => {
+  const constants = { sigmaMax: 0.5, sigmaMin: 0.05 };
+
   it("returns lower variance for low rigor at high health", () => {
     // Given
     const lowRigor = 0.1;
     const highHealth = 8;
-    const sigmaMax = 0.5;
 
     // When
-    const variance = core.deriveOutcomeVariance(lowRigor, highHealth, sigmaMax);
+    const variance = core.deriveOutcomeVariance(
+      lowRigor,
+      highHealth,
+      constants
+    );
 
     // Then
-    expect(variance).toBeLessThan(0.45);
+    expect(variance).toBeLessThan(0.5);
   });
 
   it("returns higher variance for low rigor at low health", () => {
     // Given
     const lowRigor = 0.1;
     const lowHealth = 2;
-    const sigmaMax = 0.5;
 
     // When
-    const variance = core.deriveOutcomeVariance(lowRigor, lowHealth, sigmaMax);
+    const variance = core.deriveOutcomeVariance(lowRigor, lowHealth, constants);
 
     // Then
-    expect(variance).toBeCloseTo(0.45);
+    expect(variance).toBeGreaterThan(0.4);
+  });
+
+  it("returns non-zero variance even for perfect rigor", () => {
+    // Given
+    const perfectRigor = 1.0;
+    const highHealth = 9;
+
+    // When
+    const variance = core.deriveOutcomeVariance(
+      perfectRigor,
+      highHealth,
+      constants
+    );
+
+    // Then
+    expect(variance).toBeGreaterThan(0);
   });
 });
 

@@ -18,10 +18,12 @@ export type PhaseConfig = Omit<TrajectoryConfig, "failureThreshold">;
 
 export type ModelConstants = {
   sigmaMax: number;
+  sigmaMin: number;
 };
 
 const DEFAULT_CONSTANTS: ModelConstants = {
   sigmaMax: 0.5,
+  sigmaMin: 0.05,
 };
 
 const clamp = (value: number, min: number, max: number): number =>
@@ -66,9 +68,11 @@ const deriveExpectedImpact = (
 const deriveOutcomeVariance = (
   engineeringRigor: number,
   currentHealth: number,
-  sigmaMax: number
+  constants: ModelConstants
 ): number => {
-  const baseVariance = sigmaMax * (1 - engineeringRigor);
+  const baseVariance =
+    constants.sigmaMin +
+    (constants.sigmaMax - constants.sigmaMin) * (1 - engineeringRigor);
   const stability = sigmoid(currentHealth - 5, 1.5, 0);
   return baseVariance * (0.3 + 0.7 * (1 - stability));
 };
@@ -84,7 +88,7 @@ const sampleChangeEvent = (
   const variance = deriveOutcomeVariance(
     engineeringRigor,
     currentHealth,
-    constants.sigmaMax
+    constants
   );
   const delta = mean + variance * gaussianRandom(rng);
   const newHealth = currentHealth + delta;
@@ -96,9 +100,7 @@ export const simulateTrajectory = (
   config: TrajectoryConfig,
   rng: () => number = Math.random
 ): SimulationRun => {
-  const constants: ModelConstants = {
-    sigmaMax: DEFAULT_CONSTANTS.sigmaMax,
-  };
+  const constants: ModelConstants = { ...DEFAULT_CONSTANTS };
   const history: number[] = [config.startValue ?? 8];
 
   for (let i = 0; i < config.nChanges; i += 1) {
@@ -123,9 +125,7 @@ export const simulatePhasedTrajectory = (
   const history: number[] = [phStart];
 
   phases.forEach((phase) => {
-    const constants: ModelConstants = {
-      sigmaMax: DEFAULT_CONSTANTS.sigmaMax,
-    };
+    const constants: ModelConstants = { ...DEFAULT_CONSTANTS };
 
     for (let i = 0; i < phase.nChanges; i += 1) {
       const currentHealth = history[history.length - 1];
