@@ -133,20 +133,20 @@ The formulas contain calibration parameters. These are design choices, not deriv
 
 ### Base Property Parameters
 
-| Parameter        | Value | Rationale                                                                                                   |
-| ---------------- | ----- | ----------------------------------------------------------------------------------------------------------- |
-| Impact slope     | 0.4   | Sets the sensitivity of impact to rigor. Combined with intercept, produces ±0.2 max impact per change.      |
-| Impact intercept | 0.2   | Places the breakeven point at ER = 0.5. Agents above midpoint improve systems; below midpoint degrade them. |
-| σ_max            | 0.5   | Maximum standard deviation. At ER = 0, outcomes swing by roughly ±0.5 per change.                           |
-| Ceiling base     | 5     | Minimum achievable ceiling (at ER = 0). Even zero-rigor agents have a theoretical ceiling at midscale.      |
-| Ceiling slope    | 5     | Makes ceiling range from 5 (ER = 0) to 10 (ER = 1). Perfect rigor can achieve perfect health.               |
+| Parameter        | Value | Rationale                                                          | Plain meaning                                                            |
+| ---------------- | ----- | ------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| Impact slope     | 0.4   | Sets sensitivity of impact to rigor. Produces ±0.2 max per change. | How much rigor matters. Higher = bigger difference between good and bad. |
+| Impact intercept | 0.2   | Places breakeven at ER = 0.5. Above = improve; below = degrade.    | "Average" skill (0.5) breaks even. Below average makes things worse.     |
+| σ_max            | 0.5   | Maximum standard deviation at ER = 0.                              | How wild the swings get with zero discipline. Roughly ±0.5 per change.   |
+| Ceiling base     | 5     | Minimum achievable ceiling (at ER = 0).                            | Even the worst agent has a theoretical "best they could do" at midscale. |
+| Ceiling slope    | 5     | Makes ceiling range from 5 (ER = 0) to 10 (ER = 1).                | Perfect rigor can achieve perfect health; zero rigor caps at half.       |
 
 ### System State Parameters
 
-| Parameter        | Value | Rationale                                                                      |
-| ---------------- | ----- | ------------------------------------------------------------------------------ |
-| Threshold        | 5     | The midpoint of the PH scale. Below 5 = "coupled mess"; above 5 = "tractable." |
-| Steepness (k)    | 1.5   | Controls how sharp the transition is. Higher = more abrupt threshold effect.   |
-| Ceiling exponent | 2     | The power in (PH/maxPH)². Higher = sharper diminishing returns near ceiling.   |
-| Variance floor   | 0.3   | Even healthy systems retain 30% of base variance.                              |
-| Variance range   | 0.7   | The remaining 70% of variance is affected by system state.                     |
+| Parameter        | Value | Rationale                                                       | Plain meaning                                                                 |
+| ---------------- | ----- | --------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Threshold        | 5     | Midpoint of PH scale. Below = "mess"; above = "tractable."      | The tipping point. Below 5, things get harder; above 5, things get easier.    |
+| Steepness (k)    | 1.5   | Controls how sharp the transition is around threshold.          | How suddenly things change at the tipping point. Not too abrupt, not gradual. |
+| Ceiling exponent | 2     | The power in (PH/maxPH)². Higher = sharper diminishing returns. | How hard it gets to improve near your ceiling. Squared = moderately sharp.    |
+| Variance floor   | 0.3   | Even healthy systems retain 30% of base variance.               | Nothing is perfectly predictable. Even good code has some surprises.          |
+| Variance range   | 0.7   | The 70% of variance affected by system state.                   | How much the mess amplifies unpredictability. Most of it, but not all.        |
