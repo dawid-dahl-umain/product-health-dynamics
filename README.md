@@ -56,7 +56,7 @@ This model is consistent with Lehman's Laws of Software Evolution. **Software Qu
 | **Base Sigma**     | σ = σ_max × (1 − ER) | High ER → consistent outcomes; Low ER → erratic swings.      |
 | **Maximum Health** | maxPH = 5 + 5 × ER   | High ER → higher **Maximum Health** (e.g., seniors reach 9). |
 
-Where σ_max = 0.5 (constant).
+See [Model Parameters](#model-parameters) for the rationale behind the constants (0.4, 0.2, 0.5, 5).
 
 ### System State Modifies Outcomes
 
@@ -66,13 +66,15 @@ All modifiers derive from a single intermediate variable (not a core term, just 
 
 $$\text{systemState} = \frac{1}{1 + e^{-k(PH - 5)}}$$
 
-Where k = 1.5 (steepness). This sigmoid transforms **PH** into a 0-1 scale representing how "tractable" the system is. At PH = 5, systemState = 0.5 (the threshold).
+This sigmoid transforms **PH** into a 0-1 scale representing how "tractable" the system is. At PH = 5, systemState = 0.5 (the threshold).
 
 | For...                   | Modifier                          | Effect                                                            |
 | ------------------------ | --------------------------------- | ----------------------------------------------------------------- |
 | Negative **Base Impact** | × (1 − systemState)               | Damage compounds at low PH, absorbed at high PH                   |
 | Positive **Base Impact** | × systemState × (1 − (PH/maxPH)²) | Hard to improve mess; diminishing returns near **Maximum Health** |
 | **Base Sigma**           | × (0.3 + 0.7 × (1 − systemState)) | More chaos at low PH; tests catch outliers at high PH             |
+
+See [Model Parameters](#model-parameters) for the rationale behind the constants (k, 0.3, 0.7).
 
 **Result:** Both decay and recovery follow S-curves. The threshold (~5) is where the system shifts from "coupled mess" to "tractable codebase."
 
@@ -124,3 +126,27 @@ Lehman's Laws of Software Evolution (1970s, peer-reviewed) describe universal pa
 | 2nd (Increasing Complexity) | Complexity increases unless work is done to reduce it. | **ER** represents that work. Low ER means complexity grows unchecked.                        |
 | 7th (Declining Quality)     | Quality declines unless rigorously maintained.         | Low **ER** produces negative **Base Impact**, making decline the default outcome.            |
 | 8th (Feedback System)       | Evolution is a multi-loop feedback system.             | **PH** creates feedback: low PH → damage compounds → lower PH (and vice versa for recovery). |
+
+## Model Parameters
+
+The formulas contain calibration parameters. These are design choices, not derived values, and can be adjusted based on empirical observation.
+
+### Base Property Parameters
+
+| Parameter        | Value | Rationale                                                                                                   |
+| ---------------- | ----- | ----------------------------------------------------------------------------------------------------------- |
+| Impact slope     | 0.4   | Sets the sensitivity of impact to rigor. Combined with intercept, produces ±0.2 max impact per change.      |
+| Impact intercept | 0.2   | Places the breakeven point at ER = 0.5. Agents above midpoint improve systems; below midpoint degrade them. |
+| σ_max            | 0.5   | Maximum standard deviation. At ER = 0, outcomes swing by roughly ±0.5 per change.                           |
+| Ceiling base     | 5     | Minimum achievable ceiling (at ER = 0). Even zero-rigor agents have a theoretical ceiling at midscale.      |
+| Ceiling slope    | 5     | Makes ceiling range from 5 (ER = 0) to 10 (ER = 1). Perfect rigor can achieve perfect health.               |
+
+### System State Parameters
+
+| Parameter        | Value | Rationale                                                                      |
+| ---------------- | ----- | ------------------------------------------------------------------------------ |
+| Threshold        | 5     | The midpoint of the PH scale. Below 5 = "coupled mess"; above 5 = "tractable." |
+| Steepness (k)    | 1.5   | Controls how sharp the transition is. Higher = more abrupt threshold effect.   |
+| Ceiling exponent | 2     | The power in (PH/maxPH)². Higher = sharper diminishing returns near ceiling.   |
+| Variance floor   | 0.3   | Even healthy systems retain 30% of base variance.                              |
+| Variance range   | 0.7   | The remaining 70% of variance is affected by system state.                     |
