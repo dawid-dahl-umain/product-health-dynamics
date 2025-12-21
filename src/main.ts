@@ -51,6 +51,7 @@ const injectBaseStyles = () => {
 const colorByScenario: Record<ScenarioKey, string> = {
   "ai-vibe": "#f87171",
   "ai-guardrails": "#fbbf24",
+  "junior-engineer": "#fb923c",
   "senior-engineers": "#34d399",
   "ai-handoff": "#60a5fa",
 };
@@ -108,7 +109,7 @@ const renderChart = () => {
           callbacks: {
             title: (items) => `Change ${items[0]?.parsed?.x ?? 0}`,
             label: (item) =>
-              `${item.dataset.label}: ${item.parsed.y.toFixed(2)}`,
+              `${item.dataset.label}: ${item.parsed.y?.toFixed(2) ?? "N/A"}`,
           },
         },
         annotation: {
@@ -130,7 +131,7 @@ const renderChart = () => {
                 yAdjust: -12,
                 font: {
                   size: 10,
-                  weight: "600",
+                  weight: "bold",
                 },
                 padding: 4,
               },
