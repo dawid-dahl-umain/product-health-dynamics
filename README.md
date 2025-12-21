@@ -28,7 +28,7 @@ Low **Engineering Rigor** (no modularity, weak testing, rising coupling) makes c
 
 - **Product Health** measures how easy it is to change the code (1 = impossible, 10 = easy).
 - Each **Change Event** can help, do nothing, or hurt. With low **Engineering Rigor**, the expected impact is negative.
-- Low-rigor agents trend toward 1; high-rigor agents trend toward their **Maximum Health** (~9 for seniors).
+- Low-rigor agents (human or AI) trend toward 1; high-rigor agents trend toward their **Maximum Health** (~9 for seniors).
 - Decay is slow at first, then accelerates. Recovery is slow at first, then accelerates, then plateaus.
 
 ## Terms
@@ -133,13 +133,13 @@ The formulas contain calibration parameters. These are design choices, not deriv
 
 ### Base Property Parameters
 
-| Parameter        | Value | Rationale                                                          | Plain meaning                                                            |
-| ---------------- | ----- | ------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| Impact slope     | 0.4   | Sets sensitivity of impact to rigor. Produces ±0.2 max per change. | How much rigor matters. Higher = bigger difference between good and bad. |
-| Impact intercept | 0.2   | Places breakeven at ER = 0.5. Above = improve; below = degrade.    | "Average" skill (0.5) breaks even. Below average makes things worse.     |
-| σ_max            | 0.5   | Maximum standard deviation at ER = 0.                              | How wild the swings get with zero discipline. Roughly ±0.5 per change.   |
-| Ceiling base     | 5     | Minimum achievable ceiling (at ER = 0).                            | Even the worst agent has a theoretical "best they could do" at midscale. |
-| Ceiling slope    | 5     | Makes ceiling range from 5 (ER = 0) to 10 (ER = 1).                | Perfect rigor can achieve perfect health; zero rigor caps at half.       |
+| Parameter        | Value | Rationale                                                          | Plain meaning                                                                  |
+| ---------------- | ----- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| Impact slope     | 0.4   | Sets sensitivity of impact to rigor. Produces ±0.2 max per change. | How much rigor matters. Higher = bigger difference between good and bad.       |
+| Impact intercept | 0.2   | Places breakeven at ER = 0.5. Above = improve; below = degrade.    | "Average" skill (0.5) breaks even. Below average makes things worse.           |
+| σ_max            | 0.5   | Maximum standard deviation at ER = 0.                              | How wild the swings get with zero discipline. Roughly ±0.5 per change.         |
+| Ceiling base     | 5     | Minimum achievable ceiling (at ER = 0).                            | Even the worst human or AI has a theoretical "best they could do" at midscale. |
+| Ceiling slope    | 5     | Makes ceiling range from 5 (ER = 0) to 10 (ER = 1).                | Perfect rigor can achieve perfect health; zero rigor caps at half.             |
 
 ### System State Parameters
 
