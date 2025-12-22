@@ -200,7 +200,7 @@ npm run simulate:ai  # Print trajectory statistics to console
 
 ## Repository Structure
 
-```
+```text
 src/
   model/
     Parameters.ts           # All tunable model constants
@@ -224,13 +224,6 @@ src/
   main.ts                   # Chart.js visualization
   cli.ts                    # Command-line interface
 ```
-
-**Design principles:**
-
-- **Single Responsibility:** Each file does one thing.
-- **Self-documenting:** File and class names describe their purpose; minimal comments.
-- **Testable:** `ProductHealthModel` encapsulates all model logic; pure functions in `utils/`.
-- **Configurable:** All magic numbers live in `Parameters.ts`.
 
 ---
 
