@@ -13,7 +13,7 @@ The model runs many randomized simulations (a technique called Monte Carlo simul
   - [Engineering Rigor as the Master Dial](#engineering-rigor-as-the-master-dial)
   - [System State Modifies Everything](#system-state-modifies-everything)
   - [The Compounding Effect](#the-compounding-effect-the-entropy-metaphor)
-  - [Each Change Event](#each-change-event)
+  - [Each Change Event (The Roll of the Dice)](#each-change-event-the-roll-of-the-dice)
 - [Agent Profiles](#agent-profiles)
 - [What You'll See](#what-youll-see)
 - [For Client Conversations](#for-client-conversations)
@@ -79,8 +79,8 @@ Current Product Health affects how changes land. This captures the reality that 
 
 The model computes an intermediate variable called **systemState**, which transforms Product Health into a 0-1 scale:
 
-```
-systemState = 1 / (1 + e^(-1.5 × (PH − 5)))
+```math
+\text{systemState} = \frac{1}{1 + e^{-1.5 \times (PH - 5)}}
 ```
 
 **Plain meaning:** systemState answers "how tractable is this codebase right now?"
@@ -93,7 +93,8 @@ systemState = 1 / (1 + e^(-1.5 × (PH − 5)))
 | -------------------- | ----------------------------------- | -------------------------------------------------------- |
 | Negative base impact | `× (1 − systemState)`               | Damage compounds at low PH, absorbed at high PH          |
 | Positive base impact | `× systemState × (1 − (PH/maxPH)²)` | Hard to improve a mess; diminishing returns near ceiling |
-| Variance             | `× (0.15 + 0.85 × systemState)`     | Outcomes "freeze" at low PH; normal variance at high PH  |
+| Sigma (bell-curve)   | `× (0.6 + 0.4 × bellFactor)`        | Chaos peaks mid-range; predictable at extremes           |
+| Variance attenuation | `× (0.15 + 0.85 × systemState)`     | Luck cannot save you at low PH; outcomes driven by mean  |
 
 ### The Compounding Effect (The "Entropy" Metaphor)
 
@@ -115,15 +116,28 @@ The same low-ER agent causes roughly **90× more degradation** in a coupled syst
 
 **Plain meaning:** Low-ER changes (no tests, no modularity) gradually tighten coupling. At first, existing structure absorbs the damage. But as coupling increases, changes start breaking unrelated features. Eventually, fixing one thing breaks three others. The system accelerates its own decay, just like entropy in physics. The difference: entropy is inevitable; software decay is a choice.
 
-### Each Change Event
+### Each Change Event (The Roll of the Dice)
 
-Every commit draws from a normal distribution:
+Software development is probabilistic. No two code changes are identical, even if the developer is the same. The model captures this using a **Normal (Gaussian) Distribution**.
 
+| Mathematical Term | Role in Model    | Plain Meaning                                           | For Mathematicians                       |
+| :---------------- | :--------------- | :------------------------------------------------------ | :--------------------------------------- |
+| **Mean (μ_eff)**  | Expected Impact  | On average, does this work make things better or worse? | First moment of the distribution.        |
+| **Sigma (σ_eff)** | Unpredictability | The "Vibe" factor. How consistent or erratic?           | Standard deviation (√variance).          |
+| **N(0,1)**        | The Draw         | A random roll of the dice.                              | Sample from Standard Normal (μ=0, σ²=1). |
+
+For every change event, the new health is calculated as:
+
+```math
+\Delta PH = \mu_{effective} + \sigma_{effective} \times N(0,1)
 ```
-ΔPH = μ_effective + σ_effective × N(0,1)
-```
 
-Result is clamped to [1, 10]. A soft ceiling pulls PH back toward maxPH when exceeded.
+**What this means in practice:**
+
+- **High Rigor (Senior):** High μ, low σ. They consistently make things better. Their "bad days" are still mostly neutral.
+- **Low Rigor (AI Vibe):** Negative μ, high σ. Every change is a gamble. Sometimes it works brilliantly (lucky draw), but on average, the system degrades. At low PH, σ is "frozen" (reduced), meaning outcomes become predictably bad instead of erratic.
+
+Resulting health is always clamped between 1 and 10. A soft ceiling ensures that as health approaches or exceeds an agent's `maxPH`, the positive impact of their changes naturally decays.
 
 ## Agent Profiles
 
@@ -131,25 +145,25 @@ Only ER is configured. All other values are derived.
 
 | Agent              |  ER | → Base Impact | → Base Sigma | → Max Health |
 | ------------------ | --: | :-----------: | :----------: | :----------: |
-| AI Vibe Coder      | 0.1 |     −0.96     |     0.46     |     5.5      |
-| AI with Guardrails | 0.3 |     −0.48     |     0.38     |     6.5      |
+| AI Vibe Coder      | 0.3 |     −0.48     |     0.38     |     6.5      |
+| AI with Guardrails | 0.4 |     −0.24     |     0.34     |     7.0      |
 | Junior Engineer    | 0.5 |     0.00      |     0.30     |     7.5      |
 | Senior Engineer    | 0.8 |     +0.72     |     0.18     |     9.0      |
 
-**Key insight:** Junior engineers break even (μ=0). They don't improve the system, but they don't systematically degrade it either. AI vibe coders have strongly negative expected impact; every change makes things slightly worse on average.
+**Key insight:** Junior engineers break even (μ=0). They don't improve the system, but they don't systematically degrade it either. AI vibe coders have negative expected impact; every change makes things worse on average.
 
 ## What You'll See
 
 - **AI Vibe:** Slow decay at first, accelerates around PH ~5, bottoms out at 1.
 - **AI with Guardrails:** Slower decay, but still negative trajectory. Buys time, not salvation.
-- **Junior Engineer:** Hovers around 7-8. High variance, but no systematic drift.
+- **Junior Engineer:** Slowly drifts downward toward 3-4. While their expected impact is 0 (breakeven), the system's asymmetry (slippery at the top, "frozen" and sticky at the bottom) means a neutral agent eventually slides into the mess without positive pressure to stay out.
 - **Senior Engineer:** Steady climb from 8 toward ~9, then stabilizes.
 - **Handoff (AI → Senior):** AI decays to 1. Seniors struggle initially (the mess resists improvement), then recover in an S-curve toward their ceiling.
-- **Handoff (AI → Junior):** AI decays to 1. Juniors recover more slowly and plateau lower than seniors.
+- **Handoff (AI → Junior):** AI decays to 1. Juniors recover very slowly and plateau much lower than seniors.
 
 Shaded bands are **confidence bands**: they show the range where 80% of simulation runs land. The solid line is the average. Roughly: "best realistic case" at the top, "worst realistic case" at the bottom, with extremes (top/bottom 10%) excluded.
 
-![Product Health Trajectories](./assets/Screenshot%202025-12-22%20at%2015.22.59.png)
+![Product Health Trajectories](./assets/Screenshot%202025-12-22%20at%2023.36.40.png)
 
 > **Run it yourself:** `npm install && npm run dev` opens an interactive version at `http://localhost:5173`
 
@@ -242,44 +256,71 @@ All parameters below are calibration choices. They can be adjusted based on empi
 | Threshold          |     5 | Midpoint of PH scale. Below = coupled mess; above = tractable.                                          |
 | Steepness (k)      |   1.5 | How sharp the transition around threshold. Moderate value allows recovery while preserving compounding. |
 | Ceiling exponent   |     2 | Power in `(PH/maxPH)²`. Higher = sharper diminishing returns near ceiling.                              |
-| Sigma scale floor  |  0.15 | Minimum sigma multiplier. Even frozen systems retain 15% unpredictability.                              |
-| Sigma scale range  |  0.85 | Portion of sigma affected by system state.                                                              |
+| Bell-curve floor   |   0.6 | Minimum sigma multiplier at extremes. Ensures no one is superhuman.                                     |
+| Bell-curve range   |   0.4 | How much chaos increases in the transition zone.                                                        |
+| Attenuation floor  |  0.15 | Minimum variance at low PH. Even frozen systems have some noise.                                        |
+| Attenuation range  |  0.85 | Portion of variance that scales with system state.                                                      |
 | Soft ceiling decay |     5 | Exponent in `e^(-5 × overshoot)`. Controls pull-back when PH exceeds maxPH.                             |
 
 ### Complete Formulas
 
-**System state:**
+**System state (sigmoid function):**
 
-```
-systemState(PH) = 1 / (1 + e^(-1.5 × (PH − 5)))
+```math
+\text{systemState}(PH) = \frac{1}{1 + e^{-1.5 \times (PH - 5)}}
 ```
 
 **Expected impact:**
 
-```
-baseImpact = ER × 2.4 − 1.2
-
-if baseImpact ≤ 0:
-    μ_eff = baseImpact × (1 − systemState)
-else:
-    μ_eff = baseImpact × systemState × (1 − (PH / maxPH)²)
+```math
+\mu_{base} = ER \times 2.4 - 1.2
 ```
 
-**Variance:**
-
+```math
+\mu_{eff} = \begin{cases}
+\mu_{base} \times (1 - \text{systemState}) & \text{if } \mu_{base} \leq 0 \\
+\mu_{base} \times \text{systemState} \times \left(1 - \left(\frac{PH}{maxPH}\right)^2\right) & \text{if } \mu_{base} > 0
+\end{cases}
 ```
-σ_base = 0.1 + 0.4 × (1 − ER)
-σ_eff = σ_base × (0.15 + 0.85 × systemState)
+
+**Sigma (standard deviation):**
+
+```math
+\sigma_{base} = 0.1 + 0.4 \times (1 - ER)
 ```
 
-**Change event:**
+Bell-curve scaling (chaos peaks mid-range, predictable at extremes):
 
+```math
+\text{bellFactor} = 4 \times \text{systemState} \times (1 - \text{systemState})
 ```
-Δ = μ_eff + σ_eff × N(0,1)
 
-if Δ > 0 and PH > maxPH:
-    overshoot = (PH − maxPH) / maxPH
-    Δ = Δ × e^(-5 × overshoot)
+```math
+\sigma_{eff} = \sigma_{base} \times (0.6 + 0.4 \times \text{bellFactor})
+```
 
-PH_new = clamp(PH + Δ, 1, 10)
+**Change event (the random draw):**
+
+Each change samples from a Normal (Gaussian) distribution. `N(0,1)` denotes a draw from the Standard Normal Distribution (mean=0, variance=1).
+
+The random component is attenuated at low PH (luck cannot save you in a coupled mess):
+
+```math
+\text{attenuation} = 0.15 + 0.85 \times \text{systemState}
+```
+
+```math
+\Delta PH = \mu_{eff} + \sigma_{eff} \times N(0,1) \times \text{attenuation}
+```
+
+Soft ceiling (when exceeding maxPH):
+
+```math
+\text{if } \Delta > 0 \text{ and } PH > maxPH: \quad \Delta = \Delta \times e^{-5 \times \frac{PH - maxPH}{maxPH}}
+```
+
+Final result:
+
+```math
+PH_{new} = \text{clamp}(PH + \Delta, 1, 10)
 ```

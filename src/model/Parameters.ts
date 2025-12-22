@@ -48,11 +48,23 @@ export const ModelParameters = {
 
   /**
    * Controls how system state scales sigma (unpredictability).
-   * In unhealthy systems, sigma is "frozen" (reduced), making outcomes predictably bad.
-   * floor: Minimum sigma multiplier even in a frozen system (some luck is always possible).
-   * range: How much of sigma is affected by system state (the rest is "frozen").
+   * Uses bell-curve scaling: sigma is LOW at both extremes (healthy and frozen),
+   * HIGH in the chaotic transition zone around PH=5.
+   * floor: Minimum sigma multiplier at extremes (ensures no one is "superhuman").
+   * range: How much the bell-curve can add to the floor.
    */
   sigmaScale: {
+    floor: 0.6,
+    range: 0.4,
+  },
+
+  /**
+   * Controls variance attenuation at low Product Health.
+   * In a tightly coupled system, luck cannot save you; outcomes are driven by mean.
+   * floor: Minimum variance retained even at PH=1 (some noise remains).
+   * range: Portion of variance that scales with system state.
+   */
+  varianceAttenuation: {
     floor: 0.15,
     range: 0.85,
   },

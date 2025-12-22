@@ -1,46 +1,40 @@
-flowchart TD
-    subgraph inputs ["INPUTS"]
-        ER["<b>Engineering Rigor</b><br/><i>How careful is this agent (Human or AI)?</i><br/>0 = careless, 1 = meticulous"]
+flowchart TB
+    subgraph config ["CONFIGURATION (set once)"]
+        ER["<b>Engineering Rigor</b><br/><i>How careful is this Human or AI?</i><br/>0 = careless, 1 = meticulous"]
     end
 
-    subgraph state ["CURRENT STATE"]
-        PH["<b>Product Health</b><br/><i>How easy is the code to change?</i><br/>1 = nightmare, 10 = dream"]
+    subgraph derived ["DERIVED FROM RIGOR"]
+        BI["<b>Average Impact</b><br/><i>Help or hurt on average?</i>"]
+        BS["<b>Consistency</b><br/><i>Predictable or erratic?</i>"]
+        MH["<b>Ceiling</b><br/><i>Best achievable result</i>"]
     end
 
-    subgraph traits ["DERIVED FROM RIGOR"]
-        BI["<b>Average Impact</b><br/><i>Do their changes help or hurt?</i>"]
-        BS["<b>Consistency</b><br/><i>Are they predictable or erratic?</i>"]
-        MH["<b>Ceiling</b><br/><i>Best they can realistically achieve</i>"]
-    end
+    subgraph loop ["DEVELOPMENT LOOP (repeats for each code change)"]
+        direction TB
+        
+        PH["<b>Current Product Health</b><br/><i>How easy is the code to change right now?</i><br/>1 = nightmare, 10 = dream"]
+        
+        SS["<b>System Tractability</b><br/><i>Healthy: absorbs mistakes, amplifies improvements</i><br/><i>Unhealthy: amplifies mistakes, resists improvements</i>"]
+        
+        CE["<b>Change Event</b><br/><i>One code change happens</i><br/>Outcome = rigor traits + system state + randomness"]
+        
+        NPH["<b>New Product Health</b><br/><i>System evolved: better, worse, or same</i>"]
 
-    subgraph context ["CODEBASE CONTEXT (derived)"]
-        SS["<b>System Tractability</b><br/><i>Does the codebase help or fight you?</i><br/>Healthy = absorbs mistakes<br/>Unhealthy = amplifies them"]
-    end
-
-    subgraph outcome ["OUTCOME"]
-        CE["<b>Change Event</b><br/><i>One code change, one roll of the dice</i><br/>Combines rigor +<br/>codebase state + randomness"]
-        NPH["<b>New Product Health</b><br/><i>Better or worse than before?</i>"]
+        PH --> SS
+        SS --> CE
+        CE --> NPH
+        NPH -->|"becomes current state<br/>for next change"| PH
     end
 
     ER --> BI & BS & MH
-    PH --> SS
-    BI & SS & MH --> CE
-    BS & SS --> CE
-    CE --> NPH
-    NPH -.->|"repeat for each change"| PH
+    BI & BS & MH --> CE
 
-    %% Darker backgrounds for better contrast with white text
-    style inputs fill:#1b5e20,stroke:#81c784,color:#fff
-    style state fill:#0d47a1,stroke:#64b5f6,color:#fff
-    style traits fill:#e65100,stroke:#ffb74d,color:#fff
-    style context fill:#880e4f,stroke:#f06292,color:#fff
-    style outcome fill:#4a148c,stroke:#ba68c8,color:#fff
+    %% Styling
+    style config fill:#1b5e20,stroke:#81c784,color:#fff
+    style derived fill:#e65100,stroke:#ffb74d,color:#fff
+    style loop fill:#0d47a1,stroke:#64b5f6,color:#fff
 
-    %% Explicitly style nodes for clarity
     classDef nodeStyle fill:#fff,stroke:#333,color:#000,stroke-width:2px
     class ER,PH,BI,BS,MH,SS,CE,NPH nodeStyle
 
-    %% High-contrast arrows (cyan) to distinguish from white/black text
     linkStyle default stroke:#00ced1,stroke-width:2px
-    %% Feedback loop styling
-    linkStyle 8 stroke:#00ced1,stroke-width:2px,stroke-dasharray: 5 5,color:#00ced1

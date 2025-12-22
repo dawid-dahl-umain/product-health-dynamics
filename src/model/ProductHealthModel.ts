@@ -88,14 +88,57 @@ export class ProductHealthModel {
 
   /**
    * Computes effective sigma (σ_eff): the actual unpredictability for the next change.
-   * Base sigma is scaled by system state: frozen in unhealthy systems (less randomness,
-   * outcomes become predictably bad), normal in healthy systems.
+   *
+   * Uses a bell-curve scaling: sigma is LOW at both extremes (healthy and frozen),
+   * and HIGH in the chaotic transition zone around PH=5.
+   *
+   * Intuition:
+   * - High PH (healthy): Tests catch problems, modules contain issues, predictable outcomes
+   * - Mid PH (transition): Some structure remains but unreliable, chaotic outcomes
+   * - Low PH (frozen): Everything coupled, every change breaks things, predictably bad
    */
   public computeEffectiveSigma(currentHealth: number): number {
     const { floor, range } = ModelParameters.sigmaScale;
     const systemState = this.computeSystemState(currentHealth);
-    const scale = floor + range * systemState;
+    const bellFactor = this.computeBellCurveFactor(systemState);
+    const scale = floor + range * bellFactor;
     return this.baseSigma * scale;
+  }
+
+  /**
+   * Computes a bell-curve factor that peaks at systemState=0.5 and falls to 0 at extremes.
+   * The formula 4x(1-x) produces a parabola: 0 at x=0, 1 at x=0.5, 0 at x=1.
+   */
+  private computeBellCurveFactor(systemState: number): number {
+    return 4 * systemState * (1 - systemState);
+  }
+
+  /**
+   * Computes variance attenuation at low Product Health.
+   *
+   * In a tightly coupled system, outcomes become "frozen": luck cannot save you.
+   * This prevents instant recovery via lucky variance while allowing mean-driven improvement.
+   */
+  private computeVarianceAttenuation(systemState: number): number {
+    const { floor, range } = ModelParameters.varianceAttenuation;
+    return floor + range * systemState;
+  }
+
+  /**
+   * Applies soft ceiling resistance when Product Health exceeds the agent's maxHealth.
+   * Gains are exponentially dampened based on how far above ceiling you are.
+   */
+  private applySoftCeiling(delta: number, currentHealth: number): number {
+    const isAboveCeiling = currentHealth > this.maxHealth;
+    const isGaining = delta > 0;
+
+    if (!isGaining || !isAboveCeiling) {
+      return delta;
+    }
+
+    const overshoot = (currentHealth - this.maxHealth) / this.maxHealth;
+    const { decay } = ModelParameters.softCeiling;
+    return delta * Math.exp(-decay * overshoot);
   }
 
   /**
@@ -111,18 +154,16 @@ export class ProductHealthModel {
     currentHealth: number,
     rng: () => number = Math.random
   ): number {
+    const systemState = this.computeSystemState(currentHealth);
     const mean = this.computeExpectedImpact(currentHealth);
     const sigma = this.computeEffectiveSigma(currentHealth);
-    let delta = mean + sigma * gaussianRandom(rng);
 
-    const isAboveCeiling = currentHealth > this.maxHealth;
-    const isGaining = delta > 0;
+    const rawRandom = sigma * gaussianRandom(rng);
+    const attenuatedRandom =
+      rawRandom * this.computeVarianceAttenuation(systemState);
 
-    if (isGaining && isAboveCeiling) {
-      const overshoot = (currentHealth - this.maxHealth) / this.maxHealth;
-      const { decay } = ModelParameters.softCeiling;
-      delta = delta * Math.exp(-decay * overshoot);
-    }
+    const rawDelta = mean + attenuatedRandom;
+    const delta = this.applySoftCeiling(rawDelta, currentHealth);
 
     const { min, max } = ModelParameters.health;
     return clamp(currentHealth + delta, min, max);

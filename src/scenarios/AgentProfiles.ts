@@ -8,11 +8,11 @@
 export const AgentProfiles = {
   /** Pure vibe coding: no tests, no structure, just shipping. */
   aiVibe: {
-    engineeringRigor: 0.1,
+    engineeringRigor: 0.3,
   },
   /** AI with some oversight: code review, basic testing. */
   aiGuardrails: {
-    engineeringRigor: 0.3,
+    engineeringRigor: 0.4,
   },
   /** Junior engineer: follows patterns but doesn't create them. Breakeven. */
   junior: {

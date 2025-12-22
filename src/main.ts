@@ -1,6 +1,8 @@
 import Chart from "chart.js/auto";
 import { Filler } from "chart.js";
 import annotationPlugin from "chartjs-plugin-annotation";
+import zoomPlugin from "chartjs-plugin-zoom";
+import "hammerjs";
 import {
   scenarioKeys,
   scenarios,
@@ -44,6 +46,25 @@ const injectBaseStyles = () => {
     canvas {
       width: 100%;
       height: 420px;
+      cursor: crosshair;
+    }
+    .controls {
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    button {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #e2e8f0;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    button:hover {
+      background: #334155;
     }
   `;
   document.head.appendChild(style);
@@ -114,12 +135,14 @@ const buildDatasets = () =>
     ];
   });
 
+let chartInstance: Chart | null = null;
+
 const renderChart = () => {
   const ctx = document.getElementById("trend") as HTMLCanvasElement | null;
   if (!ctx) return;
-  Chart.register(annotationPlugin, Filler);
+  Chart.register(annotationPlugin, zoomPlugin, Filler);
 
-  return new Chart(ctx, {
+  chartInstance = new Chart(ctx, {
     type: "line",
     data: {
       datasets: buildDatasets(),
@@ -183,9 +206,26 @@ const renderChart = () => {
             },
           },
         },
+        zoom: {
+          pan: {
+            enabled: true,
+            mode: "xy",
+          },
+          zoom: {
+            wheel: {
+              enabled: true,
+            },
+            pinch: {
+              enabled: true,
+            },
+            mode: "xy",
+          },
+        },
       },
     },
   });
+
+  return chartInstance;
 };
 
 const mount = () => {
@@ -195,13 +235,21 @@ const mount = () => {
   root.innerHTML = `
     <main>
       <h1>Product Health Trajectories</h1>
-      <p>Average Monte Carlo trends across scenarios (n=800 runs each).</p>
+      <p>Results from 800 randomized Monte Carlo simulations per scenario. The solid line represents the average path; shaded bands show the range where 80% of outcomes land (the "realistic" best and worst cases).</p>
       <div id="chart-container">
         <canvas id="trend" aria-label="Product Health trajectories" role="img"></canvas>
+      </div>
+      <div class="controls">
+        <button id="reset-zoom">Reset View</button>
+        <span style="font-size: 0.8rem; color: #94a3b8;">Scroll to zoom, drag to pan</span>
       </div>
     </main>
   `;
   renderChart();
+
+  document.getElementById("reset-zoom")?.addEventListener("click", () => {
+    chartInstance?.resetZoom();
+  });
 };
 
 mount();
