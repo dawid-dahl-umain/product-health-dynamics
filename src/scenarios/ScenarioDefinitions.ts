@@ -32,7 +32,7 @@ const HANDOFF_RECOVERY_CHANGES = 800;
  */
 export const Scenarios: Record<ScenarioKey, ScenarioConfig> = {
   "ai-vibe": {
-    label: "AI Vibe Coding (Ralph)",
+    label: "AI Vibe Coding",
     nChanges: DEFAULT_CHANGES,
     startValue: DEFAULT_START,
     ...AgentProfiles.aiVibe,
@@ -98,4 +98,3 @@ export const Scenarios: Record<ScenarioKey, ScenarioConfig> = {
 
 /** Array of all scenario keys, for iteration. */
 export const ScenarioKeys = Object.keys(Scenarios) as ScenarioKey[];
-
