@@ -40,5 +40,7 @@ flowchart TD
     classDef nodeStyle fill:#fff,stroke:#333,color:#000,stroke-width:2px
     class ER,PH,BI,BS,MH,SS,CE,NPH nodeStyle
 
-    %% Make arrows visible with high contrast
-    linkStyle default stroke:#fff,stroke-width:3px
+    %% High-contrast arrows (cyan) to distinguish from white/black text
+    linkStyle default stroke:#00ced1,stroke-width:2px
+    %% Feedback loop styling
+    linkStyle 8 stroke:#00ced1,stroke-width:2px,stroke-dasharray: 5 5,color:#00ced1
