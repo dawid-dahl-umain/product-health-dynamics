@@ -9,6 +9,7 @@ The model runs many randomized simulations (a technique called Monte Carlo simul
 - [Quick Summary (No Math)](#quick-summary-no-math)
 - [Core Concepts](#core-concepts)
 - [The Model](#the-model)
+  - [How It Works (Visual Overview)](#how-it-works-visual-overview)
   - [Engineering Rigor as the Master Dial](#engineering-rigor-as-the-master-dial)
   - [System State Modifies Everything](#system-state-modifies-everything)
   - [The Compounding Effect](#the-compounding-effect-the-entropy-metaphor)
@@ -57,6 +58,47 @@ The model runs many randomized simulations (a technique called Monte Carlo simul
 | **Maximum Health**         | Highest PH an agent can sustainably achieve. Derived from ER.                                                         | Your ceiling. Even seniors can't reach perfection.                           |
 
 ## The Model
+
+### How It Works (Visual Overview)
+
+```mermaid
+flowchart TD
+    subgraph inputs [" ☝️ WHAT YOU CONTROL"]
+        ER["🎛️ <b>Engineering Rigor</b><br/><i>How careful is this developer?</i><br/>0 = careless, 1 = meticulous"]
+    end
+
+    subgraph state [" 📊 CURRENT STATE"]
+        PH["📈 <b>Product Health</b><br/><i>How easy is the code to change?</i><br/>1 = nightmare, 10 = dream"]
+    end
+
+    subgraph traits [" 🧬 DEVELOPER TRAITS <i>(derived from rigor)</i>"]
+        BI["<b>Average Impact</b><br/><i>Do their changes help or hurt?</i>"]
+        BS["<b>Consistency</b><br/><i>Are they predictable or erratic?</i>"]
+        MH["<b>Ceiling</b><br/><i>Best they can realistically achieve</i>"]
+    end
+
+    subgraph context [" 🔧 CODEBASE CONTEXT <i>(derived from health)</i>"]
+        SS["<b>System Tractability</b><br/><i>Does the codebase help or fight you?</i><br/>Healthy = absorbs mistakes<br/>Unhealthy = amplifies them"]
+    end
+
+    subgraph outcome [" 🎲 WHAT HAPPENS NEXT"]
+        CE["<b>Change Event</b><br/><i>One code change, one roll of the dice</i><br/>Combines developer skill +<br/>codebase state + randomness"]
+        NPH["<b>New Product Health</b><br/><i>Better or worse than before?</i>"]
+    end
+
+    ER --> BI & BS & MH
+    PH --> SS
+    BI & SS & MH --> CE
+    BS & SS --> CE
+    CE --> NPH
+    NPH -.->|"🔄 repeat for each change"| PH
+
+    style inputs fill:#e8f5e9,stroke:#2e7d32
+    style state fill:#e3f2fd,stroke:#1565c0
+    style traits fill:#fff3e0,stroke:#ef6c00
+    style context fill:#fce4ec,stroke:#c2185b
+    style outcome fill:#f3e5f5,stroke:#7b1fa2
+```
 
 ### Engineering Rigor as the Master Dial
 
