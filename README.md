@@ -142,9 +142,11 @@ Only ER is configured. All other values are derived.
 - **Handoff (AI → Senior):** AI decays to 1. Seniors struggle initially (the mess resists improvement), then recover in an S-curve toward their ceiling.
 - **Handoff (AI → Junior):** AI decays to 1. Juniors recover more slowly and plateau lower than seniors.
 
-Shaded bands show where 80% of simulation outcomes fall.
+Shaded bands are **confidence bands**: they show the range where 80% of simulation runs land. The solid line is the average. Roughly: "best realistic case" at the top, "worst realistic case" at the bottom, with extremes (top/bottom 10%) excluded.
 
 ![Product Health Trajectories](./assets/Screenshot%202025-12-22%20at%2015.16.22.png)
+
+> **Run it yourself:** `npm install && npm run dev` opens an interactive version at `http://localhost:5173`
 
 ## For Client Conversations
 
@@ -165,8 +167,16 @@ When a client suggests AI-assisted non-engineers can replace professional engine
 ## Usage
 
 ```bash
-npm run dev          # Visualize trajectories (Chart.js)
-npm run simulate:ai  # CLI output for AI scenario
+npm install          # Install dependencies (first time only)
+npm run dev          # Start the visualization server
+```
+
+This opens a browser at `http://localhost:5173` showing the interactive chart with all scenarios.
+
+For CLI output instead:
+
+```bash
+npm run simulate:ai  # Print trajectory statistics to console
 ```
 
 ## Repository Structure
