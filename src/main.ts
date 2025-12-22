@@ -55,6 +55,7 @@ const colorByScenario: Record<ScenarioKey, string> = {
   "junior-engineer": "#fb923c",
   "senior-engineers": "#34d399",
   "ai-handoff": "#60a5fa",
+  "ai-junior-handoff": "#818cf8",
 };
 
 const hexToRgba = (hex: string, alpha: number): string => {

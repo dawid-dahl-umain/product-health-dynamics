@@ -1,26 +1,29 @@
 import {
-  simulateTrajectory,
   simulatePhasedTrajectory,
-  summarizeRuns,
-  type PhaseConfig,
-  type SimulationRun,
-  type SimulationStats,
-  type TrajectoryConfig,
-} from "./simulation/core";
+  simulateTrajectory,
+} from "./runner/Trajectory";
+import { summarizeRuns } from "./runner/Statistics";
 import {
-  scenarioKeys,
-  scenarios,
+  Scenarios,
+  ScenarioKeys,
   type ScenarioConfig,
   type ScenarioKey,
-} from "./simulation/scenarios";
+} from "./scenarios/ScenarioDefinitions";
+import type {
+  PhaseConfig,
+  SimulationRun,
+  SimulationStats,
+  TrajectoryConfig,
+} from "./types";
 
 export {
   simulateTrajectory,
   simulatePhasedTrajectory,
   summarizeRuns,
-  scenarios,
-  scenarioKeys,
+  Scenarios as scenarios,
+  ScenarioKeys as scenarioKeys,
 };
+
 export type {
   PhaseConfig,
   ScenarioConfig,
@@ -34,19 +37,21 @@ export const simulateScenario = (
   scenario: ScenarioKey,
   options?: { nSimulations?: number }
 ): SimulationStats => {
-  const config = scenarios[scenario];
+  const config = Scenarios[scenario];
   const nSimulations = options?.nSimulations ?? 1000;
+
   const runs = Array.from({ length: nSimulations }, () =>
     config.phases?.length
-      ? simulatePhasedTrajectory(config.phases, config.startValue ?? 0)
+      ? simulatePhasedTrajectory(config.phases, config.startValue ?? 8)
       : simulateTrajectory(config)
   );
+
   return summarizeRuns(runs, config.failureThreshold ?? 3);
 };
 
 export const runSimulation = () => {
-  scenarioKeys.forEach((key) => {
-    const config = scenarios[key];
+  ScenarioKeys.forEach((key) => {
+    const config = Scenarios[key];
     const result = simulateScenario(key);
     console.log(`Scenario: ${config.label}`);
     console.log(`Average Final Health: ${result.averageFinal}`);

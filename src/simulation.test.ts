@@ -1,118 +1,248 @@
 import { describe, expect, it } from "vitest";
-import { simulateTrajectory, summarizeRuns } from "./simulation";
-import { core } from "./simulation/core";
+import { ProductHealthModel } from "./model/ProductHealthModel";
+import {
+  simulatePhasedTrajectory,
+  simulateTrajectory,
+} from "./runner/Trajectory";
+import { summarizeRuns } from "./runner/Statistics";
 
-describe("deriveMaxHealth", () => {
-  it("returns low ceiling for low rigor", () => {
-    // Given
-    const lowRigor = 0.1;
+describe("ProductHealthModel", () => {
+  describe("maxHealth", () => {
+    it("returns low ceiling for low rigor", () => {
+      // Given
+      const model = new ProductHealthModel(0.1);
 
-    // When
-    const maxHealth = core.deriveMaxHealth(lowRigor);
+      // When
+      const maxHealth = model.maxHealth;
 
-    // Then
-    expect(maxHealth).toBe(5.5);
+      // Then
+      expect(maxHealth).toBe(5.5);
+    });
+
+    it("returns high ceiling for high rigor", () => {
+      // Given
+      const model = new ProductHealthModel(0.8);
+
+      // When
+      const maxHealth = model.maxHealth;
+
+      // Then
+      expect(maxHealth).toBe(9);
+    });
+
+    it("returns 10 for perfect rigor", () => {
+      // Given
+      const model = new ProductHealthModel(1.0);
+
+      // When
+      const maxHealth = model.maxHealth;
+
+      // Then
+      expect(maxHealth).toBe(10);
+    });
   });
 
-  it("returns high ceiling for high rigor", () => {
-    // Given
-    const highRigor = 0.8;
+  describe("baseImpact", () => {
+    it("returns negative for low rigor", () => {
+      // Given
+      const model = new ProductHealthModel(0.1);
 
-    // When
-    const maxHealth = core.deriveMaxHealth(highRigor);
+      // When
+      const impact = model.baseImpact;
 
-    // Then
-    expect(maxHealth).toBe(9);
-  });
-});
+      // Then
+      expect(impact).toBeLessThan(0);
+    });
 
-describe("deriveExpectedImpact", () => {
-  it("returns near-zero negative impact for low rigor at high health", () => {
-    // Given
-    const lowRigor = 0.1;
-    const highHealth = 8;
-    const maxHealth = core.deriveMaxHealth(lowRigor);
+    it("returns zero for breakeven rigor (0.5)", () => {
+      // Given
+      const model = new ProductHealthModel(0.5);
 
-    // When
-    const impact = core.deriveExpectedImpact(lowRigor, highHealth, maxHealth);
+      // When
+      const impact = model.baseImpact;
 
-    // Then
-    expect(impact).toBeCloseTo(0, 1);
-  });
+      // Then
+      expect(impact).toBe(0);
+    });
 
-  it("returns larger negative impact for low rigor at low health", () => {
-    // Given
-    const lowRigor = 0.1;
-    const lowHealth = 2;
-    const maxHealth = core.deriveMaxHealth(lowRigor);
+    it("returns positive for high rigor", () => {
+      // Given
+      const model = new ProductHealthModel(0.8);
 
-    // When
-    const impact = core.deriveExpectedImpact(lowRigor, lowHealth, maxHealth);
+      // When
+      const impact = model.baseImpact;
 
-    // Then
-    expect(impact).toBeLessThan(-0.1);
-  });
+      // Then
+      expect(impact).toBeGreaterThan(0);
+    });
 
-  it("returns positive impact for high rigor with ceiling factor", () => {
-    // Given
-    const highRigor = 0.8;
-    const midHealth = 5;
-    const maxHealth = core.deriveMaxHealth(highRigor);
+    it("increases monotonically with rigor", () => {
+      // Given
+      const lowModel = new ProductHealthModel(0.2);
+      const highModel = new ProductHealthModel(0.8);
 
-    // When
-    const impact = core.deriveExpectedImpact(highRigor, midHealth, maxHealth);
+      // When
+      const lowImpact = lowModel.baseImpact;
+      const highImpact = highModel.baseImpact;
 
-    // Then
-    expect(impact).toBeGreaterThan(0);
-    expect(impact).toBeLessThan(0.12);
-  });
-});
-
-describe("deriveOutcomeVariance", () => {
-  const constants = { sigmaMax: 0.5, sigmaMin: 0.05 };
-
-  it("returns lower variance for low rigor at high health", () => {
-    // Given
-    const lowRigor = 0.1;
-    const highHealth = 8;
-
-    // When
-    const variance = core.deriveOutcomeVariance(
-      lowRigor,
-      highHealth,
-      constants
-    );
-
-    // Then
-    expect(variance).toBeLessThan(0.5);
+      // Then
+      expect(highImpact).toBeGreaterThan(lowImpact);
+    });
   });
 
-  it("returns higher variance for low rigor at low health", () => {
-    // Given
-    const lowRigor = 0.1;
-    const lowHealth = 2;
+  describe("baseSigma", () => {
+    it("returns higher sigma for low rigor than high rigor", () => {
+      // Given
+      const lowRigorModel = new ProductHealthModel(0.1);
+      const highRigorModel = new ProductHealthModel(0.8);
 
-    // When
-    const variance = core.deriveOutcomeVariance(lowRigor, lowHealth, constants);
+      // When
+      const lowRigorSigma = lowRigorModel.baseSigma;
+      const highRigorSigma = highRigorModel.baseSigma;
 
-    // Then
-    expect(variance).toBeGreaterThan(0.4);
+      // Then
+      expect(lowRigorSigma).toBeGreaterThan(highRigorSigma);
+    });
+
+    it("returns non-zero sigma even for perfect rigor", () => {
+      // Given
+      const model = new ProductHealthModel(1.0);
+
+      // When
+      const sigma = model.baseSigma;
+
+      // Then
+      expect(sigma).toBeGreaterThan(0);
+    });
+
+    it("decreases monotonically with rigor", () => {
+      // Given
+      const models = [0.2, 0.5, 0.8].map((er) => new ProductHealthModel(er));
+
+      // When
+      const sigmas = models.map((m) => m.baseSigma);
+
+      // Then
+      expect(sigmas[0]).toBeGreaterThan(sigmas[1]);
+      expect(sigmas[1]).toBeGreaterThan(sigmas[2]);
+    });
   });
 
-  it("returns non-zero variance even for perfect rigor", () => {
-    // Given
-    const perfectRigor = 1.0;
-    const highHealth = 9;
+  describe("computeExpectedImpact", () => {
+    it("returns near-zero negative impact for low rigor at high health", () => {
+      // Given
+      const model = new ProductHealthModel(0.1);
 
-    // When
-    const variance = core.deriveOutcomeVariance(
-      perfectRigor,
-      highHealth,
-      constants
-    );
+      // When
+      const impact = model.computeExpectedImpact(8);
 
-    // Then
-    expect(variance).toBeGreaterThan(0);
+      // Then
+      expect(impact).toBeCloseTo(0, 1);
+    });
+
+    it("returns larger negative impact for low rigor at low health", () => {
+      // Given
+      const model = new ProductHealthModel(0.1);
+
+      // When
+      const impact = model.computeExpectedImpact(2);
+
+      // Then
+      expect(impact).toBeLessThan(-0.5);
+    });
+
+    it("returns positive impact for high rigor at mid health", () => {
+      // Given
+      const model = new ProductHealthModel(0.8);
+
+      // When
+      const impact = model.computeExpectedImpact(5);
+
+      // Then
+      expect(impact).toBeGreaterThan(0);
+    });
+
+    it("returns diminishing impact near ceiling", () => {
+      // Given
+      const model = new ProductHealthModel(0.8);
+
+      // When
+      const impactMid = model.computeExpectedImpact(5);
+      const impactNearCeiling = model.computeExpectedImpact(8.5);
+
+      // Then
+      expect(impactNearCeiling).toBeLessThan(impactMid);
+    });
+  });
+
+  describe("computeEffectiveSigma", () => {
+    it("returns lower sigma at low health (frozen system)", () => {
+      // Given
+      const model = new ProductHealthModel(0.1);
+
+      // When
+      const sigmaLow = model.computeEffectiveSigma(2);
+      const sigmaHigh = model.computeEffectiveSigma(8);
+
+      // Then
+      expect(sigmaLow).toBeLessThan(sigmaHigh);
+    });
+
+    it("returns non-zero sigma even for perfect rigor", () => {
+      // Given
+      const model = new ProductHealthModel(1.0);
+
+      // When
+      const sigma = model.computeEffectiveSigma(9);
+
+      // Then
+      expect(sigma).toBeGreaterThan(0);
+    });
+  });
+
+  describe("sampleNextHealth", () => {
+    it("clamps result between 1 and 10", () => {
+      // Given
+      const model = new ProductHealthModel(0.1);
+      const deterministicRng = () => 0.5;
+
+      // When
+      const results = Array.from({ length: 100 }, () =>
+        model.sampleNextHealth(5, deterministicRng)
+      );
+
+      // Then
+      results.forEach((health) => {
+        expect(health).toBeGreaterThanOrEqual(1);
+        expect(health).toBeLessThanOrEqual(10);
+      });
+    });
+
+    it("produces deterministic results with fixed RNG", () => {
+      // Given
+      const model = new ProductHealthModel(0.5);
+      const fixedRng = () => 0.5;
+
+      // When
+      const result1 = model.sampleNextHealth(5, fixedRng);
+      const result2 = model.sampleNextHealth(5, fixedRng);
+
+      // Then
+      expect(result1).toBe(result2);
+    });
+
+    it("applies soft ceiling when above maxHealth", () => {
+      // Given
+      const model = new ProductHealthModel(0.8);
+      const highRng = () => 0.999;
+      const startAboveCeiling = 9.5;
+
+      // When
+      const result = model.sampleNextHealth(startAboveCeiling, highRng);
+
+      // Then
+      expect(result).toBeLessThanOrEqual(10);
+    });
   });
 });
 
@@ -133,14 +263,13 @@ describe("simulateTrajectory", () => {
     expect(trajectory[0]).toBe(8);
   });
 
-  it("clamps health between 1 and maxHealth", () => {
+  it("clamps health between 1 and 10", () => {
     // Given
     const config = {
       nChanges: 100,
       startValue: 8,
       engineeringRigor: 0.8,
     };
-    const maxHealth = core.deriveMaxHealth(config.engineeringRigor);
 
     // When
     const trajectory = simulateTrajectory(config);
@@ -148,7 +277,56 @@ describe("simulateTrajectory", () => {
     // Then
     trajectory.forEach((health) => {
       expect(health).toBeGreaterThanOrEqual(1);
-      expect(health).toBeLessThanOrEqual(maxHealth);
+      expect(health).toBeLessThanOrEqual(10);
+    });
+  });
+
+  it("uses default start value of 8", () => {
+    // Given
+    const config = {
+      nChanges: 5,
+      engineeringRigor: 0.5,
+    };
+
+    // When
+    const trajectory = simulateTrajectory(config);
+
+    // Then
+    expect(trajectory[0]).toBe(8);
+  });
+});
+
+describe("simulatePhasedTrajectory", () => {
+  it("produces trajectory spanning all phases", () => {
+    // Given
+    const phases = [
+      { nChanges: 5, engineeringRigor: 0.1 },
+      { nChanges: 10, engineeringRigor: 0.8 },
+    ];
+
+    // When
+    const trajectory = simulatePhasedTrajectory(phases, 8);
+
+    // Then
+    expect(trajectory).toHaveLength(16);
+    expect(trajectory[0]).toBe(8);
+  });
+
+  it("transitions between phases continuously", () => {
+    // Given
+    const phases = [
+      { nChanges: 3, engineeringRigor: 0.1 },
+      { nChanges: 3, engineeringRigor: 0.8 },
+    ];
+
+    // When
+    const trajectory = simulatePhasedTrajectory(phases, 8);
+
+    // Then
+    expect(trajectory).toHaveLength(7);
+    trajectory.forEach((health) => {
+      expect(health).toBeGreaterThanOrEqual(1);
+      expect(health).toBeLessThanOrEqual(10);
     });
   });
 });
@@ -187,5 +365,20 @@ describe("summarizeRuns", () => {
 
     // Then
     expect(stats.failureRate).toBe(0.5);
+  });
+
+  it("calculates percentiles across runs", () => {
+    // Given
+    const runs = [
+      [10, 5],
+      [10, 10],
+    ];
+
+    // When
+    const stats = summarizeRuns(runs);
+
+    // Then
+    expect(stats.averageTrajectory).toEqual([10, 7.5]);
+    expect(stats.p10Trajectory[1]).toBeLessThan(stats.p90Trajectory[1]);
   });
 });

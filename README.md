@@ -1,5 +1,25 @@
 # Product Health Dynamics
 
+A simulation model that predicts how software quality evolves over time based on the engineering rigor of whoever is making changes.
+
+The model runs many randomized simulations (a technique called Monte Carlo simulation) to show not just the average outcome, but the range of likely outcomes. This reveals patterns that a single prediction would miss.
+
+## Table of Contents
+
+- [Quick Summary (No Math)](#quick-summary-no-math)
+- [Core Concepts](#core-concepts)
+- [The Model](#the-model)
+  - [Engineering Rigor as the Master Dial](#engineering-rigor-as-the-master-dial)
+  - [System State Modifies Everything](#system-state-modifies-everything)
+  - [The Compounding Effect](#the-compounding-effect-the-entropy-metaphor)
+  - [Each Change Event](#each-change-event)
+- [Agent Profiles](#agent-profiles)
+- [What You'll See](#what-youll-see)
+- [For Client Conversations](#for-client-conversations)
+- [Usage](#usage)
+- [Repository Structure](#repository-structure)
+- [Mathematical Specification](#mathematical-specification)
+
 > **Vibe coding:**
 >
 > _You've built an app. It works. And one day as you are polishing some styling, the AI accidentally deletes 40% of the tests in the backend part of the app. You do not notice, because you are vibe coding, and in the process of making coffee in another room._
@@ -16,93 +36,131 @@
 >
 > _This is the situation I predict every vibe coded project will eventually end up in, if one keeps doing it._
 
-## Overview
+**The question this model answers:** Why does AI-assisted "vibe coding" seem to work at first, then suddenly fall apart? And what does it actually cost to recover?
 
-Teams debate whether fast, AI-heavy "vibe coding" is good enough. A common scenario: a prospect or client has a non-technical employee who says they can do everything faster and cheaper by generating the code using AI.
+## Quick Summary (No Math)
 
-This simulation starts at the handoff from **Shape Phase** (initial build) into **Scale Phase** (ongoing change).
+- **Product Health** measures how easy code is to change (1 = nightmare, 10 = trivial).
+- Every code change can help, hurt, or do nothing. The outcome depends on **Engineering Rigor**: the skill and discipline of whoever makes the change.
+- Low-rigor agents (AI vibe coders) have negative expected impact. The codebase decays.
+- High-rigor agents (senior engineers) have positive expected impact. The codebase improves.
+- **Decay is slow at first, then accelerates.** A healthy codebase absorbs mistakes. A coupled codebase amplifies them.
+- **Recovery is slow at first, then accelerates, then plateaus.** Untangling a mess takes time before progress shows.
 
-Low **Engineering Rigor** (no modularity, weak testing, rising coupling) makes changes more likely to damage the system. **Product Health** trends toward 1 unless sustained **Engineering Rigor** keeps it viable over the long term.
+## Core Concepts
 
-## TL;DR (non-math)
+| Term                       | Definition                                                                                                            | Plain Meaning                                                                |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| **Product Health (PH)**    | Software quality at a point in time. Scale: 1-10.                                                                     | How hard or easy changes feel right now.                                     |
+| **Change Event**           | A modification to the codebase.                                                                                       | The code that actually gets committed.                                       |
+| **Engineering Rigor (ER)** | Degree to which changes apply: modularity, abstraction, separation of concerns, loose coupling, cohesion. Scale: 0-1. | Skill and discipline. The difference between a calculated move and a gamble. |
+| **Maximum Health**         | Highest PH an agent can sustainably achieve. Derived from ER.                                                         | Your ceiling. Even seniors can't reach perfection.                           |
 
-- **Product Health** measures how easy it is to change the code (1 = impossible, 10 = easy).
-- Each **Change Event** can help, do nothing, or hurt. With low **Engineering Rigor**, the expected impact is negative.
-- Low-rigor agents (human or AI) trend toward 1; high-rigor agents trend toward their **Maximum Health** (~9 for seniors).
-- Decay is slow at first, then accelerates. Recovery is slow at first, then accelerates, then plateaus.
+## The Model
 
-## Terms
+### Engineering Rigor as the Master Dial
 
-| Term                       | Definition                                                                                                                                                                                                  | Plain meaning                                                                                             |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| **Software Quality**       | How easy a system is to change. Primary measure of system health.                                                                                                                                           | How hard or easy changes feel.                                                                            |
-| **Product Health (PH)**    | **Software Quality** measured at a specific point in time. Scale: 1 to 10.                                                                                                                                  | Current ease of change on a 1–10 scale.                                                                   |
-| **Shape Phase**            | Initial development period. Ends when product reaches functional completeness.                                                                                                                              | Building the first working version.                                                                       |
-| **Scale Phase**            | All maintenance and evolution after **Shape Phase**. Continues indefinitely.                                                                                                                                | Growing and changing the product long term.                                                               |
-| **Change Event**           | A modification applied to the codebase. The code that gets written.                                                                                                                                         | The change that actually lands in code.                                                                   |
-| **Engineering Rigor (ER)** | The degree to which changes apply complexity management principles: modularity, abstraction, separation of concerns, loose coupling, and cohesion. Scale: 0 to 1. All other properties are derived from it. | The human or AI agent's skill and discipline. It's the difference between a calculated move and a gamble. |
+**Engineering Rigor (ER)** is the only input variable. Everything else is derived from it.
 
-## Model
+| Property        | Formula                    | What It Means                                                         |
+| --------------- | -------------------------- | --------------------------------------------------------------------- |
+| Base Impact (μ) | `μ = ER × 2.4 − 1.2`       | Expected PH change per commit. Positive above ER=0.5, negative below. |
+| Base Sigma (σ)  | `σ = 0.1 + 0.4 × (1 − ER)` | Outcome unpredictability. High ER = consistent; low ER = erratic.     |
+| Maximum Health  | `maxPH = 5 + 5 × ER`       | Sustainable ceiling. ER=0.8 → maxPH=9. ER=0.1 → maxPH=5.5.            |
 
-This model is consistent with Lehman's Laws of Software Evolution. **Software Quality** degrades over time unless work is actively done to maintain it. **Engineering Rigor** represents that "work."
+### System State Modifies Everything
 
-### The Master Dial: Engineering Rigor (ER)
+Current Product Health affects how changes land. This captures the reality that healthy codebases absorb mistakes while coupled codebases amplify them.
 
-**Engineering Rigor** is the single input variable that defines an agent (human or AI). The base properties are:
+The model computes an intermediate variable called **systemState**, which transforms Product Health into a 0-1 scale:
 
-| Derived Property   | Formula                                | Intuition                                                    |
-| ------------------ | -------------------------------------- | ------------------------------------------------------------ |
-| **Base Impact**    | μ = ER × 0.4 − 0.2                     | High ER → positive impact; Low ER → negative impact.         |
-| **Base Sigma**     | σ = σ_min + (σ_max − σ_min) × (1 − ER) | High ER → consistent outcomes; Low ER → erratic swings.      |
-| **Maximum Health** | maxPH = 5 + 5 × ER                     | High ER → higher **Maximum Health** (e.g., seniors reach 9). |
+```
+systemState = 1 / (1 + e^(-1.5 × (PH − 5)))
+```
 
-See [Model Parameters](#model-parameters) for the rationale behind the constants.
+**Plain meaning:** systemState answers "how tractable is this codebase right now?"
 
-### System State Modifies Outcomes
+- At PH=8 (healthy): systemState ≈ 0.99. The system is tractable; it has tests, modularity, and clear boundaries.
+- At PH=5 (threshold): systemState = 0.5. The tipping point between order and chaos.
+- At PH=2 (degraded): systemState ≈ 0.01. The system is a tightly coupled mess; everything depends on everything.
 
-The current **Product Health** affects how changes land. A healthy system has buffers (tests, modularity) that absorb mistakes. A coupled system amplifies damage and resists improvement.
+| Situation            | Modifier                            | Effect                                                   |
+| -------------------- | ----------------------------------- | -------------------------------------------------------- |
+| Negative base impact | `× (1 − systemState)`               | Damage compounds at low PH, absorbed at high PH          |
+| Positive base impact | `× systemState × (1 − (PH/maxPH)²)` | Hard to improve a mess; diminishing returns near ceiling |
+| Variance             | `× (0.15 + 0.85 × systemState)`     | Outcomes "freeze" at low PH; normal variance at high PH  |
 
-All modifiers derive from a single intermediate variable (not a core term, just a calculation):
+### The Compounding Effect (The "Entropy" Metaphor)
 
-$$\text{systemState} = \frac{1}{1 + e^{-k(PH - 5)}}$$
+> **Note:** This is an analogy, not an application of thermodynamic laws. We use "entropy" as a metaphor because the observable pattern is similar: systems drift toward disorder without sustained effort. The underlying mathematics is different.
 
-This sigmoid transforms **PH** into a 0-1 scale representing how "tractable" the system is. At PH = 5, systemState = 0.5 (the threshold).
+In physics, entropy describes how systems tend toward disorder without energy input. Software exhibits a similar pattern: without sustained engineering effort, codebases drift toward chaos.
 
-| For...                   | Modifier                          | Effect                                                            |
-| ------------------------ | --------------------------------- | ----------------------------------------------------------------- |
-| Negative **Base Impact** | × (1 − systemState)               | Damage compounds at low PH, absorbed at high PH                   |
-| Positive **Base Impact** | × systemState × (1 − (PH/maxPH)²) | Hard to improve mess; diminishing returns near **Maximum Health** |
-| **Base Sigma**           | × (0.3 + 0.7 × (1 − systemState)) | More chaos at low PH; tests catch outliers at high PH             |
+The driver is **coupling**: how much one part of the code depends on other parts.
 
-See [Model Parameters](#model-parameters) for the rationale behind the constants (k, 0.3, 0.7).
+- **Loosely coupled:** Changing feature X doesn't break feature Y. Tests catch regressions. Modules have clear boundaries.
+- **Tightly coupled:** Everything connects to everything. Fixing X breaks Y. Fixing Y breaks Z. This is the "BOOM" moment in the vibe coding story.
 
-**Result:** Both decay and recovery follow S-curves. The threshold (~5) is where the system shifts from "coupled mess" to "tractable codebase."
+**The math:** When base impact is negative, effective damage = `base × (1 − systemState)`.
 
-### Change Events
+- At PH=8: systemState ≈ 0.99, so only ~1% of damage applies. The healthy system absorbs mistakes.
+- At PH=2: systemState ≈ 0.01, so ~99% of damage applies. Every mistake lands with full force.
 
-Each change is a probabilistic draw: `ΔPH = μ_eff + σ_eff × N(0,1)`, clamped to [1, maxPH].
+The same low-ER agent causes roughly **90× more degradation** in a coupled system than in a healthy one.
 
-### Agent Profiles
+**Plain meaning:** Low-ER changes (no tests, no modularity) gradually tighten coupling. At first, existing structure absorbs the damage. But as coupling increases, changes start breaking unrelated features. Eventually, fixing one thing breaks three others. The system accelerates its own decay, just like entropy in physics. The difference: entropy is inevitable; software decay is a choice.
 
-Only **ER** is configured. The other columns are derived using the formulas above.
+### Each Change Event
 
-| Agent         | ER (input) | → Base Impact | → Base Sigma | → Maximum Health |
-| ------------- | ---------- | ------------- | ------------ | ---------------- |
-| AI Vibe       | 0.1        | −0.16         | 0.46         | 5.5              |
-| AI Guardrails | 0.3        | −0.08         | 0.38         | 6.5              |
-| Junior        | 0.5        | 0.00          | 0.30         | 7.5              |
-| Senior        | 0.8        | +0.12         | 0.18         | 9.0              |
+Every commit draws from a normal distribution:
 
-### What You'll See
+```
+ΔPH = μ_effective + σ_effective × N(0,1)
+```
 
-- **AI Vibe:** Slow decay at first, accelerates around **PH** ~5, bottoms at 1.
-- **Junior:** Hovers around 6-7 (breakeven ER, high variance).
-- **Senior:** Steady climb from 8 toward **Maximum Health** (~9).
-- **Handoff:** AI decays to 1; seniors struggle initially, then recover in an S-curve toward **Maximum Health**.
+Result is clamped to [1, 10]. A soft ceiling pulls PH back toward maxPH when exceeded.
 
-> Shaded bands show where 80% of outcomes land when the simulation runs many times.
+## Agent Profiles
 
-![Product Health Trajectories](./assets/Screenshot%202025-12-22%20at%2001.10.30.png)
+Only ER is configured. All other values are derived.
+
+| Agent              |  ER | → Base Impact | → Base Sigma | → Max Health |
+| ------------------ | --: | :-----------: | :----------: | :----------: |
+| AI Vibe Coder      | 0.1 |     −0.96     |     0.46     |     5.5      |
+| AI with Guardrails | 0.3 |     −0.48     |     0.38     |     6.5      |
+| Junior Engineer    | 0.5 |     0.00      |     0.30     |     7.5      |
+| Senior Engineer    | 0.8 |     +0.72     |     0.18     |     9.0      |
+
+**Key insight:** Junior engineers break even (μ=0). They don't improve the system, but they don't systematically degrade it either. AI vibe coders have strongly negative expected impact; every change makes things slightly worse on average.
+
+## What You'll See
+
+- **AI Vibe:** Slow decay at first, accelerates around PH ~5, bottoms out at 1.
+- **AI with Guardrails:** Slower decay, but still negative trajectory. Buys time, not salvation.
+- **Junior Engineer:** Hovers around 7-8. High variance, but no systematic drift.
+- **Senior Engineer:** Steady climb from 8 toward ~9, then stabilizes.
+- **Handoff (AI → Senior):** AI decays to 1. Seniors struggle initially (the mess resists improvement), then recover in an S-curve toward their ceiling.
+- **Handoff (AI → Junior):** AI decays to 1. Juniors recover more slowly and plateau lower than seniors.
+
+Shaded bands show where 80% of simulation outcomes fall.
+
+![Product Health Trajectories](./assets/Screenshot%202025-12-22%20at%2015.16.22.png)
+
+## For Client Conversations
+
+When a client suggests AI-assisted non-engineers can replace professional engineering:
+
+1. **Present the model.** Engineering Rigor determines all outcomes. Low ER produces negative expected impact per change, regardless of how fast changes ship.
+
+2. **Run the simulation.** The trajectory shows inevitable decline and the true cost of recovery.
+
+3. **Reference established theory.** This model aligns with Lehman's Laws of Software Evolution:
+
+   - _Increasing Complexity:_ Complexity grows unless work is done to reduce it. ER represents that work.
+   - _Declining Quality:_ Quality declines unless rigorously maintained. Low ER makes decline the default.
+   - _Feedback System:_ Low PH → damage compounds → lower PH. The system accelerates its own decay.
+
+4. **Quantify the tradeoff.** Fast, cheap delivery with low ER creates a codebase that becomes expensive to change. The cost is deferred, not eliminated. Recovery requires sustained high-ER effort, and the math shows exactly how long.
 
 ## Usage
 
@@ -111,46 +169,102 @@ npm run dev          # Visualize trajectories (Chart.js)
 npm run simulate:ai  # CLI output for AI scenario
 ```
 
-## For Client Conversations
+## Repository Structure
 
-When a client suggests that AI-assisted non-engineers can replace professional engineering:
+```
+src/
+  model/
+    Parameters.ts           # All tunable model constants
+    ProductHealthModel.ts   # Core simulation model (derives impact, variance, samples changes)
 
-1. **Present the model.** Engineering Rigor determines all outcomes. Low ER produces negative expected impact per change, regardless of speed.
-2. **Run the simulation.** The trajectory demonstrates the inevitable decline and the cost of recovery.
-3. **Reference established theory.** This model is consistent with Lehman's Laws of Software Evolution (see below).
-4. **Quantify the tradeoff.** Fast and cheap delivery with low ER leads to a codebase that becomes expensive to change. The cost is deferred, not eliminated.
+  runner/
+    Trajectory.ts           # Monte Carlo simulation runner
+    Statistics.ts           # Aggregates multiple runs into summary metrics
 
-### Connection to Lehman's Laws
+  scenarios/
+    AgentProfiles.ts        # Engineering Rigor values for each agent type
+    ScenarioDefinitions.ts  # Scenario configurations (changes, phases, labels)
 
-Lehman's Laws of Software Evolution (1970s, peer-reviewed) describe universal patterns in how software systems change over time:
+  utils/
+    Math.ts                 # Pure math helpers (sigmoid, gaussian, percentile, etc.)
+    Math.test.ts            # Unit tests for math utilities
 
-| Law                         | Statement                                              | How This Model Captures It                                                                   |
-| --------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| 2nd (Increasing Complexity) | Complexity increases unless work is done to reduce it. | **ER** represents that work. Low ER means complexity grows unchecked.                        |
-| 7th (Declining Quality)     | Quality declines unless rigorously maintained.         | Low **ER** produces negative **Base Impact**, making decline the default outcome.            |
-| 8th (Feedback System)       | Evolution is a multi-loop feedback system.             | **PH** creates feedback: low PH → damage compounds → lower PH (and vice versa for recovery). |
+  types.ts                  # Shared type definitions
+  simulation.ts             # Public API and re-exports
+  simulation.test.ts        # Unit tests for model and simulation
+  main.ts                   # Chart.js visualization
+  cli.ts                    # Command-line interface
+```
 
-## Model Parameters
+**Design principles:**
 
-The formulas contain calibration parameters. These are design choices, not derived values, and can be adjusted based on empirical observation.
+- **Single Responsibility:** Each file does one thing.
+- **Self-documenting:** File and class names describe their purpose; minimal comments.
+- **Testable:** `ProductHealthModel` encapsulates all model logic; pure functions in `utils/`.
+- **Configurable:** All magic numbers live in `Parameters.ts`.
+
+---
+
+## Mathematical Specification
+
+All parameters below are calibration choices. They can be adjusted based on empirical observation.
 
 ### Base Property Parameters
 
-| Parameter        | Value | Rationale                                                          | Plain meaning                                                                  |
-| ---------------- | ----- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
-| Impact slope     | 0.4   | Sets sensitivity of impact to rigor. Produces ±0.2 max per change. | How much rigor matters. Higher = bigger difference between good and bad.       |
-| Impact intercept | 0.2   | Places breakeven at ER = 0.5. Above = improve; below = degrade.    | "Average" skill (0.5) breaks even. Below average makes things worse.           |
-| σ_min            | 0.1   | Minimum standard deviation at ER = 1.                              | Even the best have some unpredictability. Nobody is perfectly consistent.      |
-| σ_max            | 0.5   | Maximum standard deviation at ER = 0.                              | How wild the swings get with zero discipline. Roughly ±0.5 per change.         |
-| Ceiling base     | 5     | Minimum achievable ceiling (at ER = 0).                            | Even the worst human or AI has a theoretical "best they could do" at midscale. |
-| Ceiling slope    | 5     | Makes ceiling range from 5 (ER = 0) to 10 (ER = 1).                | Perfect rigor can achieve perfect health; zero rigor caps at half.             |
+| Parameter        | Value | Rationale                                                                      |
+| ---------------- | ----: | ------------------------------------------------------------------------------ |
+| Impact slope     |   2.4 | Sets sensitivity of impact to rigor. Produces ±1.2 max base impact per change. |
+| Impact intercept |   1.2 | Places breakeven at ER=0.5. Above improves; below degrades.                    |
+| σ_min            |   0.1 | Minimum variance at ER=1. Even experts have some unpredictability.             |
+| σ_max            |   0.5 | Maximum variance at ER=0. How wild swings get with zero discipline.            |
+| Ceiling base     |     5 | Minimum achievable ceiling at ER=0.                                            |
+| Ceiling slope    |     5 | Makes ceiling range from 5 (ER=0) to 10 (ER=1).                                |
 
 ### System State Parameters
 
-| Parameter        | Value | Rationale                                                       | Plain meaning                                                                                                        |
-| ---------------- | ----- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Threshold        | 5     | Midpoint of PH scale. Below = "mess"; above = "tractable."      | The tipping point. Below 5, things get harder; above 5, things get easier.                                           |
-| Steepness (k)    | 2.5   | Controls how sharp the transition is around threshold.          | How suddenly things change at the tipping point. Higher = more protection at high PH, faster collapse once it fails. |
-| Ceiling exponent | 2     | The power in (PH/maxPH)². Higher = sharper diminishing returns. | How hard it gets to improve near your ceiling. Squared = moderately sharp.                                           |
-| Variance floor   | 0.3   | Even healthy systems retain 30% of base variance.               | Nothing is perfectly predictable. Even good code has some surprises.                                                 |
-| Variance range   | 0.7   | The 70% of variance affected by system state.                   | How much the mess amplifies unpredictability. Most of it, but not all.                                               |
+| Parameter          | Value | Rationale                                                                                               |
+| ------------------ | ----: | ------------------------------------------------------------------------------------------------------- |
+| Threshold          |     5 | Midpoint of PH scale. Below = coupled mess; above = tractable.                                          |
+| Steepness (k)      |   1.5 | How sharp the transition around threshold. Moderate value allows recovery while preserving compounding. |
+| Ceiling exponent   |     2 | Power in `(PH/maxPH)²`. Higher = sharper diminishing returns near ceiling.                              |
+| Sigma scale floor  |  0.15 | Minimum sigma multiplier. Even frozen systems retain 15% unpredictability.                              |
+| Sigma scale range  |  0.85 | Portion of sigma affected by system state.                                                              |
+| Soft ceiling decay |     5 | Exponent in `e^(-5 × overshoot)`. Controls pull-back when PH exceeds maxPH.                             |
+
+### Complete Formulas
+
+**System state:**
+
+```
+systemState(PH) = 1 / (1 + e^(-1.5 × (PH − 5)))
+```
+
+**Expected impact:**
+
+```
+baseImpact = ER × 2.4 − 1.2
+
+if baseImpact ≤ 0:
+    μ_eff = baseImpact × (1 − systemState)
+else:
+    μ_eff = baseImpact × systemState × (1 − (PH / maxPH)²)
+```
+
+**Variance:**
+
+```
+σ_base = 0.1 + 0.4 × (1 − ER)
+σ_eff = σ_base × (0.15 + 0.85 × systemState)
+```
+
+**Change event:**
+
+```
+Δ = μ_eff + σ_eff × N(0,1)
+
+if Δ > 0 and PH > maxPH:
+    overshoot = (PH − maxPH) / maxPH
+    Δ = Δ × e^(-5 × overshoot)
+
+PH_new = clamp(PH + Δ, 1, 10)
+```
