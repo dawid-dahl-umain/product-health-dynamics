@@ -161,9 +161,9 @@ Only ER is configured. All other values are derived.
 - **Handoff (AI → Senior):** AI decays to 1. Seniors struggle initially (the mess resists improvement), then recover in an S-curve toward their ceiling.
 - **Handoff (AI → Junior):** AI decays to 1. Juniors recover very slowly and plateau much lower than seniors.
 
-Shaded bands are **confidence bands**: they show the range where 80% of simulation runs land. The solid line is the average. Roughly: "best realistic case" at the top, "worst realistic case" at the bottom, with extremes (top/bottom 10%) excluded.
-
 ![Product Health Trajectories](./assets/Screenshot%202025-12-22%20at%2023.36.40.png)
+
+> Shaded bands are **confidence bands**: they show the range where 80% of simulation runs land. The solid line is the average. Roughly: "best realistic case" at the top, "worst realistic case" at the bottom, with extremes (top/bottom 10%) excluded.
 
 > **Run it yourself:** `npm install && npm run dev` opens an interactive version at `http://localhost:5173`
 
