@@ -93,11 +93,16 @@ flowchart TD
     CE --> NPH
     NPH -.->|"🔄 repeat for each change"| PH
 
-    style inputs fill:#e8f5e9,stroke:#2e7d32
-    style state fill:#e3f2fd,stroke:#1565c0
-    style traits fill:#fff3e0,stroke:#ef6c00
-    style context fill:#fce4ec,stroke:#c2185b
-    style outcome fill:#f3e5f5,stroke:#7b1fa2
+    %% Darker backgrounds for better contrast with white text
+    style inputs fill:#1b5e20,stroke:#81c784,color:#fff
+    style state fill:#0d47a1,stroke:#64b5f6,color:#fff
+    style traits fill:#e65100,stroke:#ffb74d,color:#fff
+    style context fill:#880e4f,stroke:#f06292,color:#fff
+    style outcome fill:#4a148c,stroke:#ba68c8,color:#fff
+
+    %% Explicitly style nodes for clarity
+    classDef nodeStyle fill:#fff,stroke:#333,color:#000,stroke-width:2px
+    class ER,PH,BI,BS,MH,SS,CE,NPH nodeStyle
 ```
 
 ### Engineering Rigor as the Master Dial
