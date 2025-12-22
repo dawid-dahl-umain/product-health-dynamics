@@ -144,7 +144,7 @@ Only ER is configured. All other values are derived.
 
 Shaded bands are **confidence bands**: they show the range where 80% of simulation runs land. The solid line is the average. Roughly: "best realistic case" at the top, "worst realistic case" at the bottom, with extremes (top/bottom 10%) excluded.
 
-![Product Health Trajectories](./assets/Screenshot%202025-12-22%20at%2015.16.22.png)
+![Product Health Trajectories](./assets/Screenshot%202025-12-22%20at%2015.22.59.png)
 
 > **Run it yourself:** `npm install && npm run dev` opens an interactive version at `http://localhost:5173`
 
