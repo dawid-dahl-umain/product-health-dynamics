@@ -63,25 +63,25 @@ The model runs many randomized simulations (a technique called Monte Carlo simul
 
 ```mermaid
 flowchart TD
-    subgraph inputs [" ☝️ WHAT YOU CONTROL"]
-        ER["🎛️ <b>Engineering Rigor</b><br/><i>How careful is this agent (Human or AI)?</i><br/>0 = careless, 1 = meticulous"]
+    subgraph inputs ["INPUTS"]
+        ER["<b>Engineering Rigor</b><br/><i>How careful is this agent (Human or AI)?</i><br/>0 = careless, 1 = meticulous"]
     end
 
-    subgraph state [" 📊 CURRENT STATE"]
-        PH["📈 <b>Product Health</b><br/><i>How easy is the code to change?</i><br/>1 = nightmare, 10 = dream"]
+    subgraph state ["CURRENT STATE"]
+        PH["<b>Product Health</b><br/><i>How easy is the code to change?</i><br/>1 = nightmare, 10 = dream"]
     end
 
-    subgraph traits [" 🧬 AGENT TRAITS <i>(derived from rigor)</i>"]
+    subgraph traits ["AGENT TRAITS (derived)"]
         BI["<b>Average Impact</b><br/><i>Do their changes help or hurt?</i>"]
         BS["<b>Consistency</b><br/><i>Are they predictable or erratic?</i>"]
         MH["<b>Ceiling</b><br/><i>Best they can realistically achieve</i>"]
     end
 
-    subgraph context [" 🔧 CODEBASE CONTEXT <i>(derived from health)</i>"]
+    subgraph context ["CODEBASE CONTEXT (derived)"]
         SS["<b>System Tractability</b><br/><i>Does the codebase help or fight you?</i><br/>Healthy = absorbs mistakes<br/>Unhealthy = amplifies them"]
     end
 
-    subgraph outcome [" 🎲 WHAT HAPPENS NEXT"]
+    subgraph outcome ["OUTCOME"]
         CE["<b>Change Event</b><br/><i>One code change, one roll of the dice</i><br/>Combines agent rigor +<br/>codebase state + randomness"]
         NPH["<b>New Product Health</b><br/><i>Better or worse than before?</i>"]
     end
@@ -91,7 +91,7 @@ flowchart TD
     BI & SS & MH --> CE
     BS & SS --> CE
     CE --> NPH
-    NPH -.->|"🔄 repeat for each change"| PH
+    NPH -.->|"repeat for each change"| PH
 
     %% Darker backgrounds for better contrast with white text
     style inputs fill:#1b5e20,stroke:#81c784,color:#fff
