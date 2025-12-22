@@ -55,7 +55,7 @@ The model runs many randomized simulations (a technique called Monte Carlo simul
 | **Product Health (PH)**    | Software quality at a point in time. Scale: 1-10.                                                                     | How hard or easy changes feel right now.                                     |
 | **Change Event**           | A modification to the codebase.                                                                                       | The code that actually gets committed.                                       |
 | **Engineering Rigor (ER)** | Degree to which changes apply: modularity, abstraction, separation of concerns, loose coupling, cohesion. Scale: 0-1. | Skill and discipline. The difference between a calculated move and a gamble. |
-| **System Tractability**    | How much the current system state helps or hinders changes. Derived from PH.                                          | Healthy: absorbs mistakes, amplifies improvements. Unhealthy: the opposite.  |
+| **System Tractability**    | How forgiving or punishing the codebase is right now. Depends on current PH.                                          | Healthy: absorbs mistakes, amplifies improvements. Unhealthy: the opposite.  |
 
 ## The Model
 
