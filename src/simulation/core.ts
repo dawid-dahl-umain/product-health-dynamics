@@ -12,6 +12,8 @@ export type SimulationStats = {
   averageMin: number;
   failureRate: number;
   averageTrajectory: number[];
+  p10Trajectory: number[];
+  p90Trajectory: number[];
 };
 
 export type PhaseConfig = Omit<TrajectoryConfig, "failureThreshold">;
@@ -23,7 +25,7 @@ export type ModelConstants = {
 
 const DEFAULT_CONSTANTS: ModelConstants = {
   sigmaMax: 0.5,
-  sigmaMin: 0.05,
+  sigmaMin: 0.1,
 };
 
 const clamp = (value: number, min: number, max: number): number =>
@@ -31,6 +33,15 @@ const clamp = (value: number, min: number, max: number): number =>
 
 const average = (values: number[]): number =>
   values.reduce((sum, value) => sum + value, 0) / values.length;
+
+const percentile = (values: number[], p: number): number => {
+  const sorted = [...values].sort((a, b) => a - b);
+  const index = (p / 100) * (sorted.length - 1);
+  const lower = Math.floor(index);
+  const upper = Math.ceil(index);
+  if (lower === upper) return sorted[lower];
+  return sorted[lower] + (sorted[upper] - sorted[lower]) * (index - lower);
+};
 
 const minValue = (values: number[]): number =>
   values.reduce((current, value) => Math.min(current, value));
@@ -53,7 +64,7 @@ const deriveExpectedImpact = (
   maxHealth: number
 ): number => {
   const baseImpact = engineeringRigor * 0.4 - 0.2;
-  const systemState = sigmoid(currentHealth - 5, 1.5, 0);
+  const systemState = sigmoid(currentHealth - 5, 2.5, 0);
 
   if (baseImpact <= 0) {
     const fragility = 1 - systemState;
@@ -73,7 +84,7 @@ const deriveOutcomeVariance = (
   const baseVariance =
     constants.sigmaMin +
     (constants.sigmaMax - constants.sigmaMin) * (1 - engineeringRigor);
-  const stability = sigmoid(currentHealth - 5, 1.5, 0);
+  const stability = sigmoid(currentHealth - 5, 2.5, 0);
   return baseVariance * (0.3 + 0.7 * (1 - stability));
 };
 
@@ -150,14 +161,24 @@ export const summarizeRuns = (
   const mins = runs.map(minValue);
   const failures = mins.filter((value) => value <= failureThreshold).length;
   const sampleLength = runs[0]?.length ?? 0;
-  const averagesByStep = Array.from({ length: sampleLength }, (_, index) =>
-    average(runs.map((run) => run[index] ?? run[run.length - 1]))
+
+  const valuesByStep = Array.from({ length: sampleLength }, (_, index) =>
+    runs.map((run) => run[index] ?? run[run.length - 1])
   );
+
   return {
     averageFinal: Number(average(finals).toFixed(3)),
     averageMin: Number(average(mins).toFixed(3)),
     failureRate: Number((failures / runs.length).toFixed(3)),
-    averageTrajectory: averagesByStep.map((value) => Number(value.toFixed(3))),
+    averageTrajectory: valuesByStep.map((values) =>
+      Number(average(values).toFixed(3))
+    ),
+    p10Trajectory: valuesByStep.map((values) =>
+      Number(percentile(values, 10).toFixed(3))
+    ),
+    p90Trajectory: valuesByStep.map((values) =>
+      Number(percentile(values, 90).toFixed(3))
+    ),
   };
 };
 

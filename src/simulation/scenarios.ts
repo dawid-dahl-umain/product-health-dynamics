@@ -24,7 +24,7 @@ const agentProfiles = {
     engineeringRigor: 0.3,
   },
   "junior-engineer": {
-    engineeringRigor: 0.4,
+    engineeringRigor: 0.5,
   },
   "senior-engineers": {
     engineeringRigor: 0.8,

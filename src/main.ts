@@ -1,4 +1,5 @@
 import Chart from "chart.js/auto";
+import { Filler } from "chart.js";
 import annotationPlugin from "chartjs-plugin-annotation";
 import {
   scenarioKeys,
@@ -56,27 +57,66 @@ const colorByScenario: Record<ScenarioKey, string> = {
   "ai-handoff": "#60a5fa",
 };
 
+const hexToRgba = (hex: string, alpha: number): string => {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 const buildDatasets = () =>
-  scenarioKeys.map((key) => {
+  scenarioKeys.flatMap((key) => {
     const stats = simulateScenario(key, { nSimulations: 800 });
-    const points = stats.averageTrajectory.map((value, index) => ({
+    const color = colorByScenario[key];
+
+    const avgPoints = stats.averageTrajectory.map((value, index) => ({
       x: index,
       y: value,
     }));
-    return {
-      label: scenarios[key].label,
-      data: points,
-      borderColor: colorByScenario[key],
-      backgroundColor: colorByScenario[key],
-      tension: 0.25,
-      pointRadius: 0,
-    };
+    const p90Points = stats.p90Trajectory.map((value, index) => ({
+      x: index,
+      y: value,
+    }));
+    const p10Points = stats.p10Trajectory.map((value, index) => ({
+      x: index,
+      y: value,
+    }));
+
+    return [
+      {
+        label: `${scenarios[key].label} (p90)`,
+        data: p90Points,
+        borderColor: "transparent",
+        backgroundColor: hexToRgba(color, 0.15),
+        fill: "+1",
+        tension: 0.25,
+        pointRadius: 0,
+      },
+      {
+        label: `${scenarios[key].label} (p10)`,
+        data: p10Points,
+        borderColor: "transparent",
+        backgroundColor: "transparent",
+        fill: false,
+        tension: 0.25,
+        pointRadius: 0,
+      },
+      {
+        label: scenarios[key].label,
+        data: avgPoints,
+        borderColor: color,
+        backgroundColor: color,
+        fill: false,
+        tension: 0.25,
+        pointRadius: 0,
+      },
+    ];
   });
 
 const renderChart = () => {
   const ctx = document.getElementById("trend") as HTMLCanvasElement | null;
   if (!ctx) return;
-  Chart.register(annotationPlugin);
+  Chart.register(annotationPlugin, Filler);
 
   return new Chart(ctx, {
     type: "line",
@@ -103,7 +143,11 @@ const renderChart = () => {
       },
       plugins: {
         legend: {
-          labels: { color: "#e2e8f0" },
+          labels: {
+            color: "#e2e8f0",
+            filter: (item) =>
+              !item.text.includes("(p10)") && !item.text.includes("(p90)"),
+          },
         },
         tooltip: {
           callbacks: {

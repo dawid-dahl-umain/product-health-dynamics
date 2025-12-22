@@ -170,6 +170,8 @@ describe("summarizeRuns", () => {
       averageMin: 6,
       failureRate: 0,
       averageTrajectory: [8, 7, 6],
+      p10Trajectory: [8, 7, 6],
+      p90Trajectory: [8, 7, 6],
     });
   });
 

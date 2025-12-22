@@ -89,17 +89,20 @@ Only **ER** is configured. The other columns are derived using the formulas abov
 | Agent         | ER (input) | → Base Impact | → Base Sigma | → Maximum Health |
 | ------------- | ---------- | ------------- | ------------ | ---------------- |
 | AI Vibe       | 0.1        | −0.16         | 0.46         | 5.5              |
-| AI Guardrails | 0.3        | −0.08         | 0.37         | 6.5              |
-| Junior        | 0.4        | −0.04         | 0.32         | 7.0              |
-| Senior        | 0.8        | +0.12         | 0.14         | 9.0              |
+| AI Guardrails | 0.3        | −0.08         | 0.38         | 6.5              |
+| Junior        | 0.5        | 0.00          | 0.30         | 7.5              |
+| Senior        | 0.8        | +0.12         | 0.18         | 9.0              |
 
 ### What You'll See
 
 - **AI Vibe:** Slow decay at first, accelerates around **PH** ~5, bottoms at 1.
+- **Junior:** Hovers around 6-7 (breakeven ER, high variance).
 - **Senior:** Steady climb from 8 toward **Maximum Health** (~9).
 - **Handoff:** AI decays to 1; seniors struggle initially, then recover in an S-curve toward **Maximum Health**.
 
-![Product Health Trajectories](./assets/Screenshot%202025-12-22%20at%2000.18.54.png)
+> Shaded bands show where 80% of outcomes land when the simulation runs many times.
+
+![Product Health Trajectories](./assets/Screenshot%202025-12-22%20at%2001.10.30.png)
 
 ## Usage
 
@@ -137,17 +140,17 @@ The formulas contain calibration parameters. These are design choices, not deriv
 | ---------------- | ----- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
 | Impact slope     | 0.4   | Sets sensitivity of impact to rigor. Produces ±0.2 max per change. | How much rigor matters. Higher = bigger difference between good and bad.       |
 | Impact intercept | 0.2   | Places breakeven at ER = 0.5. Above = improve; below = degrade.    | "Average" skill (0.5) breaks even. Below average makes things worse.           |
-| σ_min            | 0.05  | Minimum standard deviation at ER = 1.                              | Even the best have some unpredictability. Nobody is perfectly consistent.      |
+| σ_min            | 0.1   | Minimum standard deviation at ER = 1.                              | Even the best have some unpredictability. Nobody is perfectly consistent.      |
 | σ_max            | 0.5   | Maximum standard deviation at ER = 0.                              | How wild the swings get with zero discipline. Roughly ±0.5 per change.         |
 | Ceiling base     | 5     | Minimum achievable ceiling (at ER = 0).                            | Even the worst human or AI has a theoretical "best they could do" at midscale. |
 | Ceiling slope    | 5     | Makes ceiling range from 5 (ER = 0) to 10 (ER = 1).                | Perfect rigor can achieve perfect health; zero rigor caps at half.             |
 
 ### System State Parameters
 
-| Parameter        | Value | Rationale                                                       | Plain meaning                                                                 |
-| ---------------- | ----- | --------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| Threshold        | 5     | Midpoint of PH scale. Below = "mess"; above = "tractable."      | The tipping point. Below 5, things get harder; above 5, things get easier.    |
-| Steepness (k)    | 1.5   | Controls how sharp the transition is around threshold.          | How suddenly things change at the tipping point. Not too abrupt, not gradual. |
-| Ceiling exponent | 2     | The power in (PH/maxPH)². Higher = sharper diminishing returns. | How hard it gets to improve near your ceiling. Squared = moderately sharp.    |
-| Variance floor   | 0.3   | Even healthy systems retain 30% of base variance.               | Nothing is perfectly predictable. Even good code has some surprises.          |
-| Variance range   | 0.7   | The 70% of variance affected by system state.                   | How much the mess amplifies unpredictability. Most of it, but not all.        |
+| Parameter        | Value | Rationale                                                       | Plain meaning                                                                                                        |
+| ---------------- | ----- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Threshold        | 5     | Midpoint of PH scale. Below = "mess"; above = "tractable."      | The tipping point. Below 5, things get harder; above 5, things get easier.                                           |
+| Steepness (k)    | 2.5   | Controls how sharp the transition is around threshold.          | How suddenly things change at the tipping point. Higher = more protection at high PH, faster collapse once it fails. |
+| Ceiling exponent | 2     | The power in (PH/maxPH)². Higher = sharper diminishing returns. | How hard it gets to improve near your ceiling. Squared = moderately sharp.                                           |
+| Variance floor   | 0.3   | Even healthy systems retain 30% of base variance.               | Nothing is perfectly predictable. Even good code has some surprises.                                                 |
+| Variance range   | 0.7   | The 70% of variance affected by system state.                   | How much the mess amplifies unpredictability. Most of it, but not all.                                               |
