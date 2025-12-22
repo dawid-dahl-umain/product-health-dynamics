@@ -64,14 +64,14 @@ The model runs many randomized simulations (a technique called Monte Carlo simul
 ```mermaid
 flowchart TD
     subgraph inputs [" ☝️ WHAT YOU CONTROL"]
-        ER["🎛️ <b>Engineering Rigor</b><br/><i>How careful is this developer?</i><br/>0 = careless, 1 = meticulous"]
+        ER["🎛️ <b>Engineering Rigor</b><br/><i>How careful is this agent (Human or AI)?</i><br/>0 = careless, 1 = meticulous"]
     end
 
     subgraph state [" 📊 CURRENT STATE"]
         PH["📈 <b>Product Health</b><br/><i>How easy is the code to change?</i><br/>1 = nightmare, 10 = dream"]
     end
 
-    subgraph traits [" 🧬 DEVELOPER TRAITS <i>(derived from rigor)</i>"]
+    subgraph traits [" 🧬 AGENT TRAITS <i>(derived from rigor)</i>"]
         BI["<b>Average Impact</b><br/><i>Do their changes help or hurt?</i>"]
         BS["<b>Consistency</b><br/><i>Are they predictable or erratic?</i>"]
         MH["<b>Ceiling</b><br/><i>Best they can realistically achieve</i>"]
@@ -82,7 +82,7 @@ flowchart TD
     end
 
     subgraph outcome [" 🎲 WHAT HAPPENS NEXT"]
-        CE["<b>Change Event</b><br/><i>One code change, one roll of the dice</i><br/>Combines developer skill +<br/>codebase state + randomness"]
+        CE["<b>Change Event</b><br/><i>One code change, one roll of the dice</i><br/>Combines agent rigor +<br/>codebase state + randomness"]
         NPH["<b>New Product Health</b><br/><i>Better or worse than before?</i>"]
     end
 
