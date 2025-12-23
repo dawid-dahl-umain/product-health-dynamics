@@ -162,7 +162,7 @@ The same low-ER agent causes roughly **90× more degradation** in a coupled syst
 
 ### Each Change Event (The Roll of the Dice)
 
-Software development is probabilistic. No two code changes are identical, even if the developer is the same. The model captures this using a **Normal (Gaussian) Distribution**.
+The previous section explained how system state modifies expected impact (the compounding effect). But software development is also probabilistic: no two code changes are identical, even from the same developer. Each change has an expected outcome (μ) plus randomness (σ). The model combines both using a **Normal (Gaussian) Distribution**.
 
 | Mathematical Term | Role in Model    | Plain Meaning                                           | For Mathematicians                       |
 | :---------------- | :--------------- | :------------------------------------------------------ | :--------------------------------------- |
