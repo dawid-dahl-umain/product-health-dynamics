@@ -50,12 +50,14 @@ The model runs many randomized simulations (a technique called Monte Carlo simul
 
 ## Core Concepts
 
-| Term                       | Definition                                                                                                            | Plain Meaning                                                                |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| **Product Health (PH)**    | Software quality at a point in time. Scale: 1-10.                                                                     | How hard or easy changes feel right now.                                     |
-| **Change Event**           | A modification to the codebase.                                                                                       | The code that actually gets committed.                                       |
-| **Engineering Rigor (ER)** | Degree to which changes apply: modularity, abstraction, separation of concerns, loose coupling, cohesion. Scale: 0-1. | Skill and discipline. The difference between a calculated move and a gamble. |
-| **System Tractability**    | How forgiving or punishing the codebase is right now. Depends on current PH.                                          | Healthy: absorbs mistakes, amplifies improvements. Unhealthy: the opposite.  |
+| Term                       | Definition                                                                                                            | Plain Meaning                                                                     |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| **Product Health (PH)**    | Software quality at a point in time. Scale: 1-10.                                                                     | How hard or easy changes feel right now.                                          |
+| **Change Event**           | A modification to the codebase.                                                                                       | The code that actually gets committed.                                            |
+| **Engineering Rigor (ER)** | Degree to which changes apply: modularity, abstraction, separation of concerns, loose coupling, cohesion. Scale: 0-1. | Skill and discipline. The difference between a calculated move and a gamble.      |
+| **System Tractability**    | How forgiving or punishing the codebase is right now. Depends on current PH.                                          | Healthy: catches mistakes early (tests, monitoring). Unhealthy: mistakes cascade. |
+| **Shape Phase**            | Initial development where the AI has full context. Produces impressive results quickly.                               | The honeymoon period. Everything fits in the AI's immediate context window.       |
+| **Scale Phase**            | Ongoing development where context is lost. The model's dynamics dominate.                                             | Reality sets in. Simulations start here (PH=8) to show what happens next.         |
 
 ## The Model
 
@@ -151,8 +153,8 @@ The driver is **coupling**: how much one part of the code depends on other parts
 
 **The math:** When base impact is negative, effective damage = `base × (1 − systemState)`.
 
-- At PH=8: systemState ≈ 0.99, so only ~1% of damage applies. The healthy system absorbs mistakes.
-- At PH=2: systemState ≈ 0.01, so ~99% of damage applies. Every mistake lands with full force.
+- At PH=8: systemState ≈ 0.99, so only ~1% of damage applies. Tests catch regressions, monitoring alerts on failures, modular design contains blast radius.
+- At PH=2: systemState ≈ 0.01, so ~99% of damage applies. No safety nets; every mistake cascades through the tightly coupled system.
 
 The same low-ER agent causes roughly **90× more degradation** in a coupled system than in a healthy one.
 
@@ -195,6 +197,8 @@ Only ER is configured. All other values are derived.
 **Key insight:** Junior engineers break even (μ=0). They don't improve the system, but they don't systematically degrade it either. AI vibe coders have negative expected impact; every change makes things worse on average.
 
 ## What You'll See
+
+All simulations start at PH=8, representing the end of the **Shape Phase**: the AI has just built something impressive with full context. The **Scale Phase** begins, and the model shows what happens as the codebase grows beyond the AI's context window.
 
 - **AI Vibe:** Slow decay at first, accelerates around PH ~5, bottoms out at 1.
 - **AI with Guardrails:** Slower decay, but still negative trajectory. Buys time, not salvation.
@@ -298,6 +302,8 @@ All parameters below are calibration choices. They can be adjusted based on empi
 | Soft ceiling decay |     5 | Exponent in `e^(-5 × overshoot)`. Controls pull-back when PH exceeds maxPH.                             |
 
 ### Complete Formulas
+
+> **Notation:** `e` is Euler's number (~2.718), the base of the natural logarithm. `e^x` means "e raised to the power x."
 
 **System state (sigmoid function):**
 
