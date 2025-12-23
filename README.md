@@ -76,8 +76,8 @@ flowchart TB
         MH["<b>Ceiling</b><br/><i>Best achievable result</i>"]
     end
 
-    subgraph time ["TIME (grows with each change)"]
-        AC["<b>Accumulated Complexity</b><br/><i>The longer a project runs,</i><br/><i>the harder to maintain</i>"]
+    subgraph time ["TIME"]
+        AC["<b>Accumulated Complexity</b><br/><i>Grows with each change</i>"]
     end
 
     subgraph loop ["DEVELOPMENT LOOP (repeats for each code change)"]
