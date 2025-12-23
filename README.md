@@ -133,12 +133,14 @@ The model computes an intermediate variable called **systemState**, which transf
 - At PH=5 (threshold): systemState = 0.5. The tipping point between order and chaos.
 - At PH=2 (degraded): systemState ≈ 0.01. The system is a tightly coupled mess; everything depends on everything.
 
-| Situation            | Modifier                            | Effect                                                   |
-| -------------------- | ----------------------------------- | -------------------------------------------------------- |
-| Negative base impact | `× (1 − systemState)`               | Damage compounds at low PH, caught early at high PH      |
-| Positive base impact | `× systemState × (1 − (PH/maxPH)²)` | Hard to improve a mess; diminishing returns near ceiling |
-| Sigma (bell-curve)   | `× (0.6 + 0.4 × bellFactor)`        | Chaos peaks mid-range; predictable at extremes           |
-| Variance attenuation | `× (0.15 + 0.85 × systemState)`     | Luck cannot save you at low PH; outcomes driven by mean  |
+| What's Modified      | Multiplied By                     | Effect                                                   |
+| -------------------- | --------------------------------- | -------------------------------------------------------- |
+| Negative base impact | `(1 − systemState)`               | Damage compounds at low PH, caught early at high PH      |
+| Positive base impact | `systemState × (1 − (PH/maxPH)²)` | Hard to improve a mess; diminishing returns near ceiling |
+| Base sigma           | `(0.6 + 0.4 × bellFactor)`        | Chaos peaks mid-range; predictable at extremes           |
+| Random component     | `(0.15 + 0.85 × systemState)`     | Luck cannot save you at low PH; outcomes driven by mean  |
+
+Where `bellFactor = 4 × systemState × (1 − systemState)` — a parabola that peaks at systemState=0.5 and falls to 0 at both extremes.
 
 ### The Compounding Effect (The "Entropy" Metaphor)
 
@@ -164,11 +166,11 @@ The same low-ER agent causes roughly **90× more degradation** in a coupled syst
 
 The previous section explained how system state modifies expected impact (the compounding effect). But software development is also probabilistic: no two code changes are identical, even from the same developer. Each change has an expected outcome (μ) plus randomness (σ). The model combines both using a **Normal (Gaussian) Distribution**.
 
-| Mathematical Term | Role in Model    | Plain Meaning                                           | For Mathematicians                       |
-| :---------------- | :--------------- | :------------------------------------------------------ | :--------------------------------------- |
-| **Mean (μ_eff)**  | Expected Impact  | On average, does this work make things better or worse? | First moment of the distribution.        |
-| **Sigma (σ_eff)** | Unpredictability | The "Vibe" factor. How consistent or erratic?           | Standard deviation (√variance).          |
-| **N(0,1)**        | The Draw         | A random roll of the dice.                              | Sample from Standard Normal (μ=0, σ²=1). |
+| Term       | Where It Comes From                                                | Plain Meaning                                             |
+| :--------- | :----------------------------------------------------------------- | :-------------------------------------------------------- |
+| **μ_eff**  | Base Impact × system state modifiers (see tables above)            | On average, does this change make things better or worse? |
+| **σ_eff**  | Base Sigma × bell-curve scaling (see tables above)                 | How predictable is the outcome?                           |
+| **N(0,1)** | Random draw from Standard Normal Distribution (mean=0, variance=1) | The dice roll that makes each change unique.              |
 
 For every change event, the new health is calculated as:
 
@@ -360,8 +362,8 @@ Soft ceiling (when exceeding maxPH):
 \text{if } \Delta > 0 \text{ and } PH > maxPH: \quad \Delta = \Delta \times e^{-5 \times \frac{PH - maxPH}{maxPH}}
 ```
 
-Final result:
+Final result (clamped to valid range):
 
 ```math
-PH_{new} = \text{clamp}(PH + \Delta, 1, 10)
+PH_{new} = \text{clamp}(PH + \Delta, 1, 10) = \max(1, \min(10, PH + \Delta))
 ```
