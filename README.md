@@ -45,7 +45,7 @@ The model runs many randomized simulations (a technique called Monte Carlo simul
 - Every code change can help, hurt, or do nothing. The outcome depends on **Engineering Rigor**: the skill and discipline of whoever makes the change.
 - Low-rigor agents (AI vibe coders) have negative expected impact. The codebase decays.
 - High-rigor agents (senior engineers) have positive expected impact. The codebase improves.
-- **Decay is slow at first, then accelerates.** A healthy codebase absorbs mistakes. A coupled codebase amplifies them.
+- **Decay is slow at first, then accelerates.** A healthy codebase catches mistakes (tests, monitoring, error handling). A coupled codebase lets them cascade.
 - **Recovery is slow at first, then accelerates, then plateaus.** Untangling a mess takes time before progress shows.
 
 ## Core Concepts
@@ -80,7 +80,7 @@ flowchart TB
 
         PH["<b>Current Product Health</b><br/><i>How easy is the code to change right now?</i><br/>1 = nightmare, 10 = dream"]
 
-        SS["<b>System Tractability</b><br/><i>Healthy: absorbs mistakes, amplifies improvements</i><br/><i>Unhealthy: amplifies mistakes, resists improvements</i>"]
+        SS["<b>System Tractability</b><br/><i>Healthy: catches mistakes, amplifies improvements</i><br/><i>Unhealthy: mistakes cascade, improvements blocked</i>"]
 
         CE["<b>Change Event</b><br/><i>One code change happens</i><br/>Outcome = rigor traits + system state + randomness"]
 
@@ -119,7 +119,7 @@ flowchart TB
 
 ### System State Modifies Everything
 
-Current Product Health affects how changes land. This captures the reality that healthy codebases absorb mistakes while coupled codebases amplify them.
+Current Product Health affects how changes land. This captures the reality that healthy codebases catch and contain mistakes (via tests, monitoring, modularity) while coupled codebases let them cascade.
 
 The model computes an intermediate variable called **systemState**, which transforms Product Health into a 0-1 scale:
 
@@ -135,7 +135,7 @@ The model computes an intermediate variable called **systemState**, which transf
 
 | Situation            | Modifier                            | Effect                                                   |
 | -------------------- | ----------------------------------- | -------------------------------------------------------- |
-| Negative base impact | `× (1 − systemState)`               | Damage compounds at low PH, absorbed at high PH          |
+| Negative base impact | `× (1 − systemState)`               | Damage compounds at low PH, caught early at high PH      |
 | Positive base impact | `× systemState × (1 − (PH/maxPH)²)` | Hard to improve a mess; diminishing returns near ceiling |
 | Sigma (bell-curve)   | `× (0.6 + 0.4 × bellFactor)`        | Chaos peaks mid-range; predictable at extremes           |
 | Variance attenuation | `× (0.15 + 0.85 × systemState)`     | Luck cannot save you at low PH; outcomes driven by mean  |
@@ -158,7 +158,7 @@ The driver is **coupling**: how much one part of the code depends on other parts
 
 The same low-ER agent causes roughly **90× more degradation** in a coupled system than in a healthy one.
 
-**Plain meaning:** Low-ER changes (no tests, no modularity) gradually tighten coupling. At first, existing structure absorbs the damage. But as coupling increases, changes start breaking unrelated features. Eventually, fixing one thing breaks three others. The system accelerates its own decay, just like entropy in physics. The difference: entropy is inevitable; software decay is a choice.
+**Plain meaning:** Low-ER changes (no tests, no modularity) gradually tighten coupling. At first, existing structure catches problems: tests fail, monitoring alerts, modular boundaries contain the blast. But as coupling increases, these safety nets erode. Changes start breaking unrelated features. Eventually, fixing one thing breaks three others. The system accelerates its own decay, just like entropy in physics. The difference: entropy is inevitable; software decay is a choice.
 
 ### Each Change Event (The Roll of the Dice)
 
