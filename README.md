@@ -20,6 +20,7 @@ The model runs many randomized simulations (a technique called Monte Carlo simul
 - [Usage](#usage)
 - [Repository Structure](#repository-structure)
 - [Mathematical Specification](#mathematical-specification)
+- [The Complete Equation](#the-complete-equation-t-shirt-version)
 
 > **Vibe coding:**
 >
@@ -402,3 +403,37 @@ Final result (clamped to valid range):
 ```math
 PH_{new} = \text{clamp}(PH + \Delta, 1, 10) = \max(1, \min(10, PH + \Delta))
 ```
+
+---
+
+## The Complete Equation
+
+For those who want the entire model in one formula:
+
+```math
+PH_{n+1} = \text{clamp}\Big(PH_n + \mu_{eff} - c(n) \cdot s + \sigma_{eff} \cdot \varepsilon \cdot a, \; 1, \; 10\Big)
+```
+
+### Every Term Explained
+
+> **Note:** This section uses shorthand notation. Elsewhere in this document you'll see the full names: `s` = `systemState`, `a` = `attenuation`, `c(n)` = `complexityRate`.
+
+| Symbol        | Name                   | What It Means (For Non-Developers)                                                                                                            |
+| ------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **PH_n**      | Current Product Health | How easy the code is to change right now (1-10 scale).                                                                                        |
+| **PH\_{n+1}** | Next Product Health    | What the health becomes after one code change.                                                                                                |
+| **μ_eff**     | Effective Impact       | Does this change help or hurt? Positive = improvement, negative = damage. Depends on the developer's skill (ER) and the current system state. |
+| **c(n)**      | Complexity Rate        | How much inherent complexity has built up. Grows with each change: `0.005 + 0.00005 × n`. The longer a project runs, the higher this gets.    |
+| **s**         | System State           | How tractable the codebase is (0-1). Healthy code ≈ 1, messy code ≈ 0. Calculated as a sigmoid of PH.                                         |
+| **σ_eff**     | Effective Sigma        | How unpredictable the outcome is. Low-skill developers have high sigma (wild swings); experts have low sigma (consistent).                    |
+| **ε**         | Random Draw            | A dice roll from a Normal distribution. Some changes go better or worse than expected.                                                        |
+| **a**         | Attenuation            | How much randomness matters. In a messy codebase (low s), luck cannot save you; outcomes are driven by the mean.                              |
+| **clamp**     | Bounds                 | Keeps the result between 1 and 10. You can't go below rock bottom or above perfect.                                                           |
+
+### The Story It Tells
+
+1. **Your skill (μ_eff)** determines whether changes help or hurt on average.
+2. **Time (c(n))** works against everyone. Complexity accumulates with every change.
+3. **System health (s)** amplifies everything. Good code catches mistakes; bad code lets them cascade.
+4. **Randomness (ε)** means any single change could go either way, but averages reveal the trend.
+5. **In the long run**, only sustained high-skill effort can outpace the relentless growth of complexity.
