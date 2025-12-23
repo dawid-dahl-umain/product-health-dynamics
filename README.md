@@ -175,8 +175,10 @@ The previous section explained how system state modifies expected impact (the co
 For every change event, the new health is calculated as:
 
 ```math
-\Delta PH = \mu_{effective} + \sigma_{effective} \times N(0,1)
+\Delta PH = \mu_{eff} + \sigma_{eff} \times N(0,1) \times \text{attenuation}
 ```
+
+(See [Mathematical Specification](#mathematical-specification) for complete formulas including soft ceiling and clamping.)
 
 **What this means in practice:**
 
