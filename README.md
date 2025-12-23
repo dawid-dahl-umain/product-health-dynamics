@@ -58,6 +58,7 @@ The model runs many randomized simulations (a technique called Monte Carlo simul
 | **System Tractability**    | How forgiving or punishing the codebase is right now. Depends on current PH.                                          | Healthy: mistakes are caught or contained (tests, structure, error handling). Unhealthy: mistakes cascade. |
 | **Shape Phase**            | Initial development where the AI has full context. Produces impressive results quickly.                               | The honeymoon period. Everything fits in the AI's immediate context window.                                |
 | **Scale Phase**            | Ongoing development where context is lost. The model's dynamics dominate.                                             | Reality sets in. Simulations start here (e.g. PH=8) to show what happens next.                             |
+| **Accumulated Complexity** | Inherent disorder that grows with each change. Even perfect engineering cannot fully prevent it.                      | Technical debt that accrues over time. The longer a project runs, the harder it becomes to maintain.       |
 
 ## The Model
 
@@ -162,6 +163,16 @@ The same low-ER agent causes roughly **90× more degradation** in a coupled syst
 
 **Plain meaning:** Low-ER changes (no tests, no modularity) gradually tighten coupling. At first, existing structure catches problems: tests fail, monitoring alerts, modular boundaries contain the blast. But as coupling increases, these safety nets erode. Changes start breaking unrelated features. Eventually, fixing one thing breaks three others. The system accelerates its own decay, just like entropy in physics. The difference: entropy is inevitable; software decay is a choice.
 
+**Accumulated complexity:** Beyond the compounding effect, there's a second force at play: every change adds a small amount of inherent complexity. Even perfect engineering cannot fully prevent this. The longer a project runs, the more accumulated complexity it carries. This creates a slight downward pressure over time.
+
+The math: `complexityDrift = -(base + growth × changeCount) × systemState`
+
+- **Time = changeCount.** Each change is a unit of time.
+- **Complexity grows linearly** with each change: `base + growth × changeCount`.
+- **Scaled by systemState.** Degraded systems (low PH) don't pay extra; they're already maximally disordered.
+
+At step 0, accumulated complexity is minimal. By step 1000, it has grown enough to create a visible downward trend even for senior engineers. This reflects the reality that long-running projects require sustained effort just to maintain quality, let alone improve it.
+
 ### Each Change Event (The Roll of the Dice)
 
 The previous section explained how system state modifies expected impact (the compounding effect). But software development is also probabilistic: no two code changes are identical, even from the same developer. Each change has an expected outcome (μ) plus randomness (σ). The model combines both using a **Normal (Gaussian) Distribution**.
@@ -175,10 +186,10 @@ The previous section explained how system state modifies expected impact (the co
 For every change event, the new health is calculated as:
 
 ```math
-\Delta PH = \mu_{eff} + \sigma_{eff} \times N(0,1) \times \text{attenuation}
+\Delta PH = \mu_{eff} + \text{complexityDrift} + \sigma_{eff} \times N(0,1) \times \text{attenuation}
 ```
 
-(See [Mathematical Specification](#mathematical-specification) for complete formulas including soft ceiling and clamping.)
+(See [Mathematical Specification](#mathematical-specification) for complete formulas including accumulated complexity, soft ceiling, and clamping.)
 
 **What this means in practice:**
 
@@ -207,11 +218,11 @@ All simulations start at PH=8, representing the end of the **Shape Phase**: the 
 - **AI Vibe:** Slow decay at first, accelerates around PH ~5, bottoms out at 1.
 - **AI with Guardrails:** Slower decay, but still negative trajectory. Buys time, not salvation.
 - **Junior Engineer:** Slowly drifts downward toward 3-4. While their expected impact is 0 (breakeven), the system's asymmetry (slippery at the top, "frozen" and sticky at the bottom) means a neutral agent eventually slides into the mess without positive pressure to stay out.
-- **Senior Engineer:** Steady climb from 8 toward ~9, then stabilizes.
+- **Senior Engineer:** Climbs from 8 toward ~9, then shows a slight downward drift over time due to accumulated complexity. Even seniors cannot fully escape it.
 - **Handoff (AI → Senior):** AI decays to 1. Seniors struggle initially (the mess resists improvement), then recover in an S-curve toward their ceiling.
 - **Handoff (AI → Junior):** AI decays to 1. Juniors recover very slowly and plateau much lower than seniors.
 
-![Product Health Trajectories](./assets/Screenshot%202025-12-22%20at%2023.36.40.png)
+![Product Health Trajectories](./assets/Screenshot%202025-12-23%20at%2010.22.50.png)
 
 > Shaded bands are **confidence bands**: they show the range where 80% of simulation runs land. The solid line is the average. Roughly: "best realistic case" at the top, "worst realistic case" at the bottom, with extremes (top/bottom 10%) excluded.
 
@@ -294,16 +305,18 @@ All parameters below are calibration choices. They can be adjusted based on empi
 
 ### System State Parameters
 
-| Parameter          | Value | Rationale                                                                                               |
-| ------------------ | ----: | ------------------------------------------------------------------------------------------------------- |
-| Threshold          |     5 | Midpoint of PH scale. Below = coupled mess; above = tractable.                                          |
-| Steepness (k)      |   1.5 | How sharp the transition around threshold. Moderate value allows recovery while preserving compounding. |
-| Ceiling exponent   |     2 | Power in `(PH/maxPH)²`. Higher = sharper diminishing returns near ceiling.                              |
-| Bell-curve floor   |   0.6 | Minimum sigma multiplier at extremes. Ensures no one is superhuman.                                     |
-| Bell-curve range   |   0.4 | How much chaos increases in the transition zone.                                                        |
-| Attenuation floor  |  0.15 | Minimum variance at low PH. Even frozen systems have some noise.                                        |
-| Attenuation range  |  0.85 | Portion of variance that scales with system state.                                                      |
-| Soft ceiling decay |     5 | Exponent in `e^(-5 × overshoot)`. Controls pull-back when PH exceeds maxPH.                             |
+| Parameter          |   Value | Rationale                                                                                               |
+| ------------------ | ------: | ------------------------------------------------------------------------------------------------------- |
+| Threshold          |       5 | Midpoint of PH scale. Below = coupled mess; above = tractable.                                          |
+| Steepness (k)      |     1.5 | How sharp the transition around threshold. Moderate value allows recovery while preserving compounding. |
+| Ceiling exponent   |       2 | Power in `(PH/maxPH)²`. Higher = sharper diminishing returns near ceiling.                              |
+| Bell-curve floor   |     0.6 | Minimum sigma multiplier at extremes. Ensures no one is superhuman.                                     |
+| Bell-curve range   |     0.4 | How much chaos increases in the transition zone.                                                        |
+| Attenuation floor  |    0.15 | Minimum variance at low PH. Even frozen systems have some noise.                                        |
+| Attenuation range  |    0.85 | Portion of variance that scales with system state.                                                      |
+| Soft ceiling decay |       5 | Exponent in `e^(-5 × overshoot)`. Controls pull-back when PH exceeds maxPH.                             |
+| Complexity base    |   0.005 | Initial complexity cost per change. Small but present from the start.                                   |
+| Complexity growth  | 0.00005 | How much complexity increases per change. Accumulates over time.                                        |
 
 ### Complete Formulas
 
@@ -344,6 +357,20 @@ Bell-curve scaling (chaos peaks mid-range, predictable at extremes):
 \sigma_{eff} = \sigma_{base} \times (0.6 + 0.4 \times \text{bellFactor})
 ```
 
+**Accumulated complexity:**
+
+Software complexity grows with each change. The complexity rate increases over time:
+
+```math
+\text{complexityRate} = 0.005 + 0.00005 \times \text{changeCount}
+```
+
+```math
+\text{complexityDrift} = -\text{complexityRate} \times \text{systemState}
+```
+
+Scaled by systemState: healthy systems pay this maintenance cost; degraded systems (already chaotic) don't accumulate extra complexity.
+
 **Change event (the random draw):**
 
 Each change samples from a Normal (Gaussian) distribution. `N(0,1)` denotes a draw from the Standard Normal Distribution (mean=0, variance=1).
@@ -355,7 +382,7 @@ The random component is attenuated at low PH (luck cannot save you in a coupled 
 ```
 
 ```math
-\Delta PH = \mu_{eff} + \sigma_{eff} \times N(0,1) \times \text{attenuation}
+\Delta PH = \mu_{eff} + \text{complexityDrift} + \sigma_{eff} \times N(0,1) \times \text{attenuation}
 ```
 
 Soft ceiling (when exceeding maxPH):

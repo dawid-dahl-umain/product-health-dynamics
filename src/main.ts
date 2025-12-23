@@ -124,13 +124,13 @@ const buildDatasets = () =>
         pointRadius: 0,
       },
       {
-        label: scenarios[key].label,
+      label: scenarios[key].label,
         data: avgPoints,
         borderColor: color,
         backgroundColor: color,
         fill: false,
-        tension: 0.25,
-        pointRadius: 0,
+      tension: 0.25,
+      pointRadius: 0,
       },
     ];
   });

@@ -20,7 +20,7 @@ export const simulateTrajectory = (
 
   for (let i = 0; i < nChanges; i++) {
     const currentHealth = history[history.length - 1];
-    history.push(model.sampleNextHealth(currentHealth, rng));
+    history.push(model.sampleNextHealth(currentHealth, i, rng));
   }
 
   return history;
@@ -32,6 +32,9 @@ export const simulateTrajectory = (
  * Use this for scenarios like "AI vibe coding for 200 changes, then senior engineers
  * take over for 800 changes". Each phase picks up where the previous one left off.
  *
+ * The accumulated change count is preserved across phases, so accumulated complexity
+ * continues to grow even when the agent changes.
+ *
  * @returns Array of PH values spanning all phases continuously
  */
 export const simulatePhasedTrajectory = (
@@ -40,16 +43,20 @@ export const simulatePhasedTrajectory = (
   rng: () => number = Math.random
 ): SimulationRun => {
   const history: number[] = [startHealth];
+  let totalChanges = 0;
 
   for (const phase of phases) {
     const model = new ProductHealthModel(phase.engineeringRigor);
 
     for (let i = 0; i < phase.nChanges; i++) {
       const currentHealth = history[history.length - 1];
-      history.push(model.sampleNextHealth(currentHealth, rng));
+      history.push(
+        model.sampleNextHealth(currentHealth, totalChanges + i, rng)
+      );
     }
+
+    totalChanges += phase.nChanges;
   }
 
   return history;
 };
-

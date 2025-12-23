@@ -94,4 +94,18 @@ export const ModelParameters = {
     min: 1,
     max: 10,
   },
+
+  /**
+   * Accumulated Complexity: a "maintenance cost" that grows with each change.
+   * Even with perfect engineering, complexity accumulates over time; this models that reality.
+   * base: Initial complexity cost at step 0.
+   * growth: How much complexity increases per change event.
+   * Scaled by systemState, so degraded systems (already chaotic) don't pay extra.
+   *
+   * Tuned so seniors (ER=0.8) show ~5% decline over 1000 changes (9.0 -> 8.5).
+   */
+  accumulatedComplexity: {
+    base: 0.005,
+    growth: 0.00005,
+  },
 } as const;

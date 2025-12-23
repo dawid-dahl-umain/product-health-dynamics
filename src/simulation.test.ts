@@ -207,8 +207,8 @@ describe("ProductHealthModel", () => {
       const deterministicRng = () => 0.5;
 
       // When
-      const results = Array.from({ length: 100 }, () =>
-        model.sampleNextHealth(5, deterministicRng)
+      const results = Array.from({ length: 100 }, (_, i) =>
+        model.sampleNextHealth(5, i, deterministicRng)
       );
 
       // Then
@@ -220,12 +220,13 @@ describe("ProductHealthModel", () => {
 
     it("produces deterministic results with fixed RNG", () => {
       // Given
-      const model = new ProductHealthModel(0.5);
+      const model1 = new ProductHealthModel(0.5);
+      const model2 = new ProductHealthModel(0.5);
       const fixedRng = () => 0.5;
 
       // When
-      const result1 = model.sampleNextHealth(5, fixedRng);
-      const result2 = model.sampleNextHealth(5, fixedRng);
+      const result1 = model1.sampleNextHealth(5, 0, fixedRng);
+      const result2 = model2.sampleNextHealth(5, 0, fixedRng);
 
       // Then
       expect(result1).toBe(result2);
@@ -238,7 +239,7 @@ describe("ProductHealthModel", () => {
       const startAboveCeiling = 9.5;
 
       // When
-      const result = model.sampleNextHealth(startAboveCeiling, highRng);
+      const result = model.sampleNextHealth(startAboveCeiling, 0, highRng);
 
       // Then
       expect(result).toBeLessThanOrEqual(10);

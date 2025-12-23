@@ -142,27 +142,50 @@ export class ProductHealthModel {
   }
 
   /**
+   * Computes the accumulated complexity drift.
+   *
+   * Software naturally tends toward disorder; complexity accumulates with each change.
+   * The complexity cost grows over time: base + growth × changeCount.
+   * Scaled by systemState: healthy systems pay this "maintenance cost",
+   * but degraded systems (already chaotic) don't accumulate extra complexity.
+   */
+  private computeComplexityDrift(
+    systemState: number,
+    changeCount: number
+  ): number {
+    const { base, growth } = ModelParameters.accumulatedComplexity;
+    const currentRate = base + growth * changeCount;
+    return -currentRate * systemState;
+  }
+
+  /**
    * Samples the next Product Health value after one change event.
    * This is the core Monte Carlo step: draws from a normal distribution,
    * applies soft ceiling logic, and clamps to valid bounds.
    *
    * @param currentHealth - The current Product Health (1-10)
+   * @param changeCount - How many changes have occurred (for accumulated complexity)
    * @param rng - Random number generator (default: Math.random). Inject for testing.
    * @returns The new Product Health after this change
    */
   public sampleNextHealth(
     currentHealth: number,
+    changeCount: number = 0,
     rng: () => number = Math.random
   ): number {
     const systemState = this.computeSystemState(currentHealth);
     const mean = this.computeExpectedImpact(currentHealth);
+    const complexityDrift = this.computeComplexityDrift(
+      systemState,
+      changeCount
+    );
     const sigma = this.computeEffectiveSigma(currentHealth);
 
     const rawRandom = sigma * gaussianRandom(rng);
     const attenuatedRandom =
       rawRandom * this.computeVarianceAttenuation(systemState);
 
-    const rawDelta = mean + attenuatedRandom;
+    const rawDelta = mean + complexityDrift + attenuatedRandom;
     const delta = this.applySoftCeiling(rawDelta, currentHealth);
 
     const { min, max } = ModelParameters.health;
