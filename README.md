@@ -45,19 +45,19 @@ The model runs many randomized simulations (a technique called Monte Carlo simul
 - Every code change can help, hurt, or do nothing. The outcome depends on **Engineering Rigor**: the skill and discipline of whoever makes the change.
 - Low-rigor agents (AI vibe coders) have negative expected impact. The codebase decays.
 - High-rigor agents (senior engineers) have positive expected impact. The codebase improves.
-- **Decay is slow at first, then accelerates.** A healthy codebase catches mistakes (tests, monitoring, error handling). A coupled codebase lets them cascade.
+- **Decay is slow at first, then accelerates.** A healthy codebase catches mistakes (tests, clean structure, monitoring, error handling). A coupled codebase lets them cascade.
 - **Recovery is slow at first, then accelerates, then plateaus.** Untangling a mess takes time before progress shows.
 
 ## Core Concepts
 
-| Term                       | Definition                                                                                                            | Plain Meaning                                                                     |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| **Product Health (PH)**    | Software quality at a point in time. Scale: 1-10.                                                                     | How hard or easy changes feel right now.                                          |
-| **Change Event**           | A modification to the codebase.                                                                                       | The code that actually gets committed.                                            |
-| **Engineering Rigor (ER)** | Degree to which changes apply: modularity, abstraction, separation of concerns, loose coupling, cohesion. Scale: 0-1. | Skill and discipline. The difference between a calculated move and a gamble.      |
-| **System Tractability**    | How forgiving or punishing the codebase is right now. Depends on current PH.                                          | Healthy: catches mistakes early (tests, monitoring). Unhealthy: mistakes cascade. |
-| **Shape Phase**            | Initial development where the AI has full context. Produces impressive results quickly.                               | The honeymoon period. Everything fits in the AI's immediate context window.       |
-| **Scale Phase**            | Ongoing development where context is lost. The model's dynamics dominate.                                             | Reality sets in. Simulations start here (PH=8) to show what happens next.         |
+| Term                       | Definition                                                                                                            | Plain Meaning                                                                                              |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Product Health (PH)**    | Software quality at a point in time. Scale: 1-10.                                                                     | How hard or easy changes feel right now.                                                                   |
+| **Change Event**           | A modification to the codebase.                                                                                       | The code that actually gets committed.                                                                     |
+| **Engineering Rigor (ER)** | Degree to which changes apply: modularity, abstraction, separation of concerns, loose coupling, cohesion. Scale: 0-1. | Skill and discipline. The difference between a calculated move and a gamble.                               |
+| **System Tractability**    | How forgiving or punishing the codebase is right now. Depends on current PH.                                          | Healthy: mistakes are caught or contained (tests, structure, error handling). Unhealthy: mistakes cascade. |
+| **Shape Phase**            | Initial development where the AI has full context. Produces impressive results quickly.                               | The honeymoon period. Everything fits in the AI's immediate context window.                                |
+| **Scale Phase**            | Ongoing development where context is lost. The model's dynamics dominate.                                             | Reality sets in. Simulations start here (PH=8) to show what happens next.                                  |
 
 ## The Model
 
@@ -119,7 +119,7 @@ flowchart TB
 
 ### System State Modifies Everything
 
-Current Product Health affects how changes land. This captures the reality that healthy codebases catch and contain mistakes (via tests, monitoring, modularity) while coupled codebases let them cascade.
+Current Product Health affects how changes land. This captures the reality that healthy codebases catch and contain mistakes (via tests, clean structure, error handling, monitoring, etc) while coupled codebases let them cascade.
 
 The model computes an intermediate variable called **systemState**, which transforms Product Health into a 0-1 scale:
 
