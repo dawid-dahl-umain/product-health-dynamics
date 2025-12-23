@@ -20,7 +20,7 @@ The model runs many randomized simulations (a technique called Monte Carlo simul
 - [Usage](#usage)
 - [Repository Structure](#repository-structure)
 - [Mathematical Specification](#mathematical-specification)
-- [The Complete Equation](#the-complete-equation-t-shirt-version)
+- [The Complete Equation](#the-complete-equation)
 
 > **Vibe coding:**
 >
