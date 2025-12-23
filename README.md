@@ -76,6 +76,10 @@ flowchart TB
         MH["<b>Ceiling</b><br/><i>Best achievable result</i>"]
     end
 
+    subgraph time ["TIME (grows with each change)"]
+        AC["<b>Accumulated Complexity</b><br/><i>The longer a project runs,</i><br/><i>the harder to maintain</i>"]
+    end
+
     subgraph loop ["DEVELOPMENT LOOP (repeats for each code change)"]
         direction TB
 
@@ -83,7 +87,7 @@ flowchart TB
 
         SS["<b>System Tractability</b><br/><i>Healthy: catches mistakes, amplifies improvements</i><br/><i>Unhealthy: mistakes cascade, improvements blocked</i>"]
 
-        CE["<b>Change Event</b><br/><i>One code change happens</i><br/>Outcome = rigor traits + system state + randomness"]
+        CE["<b>Change Event</b><br/><i>One code change happens</i><br/>Outcome = rigor + tractability + complexity + randomness"]
 
         NPH["<b>New Product Health</b><br/><i>System evolved: better, worse, or same</i>"]
 
@@ -95,14 +99,16 @@ flowchart TB
 
     ER --> BI & BS & MH
     BI & BS & MH --> CE
+    AC --> CE
 
     %% Styling
     style config fill:#1b5e20,stroke:#81c784,color:#fff
     style derived fill:#e65100,stroke:#ffb74d,color:#fff
+    style time fill:#6a1b9a,stroke:#ba68c8,color:#fff
     style loop fill:#0d47a1,stroke:#64b5f6,color:#fff
 
     classDef nodeStyle fill:#fff,stroke:#333,color:#000,stroke-width:2px
-    class ER,PH,BI,BS,MH,SS,CE,NPH nodeStyle
+    class ER,PH,BI,BS,MH,SS,AC,CE,NPH nodeStyle
 
     linkStyle default stroke:#00ced1,stroke-width:2px
 
