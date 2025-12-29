@@ -17,6 +17,7 @@ The model runs many randomized simulations (a technique called Monte Carlo simul
 - [Agent Profiles](#agent-profiles)
 - [What You'll See](#what-youll-see)
 - [For Client Conversations](#for-client-conversations)
+- [Theoretical Grounding (Research Basis)](./docs/theoretical-grounding.md)
 - [Usage](#usage)
 - [Repository Structure](#repository-structure)
 - [Mathematical Specification](#mathematical-specification)
@@ -243,7 +244,7 @@ When a client suggests AI-assisted non-engineers can replace professional engine
 
 2. **Run the simulation.** The trajectory shows inevitable decline and the true cost of recovery.
 
-3. **Reference established theory.** This model aligns with Lehman's Laws of Software Evolution:
+3. **Reference established theory.** This model aligns with [Lehman's Laws of Software Evolution](./docs/theoretical-grounding.md):
 
    - _Increasing Complexity:_ Complexity grows unless work is done to reduce it. ER represents that work.
    - _Declining Quality:_ Quality declines unless rigorously maintained. Low ER makes decline the default.
