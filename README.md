@@ -89,7 +89,7 @@ flowchart LR
     subgraph loop ["YOUR SYSTEM ⟳ (repeats each commit)"]
         direction TB
         PH["<b>Current Product Health</b><br/>How easy is the code<br/>to change right now?<br/><i>1 = nightmare, 10 = dream</i>"]
-        SS["<b>Tractability</b><br/>Does the system catch mistakes<br/>or let them cascade?"]
+        SS["<b>Tractability</b><br/>Hard to improve?<br/>Easy to damage?"]
         CE(("<b>Change</b><br/><b>Event</b><br/>roll the dice"))
         NPH["<b>New Product Health</b><br/>Better, worse,<br/>or same?"]
 
