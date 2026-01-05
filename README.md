@@ -1,6 +1,6 @@
 # Product Health Dynamics
 
-A simulation model that predicts how software quality evolves over time based on the engineering rigor of whoever is making changes.
+A simulation model that predicts how software quality evolves over time based on two inputs: the **engineering rigor** of whoever makes changes, and the **complexity** of the system being built.
 
 The model runs many randomized simulations (a technique called Monte Carlo simulation) to show not just the average outcome, but the range of likely outcomes. This reveals patterns that a single prediction would miss.
 
@@ -10,11 +10,12 @@ The model runs many randomized simulations (a technique called Monte Carlo simul
 - [Core Concepts](#core-concepts)
 - [The Model](#the-model)
   - [How It Works (Visual Overview)](#how-it-works-visual-overview)
-  - [Engineering Rigor as the Master Dial](#engineering-rigor-as-the-master-dial)
+  - [The Two Input Parameters](#the-two-input-parameters)
   - [System State Modifies Everything](#system-state-modifies-everything)
   - [The Compounding Effect](#the-compounding-effect-the-entropy-metaphor)
   - [Each Change Event (The Roll of the Dice)](#each-change-event-the-roll-of-the-dice)
 - [Agent Profiles](#agent-profiles)
+- [Complexity Profiles](#complexity-profiles)
 - [What You'll See](#what-youll-see)
 - [For Client Conversations](#for-client-conversations)
 - [Theoretical Grounding (Research Basis)](./docs/theoretical-grounding.md)
@@ -45,111 +46,144 @@ The model runs many randomized simulations (a technique called Monte Carlo simul
 
 - **Product Health** measures how easy code is to change (1 = nightmare, 10 = trivial).
 - Every code change can help, hurt, or do nothing. The outcome depends on **Engineering Rigor**: the skill and discipline of whoever makes the change.
+- **System Complexity** determines how forgiving the system is. A blog is forgiving; an enterprise platform is not.
 - Low-rigor agents (AI vibe coders) have negative expected impact. The codebase decays.
 - High-rigor agents (senior engineers) have positive expected impact. The codebase improves.
-- **Decay is slow at first, then accelerates.** A healthy codebase catches mistakes (tests, clean structure, monitoring, error handling). A coupled codebase lets them cascade.
+- **Simple systems are forgiving:** lower-rigor agents can still maintain them; recovery from damage is fast.
+- **Complex systems are punishing:** mistakes cascade, recovery is slow, and only high rigor can sustain quality.
+- **Decay is slow at first, then accelerates.** A healthy codebase catches mistakes. A coupled codebase lets them cascade.
 - **Recovery is slow at first, then accelerates, then plateaus.** Untangling a mess takes time before progress shows.
 
 ## Core Concepts
 
-| Term                       | Definition                                                                                                            | Plain Meaning                                                                                              |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| **Product Health (PH)**    | Software quality at a point in time. Scale: 1-10.                                                                     | How hard or easy changes feel right now.                                                                   |
-| **Change Event**           | A modification to the codebase.                                                                                       | The code that actually gets committed.                                                                     |
-| **Engineering Rigor (ER)** | Degree to which changes apply: modularity, abstraction, separation of concerns, loose coupling, cohesion. Scale: 0-1. | Skill and discipline. The difference between a calculated move and a gamble.                               |
-| **System Tractability**    | How forgiving or punishing the codebase is right now. Depends on current PH.                                          | Healthy: mistakes are caught or contained (tests, structure, error handling). Unhealthy: mistakes cascade. |
-| **Shape Phase**            | Initial development where the AI has full context. Produces impressive results quickly.                               | The honeymoon period. Everything fits in the AI's immediate context window.                                |
-| **Scale Phase**            | Ongoing development where context is lost. The model's dynamics dominate.                                             | Reality sets in. Simulations start here (e.g. PH=8) to show what happens next.                             |
-| **Accumulated Complexity** | Inherent disorder that grows with each change. Even perfect engineering cannot fully prevent it.                      | Technical debt that accrues over time. The longer a project runs, the harder it becomes to maintain.       |
+| Term                       | Definition                                                                                                            | Plain Meaning                                                                                                |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Product Health (PH)**    | Software quality at a point in time. Scale: 1-10.                                                                     | How hard or easy changes feel right now.                                                                     |
+| **Change Event**           | A modification to the codebase.                                                                                       | The code that actually gets committed.                                                                       |
+| **Engineering Rigor (ER)** | Degree to which changes apply: modularity, abstraction, separation of concerns, loose coupling, cohesion. Scale: 0-1. | Skill and discipline of the agent (human or AI). The difference between a calculated move and a gamble.      |
+| **System Complexity (SC)** | Inherent architectural complexity of the system. Scale: 0-1. Simple blog = 0.25, enterprise platform = 1.0.           | How many moving parts? How tightly coupled by nature? How much can go wrong?                                 |
+| **System Tractability**    | How forgiving or punishing the codebase is right now. Depends on current PH and SC.                                   | Healthy: mistakes are caught or contained. Unhealthy: mistakes cascade. Simpler systems stay more tractable. |
+| **Shape Phase**            | Initial development where the AI has full context. Produces impressive results quickly.                               | The honeymoon period. Everything fits in the AI's immediate context window.                                  |
+| **Scale Phase**            | Ongoing development where context is lost. The model's dynamics dominate.                                             | Reality sets in. Simulations start here (e.g. PH=8) to show what happens next.                               |
+| **Accumulated Complexity** | Inherent disorder that grows with each change. Scales with system complexity.                                         | Technical debt that accrues over time. Simple systems accumulate less; complex systems accumulate more.      |
 
 ## The Model
 
 ### How It Works (Visual Overview)
 
 ```mermaid
-flowchart TB
-    subgraph config ["CONFIGURATION (set once)"]
-        ER["<b>Engineering Rigor</b><br/><i>Does this Human or AI build to last?</i><br/><i>(testing, modularity, decoupling, clean design, refactoring)</i><br/>0 = no, 1 = yes"]
-    end
-
-    subgraph derived ["DERIVED FROM RIGOR"]
-        BI["<b>Average Impact</b><br/><i>Help or hurt on average?</i>"]
-        BS["<b>Consistency</b><br/><i>Predictable or erratic?</i>"]
-        MH["<b>Ceiling</b><br/><i>Best achievable result</i>"]
-    end
-
-    subgraph time ["TIME"]
-        AC["<b>Accumulated Complexity</b><br/><i>Grows with each change</i>"]
-    end
-
-    subgraph loop ["DEVELOPMENT LOOP (repeats for each code change)"]
+flowchart LR
+    subgraph inputs ["INPUTS (you choose)"]
         direction TB
-
-        PH["<b>Current Product Health</b><br/><i>How easy is the code to change right now?</i><br/>1 = nightmare, 10 = dream"]
-
-        SS["<b>System Tractability</b><br/><i>Healthy: catches mistakes, amplifies improvements</i><br/><i>Unhealthy: mistakes cascade, improvements blocked</i>"]
-
-        CE["<b>Change Event</b><br/><i>One code change happens</i><br/>Outcome = rigor + tractability + complexity + randomness"]
-
-        NPH["<b>New Product Health</b><br/><i>System evolved: better, worse, or same</i>"]
-
-        PH --> SS
-        SS --> CE
-        CE --> NPH
-        NPH -->|"becomes current state<br/>for next change"| PH
+        ER["<b>Engineering Rigor</b><br/>How disciplined is the developer?<br/><i>0 = vibe coding, 1 = senior engineer</i>"]
+        SC["<b>System Complexity</b><br/>How complex is the system?<br/><i>0.25 = blog, 1.0 = enterprise</i>"]
     end
 
-    ER --> BI & BS & MH
-    BI & BS & MH --> CE
-    AC --> CE
+    subgraph derived ["DERIVED (from ER + SC)"]
+        direction TB
+        BI["<b>Base Impact</b><br/>Does each change<br/>help or hurt on average?"]
+        BS["<b>Base Sigma</b><br/>How predictable<br/>are the outcomes?"]
+        MH["<b>Max Health</b><br/>Best sustainable<br/>quality level"]
+    end
 
-    %% Styling
-    style config fill:#1b5e20,stroke:#81c784,color:#fff
-    style derived fill:#e65100,stroke:#ffb74d,color:#fff
-    style time fill:#6a1b9a,stroke:#ba68c8,color:#fff
-    style loop fill:#0d47a1,stroke:#64b5f6,color:#fff
+    subgraph loop ["YOUR SYSTEM ⟳ (repeats each commit)"]
+        direction TB
+        PH["<b>Current Health</b><br/>How easy is the code<br/>to change right now?<br/><i>1 = nightmare, 10 = dream</i>"]
+        SS["<b>Tractability</b><br/>Does the system catch mistakes<br/>or let them cascade?"]
+        CE(("<b>Change</b><br/><b>Event</b><br/>roll the dice"))
+        NPH["<b>New Health</b><br/>Better, worse,<br/>or same?"]
 
-    classDef nodeStyle fill:#fff,stroke:#333,color:#000,stroke-width:2px
-    class ER,PH,BI,BS,MH,SS,AC,CE,NPH nodeStyle
+        PH -->|"health affects"| SS
+        SS -->|"modifies outcome"| CE
+        CE -->|"produces"| NPH
+        NPH -.->|"becomes next"| PH
+    end
 
-    linkStyle default stroke:#00ced1,stroke-width:2px
+    AC["<b>Accumulated</b><br/><b>Complexity</b><br/>Grows with each change<br/><i>even seniors can't escape</i>"]
 
+    ER -->|"determines"| BI & BS & MH
+    SC -->|"shifts breakeven"| BI
+    SC -->|"keeps tractable"| SS
+    SC -->|"scales"| AC
+    BI & BS & MH -->|"feed into"| CE
+    AC -->|"drags down"| CE
+
+    style inputs fill:none,stroke:#4ade80,stroke-width:2px
+    style derived fill:none,stroke:#fb923c,stroke-width:2px
+    style loop fill:none,stroke:#60a5fa,stroke-width:2px
+
+    classDef inputNode fill:#166534,stroke:#4ade80,color:#fff
+    classDef derivedNode fill:#9a3412,stroke:#fb923c,color:#fff
+    classDef loopNode fill:#1e40af,stroke:#60a5fa,color:#fff
+    classDef timeNode fill:#581c87,stroke:#a855f7,color:#fff
+    classDef eventNode fill:#0f172a,stroke:#60a5fa,color:#fff
+
+    class ER,SC inputNode
+    class BI,BS,MH derivedNode
+    class PH,SS,NPH loopNode
+    class CE eventNode
+    class AC timeNode
 ```
 
-### Engineering Rigor as the Master Dial
+### The Two Input Parameters
 
-**Engineering Rigor (ER)** is the only input variable. Everything else is derived from it.
+The model has two inputs. Everything else is derived.
 
-| Property        | Formula                    | What It Means                                                         |
-| --------------- | -------------------------- | --------------------------------------------------------------------- |
-| Base Impact (μ) | `μ = ER × 2.4 − 1.2`       | Expected PH change per commit. Positive above ER=0.5, negative below. |
-| Base Sigma (σ)  | `σ = 0.1 + 0.4 × (1 − ER)` | Outcome unpredictability. High ER = consistent; low ER = erratic.     |
-| Maximum Health  | `maxPH = 5 + 5 × ER`       | Sustainable ceiling. ER=0.8 → maxPH=9. ER=0.1 → maxPH=5.5.            |
+**Engineering Rigor (ER)** — the skill and discipline of the agent (0-1 scale).
+
+**System Complexity (SC)** — the inherent complexity of the system being built (0-1 scale).
+
+| Property        | Formula                            | What It Means                                                           |
+| --------------- | ---------------------------------- | ----------------------------------------------------------------------- |
+| Base Impact (μ) | `μ = 2.4 × (ER − 0.25 × (1 + SC))` | Expected PH change per commit. Breakeven ER scales with SC (see below). |
+| Base Sigma (σ)  | `σ = 0.1 + 0.4 × (1 − ER)`         | Outcome unpredictability. High ER = consistent; low ER = erratic.       |
+| Maximum Health  | `maxPH = 5 + 5 × ER`               | Sustainable ceiling. ER=0.8 → maxPH=9. ER=0.1 → maxPH=5.5.              |
+
+**How SC affects breakeven:** The ER required to break even (μ=0) scales with complexity:
+
+```
+breakeven_ER = 0.25 × (1 + SC)
+```
+
+| System Complexity | SC   | Breakeven ER | Plain Meaning                                      |
+| ----------------- | ---- | ------------ | -------------------------------------------------- |
+| Simple (blog)     | 0.25 | 0.31         | Even juniors can maintain it without degradation.  |
+| Medium (CRUD app) | 0.50 | 0.38         | Some discipline required; vibe coding still risky. |
+| Enterprise        | 1.00 | 0.50         | Only skilled engineers maintain positive impact.   |
 
 ### System State Modifies Everything
 
-Current Product Health affects how changes land. This captures the reality that healthy codebases catch and contain mistakes (via tests, clean structure, error handling, monitoring, etc) while coupled codebases let them cascade.
+Current Product Health affects how changes land. Healthy codebases catch and contain mistakes; coupled codebases let them cascade.
 
-The model computes an intermediate variable called **systemState**, which transforms Product Health into a 0-1 scale:
+The model computes **rawSystemState** from Product Health using a sigmoid:
 
 ```math
-\text{systemState} = \frac{1}{1 + e^{-1.5 \times (PH - 5)}}
+\text{rawSystemState} = \frac{1}{1 + e^{-1.5 \times (PH - 5)}}
 ```
 
-**Plain meaning:** systemState answers "how tractable is this codebase right now?"
+System Complexity (SC) then provides a **floor** on tractability. Simple systems never become as "frozen" as complex ones—there's less coupling possible:
 
-- At PH=8 (healthy): systemState ≈ 0.99. The system is tractable; it has tests, modularity, and clear boundaries.
-- At PH=5 (threshold): systemState = 0.5. The tipping point between order and chaos.
-- At PH=2 (degraded): systemState ≈ 0.01. The system is a tightly coupled mess; everything depends on everything.
+```math
+\text{effectiveSystemState} = (1 - SC) + SC \times \text{rawSystemState}
+```
 
-| What's Modified      | Multiplied By                     | Effect                                                   |
-| -------------------- | --------------------------------- | -------------------------------------------------------- |
-| Negative base impact | `(1 − systemState)`               | Damage compounds at low PH, caught early at high PH      |
-| Positive base impact | `systemState × (1 − (PH/maxPH)²)` | Hard to improve a mess; diminishing returns near ceiling |
-| Base sigma           | `(0.6 + 0.4 × bellFactor)`        | Chaos peaks mid-range; predictable at extremes           |
-| Random component     | `(0.15 + 0.85 × systemState)`     | Luck cannot save you at low PH; outcomes driven by mean  |
+**Plain meaning:** In a simple system (SC=0.25), even at rock-bottom PH, the system stays ~75% tractable. In an enterprise system (SC=1.0), tractability tracks rawSystemState directly.
 
-Where `bellFactor = 4 × systemState × (1 − systemState)` — a parabola that peaks at systemState=0.5 and falls to 0 at both extremes.
+| PH  | rawSystemState | SC=0.25 (Simple) | SC=1.0 (Enterprise) |
+| --- | -------------- | ---------------- | ------------------- |
+| 8   | 0.99           | 1.00             | 0.99                |
+| 5   | 0.50           | 0.88             | 0.50                |
+| 2   | 0.01           | 0.75             | 0.01                |
+
+| What's Modified        | Multiplied By                              | Effect                                                   |
+| ---------------------- | ------------------------------------------ | -------------------------------------------------------- |
+| Negative base impact   | `(1 − effectiveSystemState)`               | Damage compounds at low PH, caught early at high PH      |
+| Positive base impact   | `effectiveSystemState × (1 − (PH/maxPH)²)` | Hard to improve a mess; diminishing returns near ceiling |
+| Base sigma             | `(0.6 + 0.4 × bellFactor)`                 | Chaos peaks mid-range; predictable at extremes           |
+| Random component       | `(0.15 + 0.85 × effectiveSystemState)`     | Luck cannot save you at low PH; outcomes driven by mean  |
+| Accumulated complexity | `× SC`                                     | Simple systems accumulate less inherent complexity       |
+
+Where `bellFactor = 4 × s × (1 − s)` — a parabola peaking at s=0.5, using effectiveSystemState.
 
 ### The Compounding Effect (The "Entropy" Metaphor)
 
@@ -171,15 +205,16 @@ The same low-ER agent causes roughly **90× more degradation** in a coupled syst
 
 **Plain meaning:** Low-ER changes (no tests, no modularity) gradually tighten coupling. At first, existing structure catches problems: tests fail, monitoring alerts, modular boundaries contain the blast. But as coupling increases, these safety nets erode. Changes start breaking unrelated features. Eventually, fixing one thing breaks three others. The system accelerates its own decay, just like entropy in physics. The difference: entropy is inevitable; software decay is a choice.
 
-**Accumulated complexity:** Beyond the compounding effect, there's a second force at play: every change adds a small amount of inherent complexity. Even perfect engineering cannot fully prevent this. The longer a project runs, the more accumulated complexity it carries. This creates a slight downward pressure over time.
+**Accumulated complexity:** Beyond the compounding effect, every change adds inherent complexity. The longer a project runs, the more accumulated complexity it carries.
 
-The math: `complexityDrift = -(base + growth × changeCount) × systemState`
+The math: `complexityDrift = -(base + growth × changeCount) × systemState × SC`
 
 - **Time = changeCount.** Each change is a unit of time.
 - **Complexity grows linearly** with each change: `base + growth × changeCount`.
-- **Scaled by systemState.** Degraded systems (low PH) don't pay extra; they're already maximally disordered.
+- **Scaled by systemState.** Degraded systems don't pay extra; they're already maximally disordered.
+- **Scaled by SC.** Simple systems have fewer moving parts, so less complexity accumulates.
 
-At step 0, accumulated complexity is minimal. By step 1000, it has grown enough to create a visible downward trend even for senior engineers. This reflects the reality that long-running projects require sustained effort just to maintain quality, let alone improve it.
+At step 0, accumulated complexity is minimal. By step 1000, it has grown enough to create a visible downward trend even for senior engineers. Simple systems (SC=0.25) feel this pressure at 1/4 the rate of enterprise systems (SC=1.0).
 
 ### Each Change Event (The Roll of the Dice)
 
@@ -208,31 +243,47 @@ Resulting health is always clamped between 1 and 10. A soft ceiling ensures that
 
 ## Agent Profiles
 
-Only ER is configured. All other values are derived.
+An "agent" is anyone (human or AI) making changes to the codebase. Each has a fixed Engineering Rigor (ER). Base Impact depends on both ER and System Complexity (SC).
 
-| Agent              |  ER | → Base Impact | → Base Sigma | → Max Health |
-| ------------------ | --: | :-----------: | :----------: | :----------: |
-| AI Vibe Coder      | 0.3 |     −0.48     |     0.38     |     6.5      |
-| AI with Guardrails | 0.4 |     −0.24     |     0.34     |     7.0      |
-| Junior Engineer    | 0.5 |     0.00      |     0.30     |     7.5      |
-| Senior Engineer    | 0.8 |     +0.72     |     0.18     |     9.0      |
+| Agent              |  ER | Base Impact (SC=1.0) | Base Impact (SC=0.25) | Base Sigma | Max Health |
+| ------------------ | --: | :------------------: | :-------------------: | :--------: | :--------: |
+| AI Vibe Coder      | 0.3 |        −0.48         |         −0.03         |    0.38    |    6.5     |
+| AI with Guardrails | 0.4 |        −0.24         |         +0.21         |    0.34    |    7.0     |
+| Junior Engineer    | 0.5 |         0.00         |         +0.45         |    0.30    |    7.5     |
+| Senior Engineer    | 0.8 |        +0.72         |         +1.17         |    0.18    |    9.0     |
 
-**Key insight:** Junior engineers break even (μ=0). They don't improve the system, but they don't systematically degrade it either. AI vibe coders have negative expected impact; every change makes things worse on average.
+**Key insight:** In enterprise systems (SC=1.0), juniors break even while vibe coders degrade. In simple systems (SC=0.25), vibe coders are nearly breakeven (−0.03) and juniors have solid positive impact—simple systems are forgiving.
+
+## Complexity Profiles
+
+The UI lets you switch between three system complexity levels:
+
+| Profile    | SC   | Example                                            | Character                                   |
+| ---------- | ---- | -------------------------------------------------- | ------------------------------------------- |
+| Simple     | 0.25 | Blog, landing page, basic CMS                      | Very forgiving; most agents can maintain    |
+| Medium     | 0.50 | CRUD backend with auth, moderate logic             | Some discipline required                    |
+| Enterprise | 1.00 | Complex architecture and domain, many integrations | Only high ER (human or AI) sustains quality |
 
 ## What You'll See
 
-All simulations start at PH=8, representing the end of the **Shape Phase**: the AI has just built something impressive with full context. The **Scale Phase** begins, and the model shows what happens as the codebase grows beyond the AI's context window.
+The visualization has **tabs for each complexity level** (Simple, Medium, Enterprise). All simulations start at PH=8, representing the end of the **Shape Phase**.
+
+**Enterprise (SC=1.0)** — the punishing case:
 
 - **AI Vibe:** Slow decay at first, accelerates around PH ~5, bottoms out at 1.
-- **AI with Guardrails:** Slower decay, but still negative trajectory. Buys time, not salvation.
-- **Junior Engineer:** Slowly drifts downward toward 3-4. While their expected impact is 0 (breakeven), the system's asymmetry (slippery at the top, "frozen" and sticky at the bottom) means a neutral agent eventually slides into the mess without positive pressure to stay out.
-- **Senior Engineer:** Climbs from 8 toward ~9, then shows a slight downward drift over time due to accumulated complexity. Even seniors cannot fully escape it.
-- **Handoff (AI → Senior):** AI decays to 1. Seniors struggle initially (the mess resists improvement), then recover in an S-curve toward their ceiling.
-- **Handoff (AI → Junior):** AI decays to 1. Juniors recover very slowly and plateau much lower than seniors.
+- **Junior Engineer:** Drifts downward toward 3-4. Breakeven isn't enough to escape the asymmetry.
+- **Senior Engineer:** Climbs toward ~9, then slight drift due to accumulated complexity.
+- **Handoff (AI → Senior):** Slow S-curve recovery from PH=1 to ~9.
 
-![Product Health Trajectories](./assets/Screenshot%202025-12-23%20at%2010.22.50.png)
+**Simple (SC=0.25)** — the forgiving case:
 
-> Shaded bands are **confidence bands**: they show the range where 80% of simulation runs land. The solid line is the average. Roughly: "best realistic case" at the top, "worst realistic case" at the bottom, with extremes (top/bottom 10%) excluded.
+- **AI Vibe:** Nearly breakeven; drifts slowly, stays much healthier than in enterprise.
+- **Junior Engineer:** Positive impact; climbs toward ceiling.
+- **Handoff (AI → Senior):** Rapid recovery from any low point.
+
+![Product Health Trajectories](./assets/Screenshot%202026-01-05%20at%2014.02.48.png)
+
+> Shaded bands are **confidence bands**: 80% of runs land within them. The solid line is the average.
 
 > **Run it yourself:** `npm install && npm run dev` opens an interactive version at `http://localhost:5173`
 
@@ -259,12 +310,15 @@ npm install          # Install dependencies (first time only)
 npm run dev          # Start the visualization server
 ```
 
-This opens a browser at `http://localhost:5173` showing the interactive chart with all scenarios.
+This opens a browser at `http://localhost:5173` showing the interactive chart with tabs for each complexity level.
 
-For CLI output instead:
+For CLI output:
 
 ```bash
-npm run simulate:ai  # Print trajectory statistics to console
+npm run simulate:ai                    # Default: enterprise complexity
+npm run simulate:ai -- --complexity simple   # Simple system (SC=0.25)
+npm run simulate:ai -- --complexity medium   # Medium system (SC=0.5)
+npm run simulate:ai -- --complexity enterprise  # Enterprise system (SC=1.0)
 ```
 
 ## Repository Structure
@@ -273,7 +327,7 @@ npm run simulate:ai  # Print trajectory statistics to console
 src/
   model/
     Parameters.ts           # All tunable model constants
-    ProductHealthModel.ts   # Core simulation model (derives impact, variance, samples changes)
+    ProductHealthModel.ts   # Core simulation model (ER, SC → impact, variance, samples)
 
   runner/
     Trajectory.ts           # Monte Carlo simulation runner
@@ -281,7 +335,13 @@ src/
 
   scenarios/
     AgentProfiles.ts        # Engineering Rigor values for each agent type
+    ComplexityProfiles.ts   # System Complexity values (simple, medium, enterprise)
     ScenarioDefinitions.ts  # Scenario configurations (changes, phases, labels)
+
+  chart/
+    colors.ts               # Scenario color palette and theme colors
+    config.ts               # Chart.js configuration options
+    datasets.ts             # Dataset building and precomputation
 
   utils/
     Math.ts                 # Pure math helpers (sigmoid, gaussian, percentile, etc.)
@@ -290,8 +350,9 @@ src/
   types.ts                  # Shared type definitions
   simulation.ts             # Public API and re-exports
   simulation.test.ts        # Unit tests for model and simulation
-  main.ts                   # Chart.js visualization
-  cli.ts                    # Command-line interface
+  main.ts                   # App entry point (wiring only)
+  styles.css                # UI styles
+  cli.ts                    # Command-line interface with --complexity flag
 ```
 
 ---
@@ -302,14 +363,14 @@ All parameters below are calibration choices. They can be adjusted based on empi
 
 ### Base Property Parameters
 
-| Parameter        | Value | Rationale                                                                      |
-| ---------------- | ----: | ------------------------------------------------------------------------------ |
-| Impact slope     |   2.4 | Sets sensitivity of impact to rigor. Produces ±1.2 max base impact per change. |
-| Impact intercept |   1.2 | Places breakeven at ER=0.5. Above improves; below degrades.                    |
-| σ_min            |   0.1 | Minimum variance at ER=1. Even experts have some unpredictability.             |
-| σ_max            |   0.5 | Maximum variance at ER=0. How wild swings get with zero discipline.            |
-| Ceiling base     |     5 | Minimum achievable ceiling at ER=0.                                            |
-| Ceiling slope    |     5 | Makes ceiling range from 5 (ER=0) to 10 (ER=1).                                |
+| Parameter        | Value | Rationale                                                                   |
+| ---------------- | ----: | --------------------------------------------------------------------------- |
+| Impact slope     |   2.4 | Sets sensitivity of impact to rigor. Produces ±1.2 max base impact at SC=1. |
+| Min breakeven ER |  0.25 | Minimum discipline required even for simplest systems.                      |
+| σ_min            |   0.1 | Minimum variance at ER=1. Even experts have some unpredictability.          |
+| σ_max            |   0.5 | Maximum variance at ER=0. How wild swings get with zero discipline.         |
+| Ceiling base     |     5 | Minimum achievable ceiling at ER=0.                                         |
+| Ceiling slope    |     5 | Makes ceiling range from 5 (ER=0) to 10 (ER=1).                             |
 
 ### System State Parameters
 
@@ -328,24 +389,30 @@ All parameters below are calibration choices. They can be adjusted based on empi
 
 ### Complete Formulas
 
-> **Notation:** `e` is Euler's number (~2.718), the base of the natural logarithm. `e^x` means "e raised to the power x."
+> **Notation:** `e` is Euler's number (~2.718). `s` = effectiveSystemState. `SC` = System Complexity.
 
-**System state (sigmoid function):**
+**System state (with complexity floor):**
 
 ```math
-\text{systemState}(PH) = \frac{1}{1 + e^{-1.5 \times (PH - 5)}}
+\text{rawSystemState} = \frac{1}{1 + e^{-1.5 \times (PH - 5)}}
 ```
 
-**Expected impact:**
+```math
+s = (1 - SC) + SC \times \text{rawSystemState}
+```
+
+Simple systems (low SC) have a floor on tractability; they never become as "frozen" as complex systems.
+
+**Expected impact (breakeven scales with SC):**
 
 ```math
-\mu_{base} = ER \times 2.4 - 1.2
+\mu_{base} = 2.4 \times (ER - 0.25 \times (1 + SC))
 ```
 
 ```math
 \mu_{eff} = \begin{cases}
-\mu_{base} \times (1 - \text{systemState}) & \text{if } \mu_{base} \leq 0 \\
-\mu_{base} \times \text{systemState} \times \left(1 - \left(\frac{PH}{maxPH}\right)^2\right) & \text{if } \mu_{base} > 0
+\mu_{base} \times (1 - s) & \text{if } \mu_{base} \leq 0 \\
+\mu_{base} \times s \times \left(1 - \left(\frac{PH}{maxPH}\right)^2\right) & \text{if } \mu_{base} > 0
 \end{cases}
 ```
 
@@ -355,54 +422,46 @@ All parameters below are calibration choices. They can be adjusted based on empi
 \sigma_{base} = 0.1 + 0.4 \times (1 - ER)
 ```
 
-Bell-curve scaling (chaos peaks mid-range, predictable at extremes):
-
 ```math
-\text{bellFactor} = 4 \times \text{systemState} \times (1 - \text{systemState})
+\text{bellFactor} = 4 \times s \times (1 - s)
 ```
 
 ```math
 \sigma_{eff} = \sigma_{base} \times (0.6 + 0.4 \times \text{bellFactor})
 ```
 
-**Accumulated complexity:**
-
-Software complexity grows with each change. The complexity rate increases over time:
+**Accumulated complexity (scaled by SC):**
 
 ```math
 \text{complexityRate} = 0.005 + 0.00005 \times \text{changeCount}
 ```
 
 ```math
-\text{complexityDrift} = -\text{complexityRate} \times \text{systemState}
+\text{complexityDrift} = -\text{complexityRate} \times s \times SC
 ```
 
-Scaled by systemState: healthy systems pay this maintenance cost; degraded systems (already chaotic) don't accumulate extra complexity.
+Simple systems accumulate less inherent complexity (fewer moving parts to entangle).
 
 **Change event (the random draw):**
 
-Each change samples from a Normal (Gaussian) distribution. `N(0,1)` denotes a draw from the Standard Normal Distribution (mean=0, variance=1).
-
-The random component is attenuated at low PH (luck cannot save you in a coupled mess):
-
 ```math
-\text{attenuation} = 0.15 + 0.85 \times \text{systemState}
+\text{attenuation} = 0.15 + 0.85 \times s
 ```
 
 ```math
 \Delta PH = \mu_{eff} + \text{complexityDrift} + \sigma_{eff} \times N(0,1) \times \text{attenuation}
 ```
 
-Soft ceiling (when exceeding maxPH):
+**Soft ceiling** (when exceeding maxPH):
 
 ```math
 \text{if } \Delta > 0 \text{ and } PH > maxPH: \quad \Delta = \Delta \times e^{-5 \times \frac{PH - maxPH}{maxPH}}
 ```
 
-Final result (clamped to valid range):
+**Final result** (clamped to valid range):
 
 ```math
-PH_{new} = \text{clamp}(PH + \Delta, 1, 10) = \max(1, \min(10, PH + \Delta))
+PH_{new} = \text{clamp}(PH + \Delta, 1, 10)
 ```
 
 ---
@@ -412,29 +471,31 @@ PH_{new} = \text{clamp}(PH + \Delta, 1, 10) = \max(1, \min(10, PH + \Delta))
 For those who want the entire model in one formula:
 
 ```math
-PH_{n+1} = \text{clamp}\Big(PH_n + \mu_{eff} - c(n) \cdot s + \sigma_{eff} \cdot \varepsilon \cdot a, \; 1, \; 10\Big)
+PH_{n+1} = \text{clamp}\Big(PH_n + \mu_{eff} - c(n) \cdot s \cdot SC + \sigma_{eff} \cdot \varepsilon \cdot a, \; 1, \; 10\Big)
 ```
 
 ### Every Term Explained
 
-> **Note:** This section uses shorthand notation. Elsewhere in this document you'll see the full names: `s` = `systemState`, `a` = `attenuation`, `c(n)` = `complexityRate`.
+> **Shorthand:** `s` = effectiveSystemState, `a` = attenuation, `c(n)` = complexityRate, `SC` = System Complexity.
 
-| Symbol        | Name                   | What It Means (For Non-Developers)                                                                                                            |
-| ------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| **PH_n**      | Current Product Health | How easy the code is to change right now (1-10 scale).                                                                                        |
-| **PH\_{n+1}** | Next Product Health    | What the health becomes after one code change.                                                                                                |
-| **μ_eff**     | Effective Impact       | Does this change help or hurt? Positive = improvement, negative = damage. Depends on the developer's skill (ER) and the current system state. |
-| **c(n)**      | Complexity Rate        | How much inherent complexity has built up. Grows with each change: `0.005 + 0.00005 × n`. The longer a project runs, the higher this gets.    |
-| **s**         | System State           | How tractable the codebase is (0-1). Healthy code ≈ 1, messy code ≈ 0. Calculated as a sigmoid of PH.                                         |
-| **σ_eff**     | Effective Sigma        | How unpredictable the outcome is. Low-skill developers have high sigma (wild swings); experts have low sigma (consistent).                    |
-| **ε**         | Random Draw            | A dice roll from a Normal distribution. Some changes go better or worse than expected.                                                        |
-| **a**         | Attenuation            | How much randomness matters. In a messy codebase (low s), luck cannot save you; outcomes are driven by the mean.                              |
-| **clamp**     | Bounds                 | Keeps the result between 1 and 10. You can't go below rock bottom or above perfect.                                                           |
+| Symbol        | Name                   | What It Means                                                                                             |
+| ------------- | ---------------------- | --------------------------------------------------------------------------------------------------------- |
+| **PH_n**      | Current Product Health | How easy the code is to change right now (1-10 scale).                                                    |
+| **PH\_{n+1}** | Next Product Health    | What the health becomes after one code change.                                                            |
+| **μ_eff**     | Effective Impact       | Help or hurt? Depends on ER, SC, and current system state.                                                |
+| **c(n)**      | Complexity Rate        | Inherent complexity that grows with each change: `0.005 + 0.00005 × n`.                                   |
+| **s**         | Effective System State | How tractable the codebase is. Simple systems stay tractable; complex systems can become "frozen."        |
+| **SC**        | System Complexity      | Inherent complexity of the system (0.25 = blog, 1.0 = enterprise). Scales complexity drift and breakeven. |
+| **σ_eff**     | Effective Sigma        | How unpredictable the outcome is. Low ER = wild swings; high ER = consistent.                             |
+| **ε**         | Random Draw            | A dice roll from a Normal distribution. Some changes go better or worse than expected.                    |
+| **a**         | Attenuation            | How much randomness matters. In a frozen codebase, luck cannot save you.                                  |
+| **clamp**     | Bounds                 | Keeps the result between 1 and 10.                                                                        |
 
 ### The Story It Tells
 
 1. **Your skill (μ_eff)** determines whether changes help or hurt on average.
-2. **Time (c(n))** works against everyone. Complexity accumulates with every change.
-3. **System health (s)** amplifies everything. Good code catches mistakes; bad code lets them cascade.
-4. **Randomness (ε)** means any single change could go either way, but averages reveal the trend.
-5. **In the long run**, only sustained high-skill effort can outpace the relentless growth of complexity.
+2. **System complexity (SC)** sets the difficulty level. Simple systems forgive low rigor; complex systems punish it.
+3. **Time (c(n))** works against everyone—but slower for simple systems.
+4. **System health (s)** amplifies everything. Good code catches mistakes; bad code lets them cascade.
+5. **Randomness (ε)** means any single change could go either way, but averages reveal the trend.
+6. **In the long run**, only sustained high-skill effort can outpace complexity—and the bar is higher for complex systems.

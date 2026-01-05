@@ -21,8 +21,23 @@ export class ProductHealthModel {
    */
   public readonly engineeringRigor: number;
 
-  constructor(engineeringRigor: number) {
+  /**
+   * The inherent complexity of the system being worked on (0-1 scale).
+   * Determines how much the "entropy dynamics" (systemState feedback) affect the system.
+   *
+   * In a simple system (low SC), there's less coupling possible, so:
+   * - The system never becomes as "frozen" even at low PH
+   * - Damage doesn't cascade as severely
+   * - Recovery is faster (easier to untangle)
+   *
+   * Mathematically: effectiveSystemState = (1 - SC) + SC × rawSystemState
+   * This provides a floor on tractability proportional to simplicity.
+   */
+  public readonly systemComplexity: number;
+
+  constructor(engineeringRigor: number, systemComplexity: number = 1.0) {
     this.engineeringRigor = engineeringRigor;
+    this.systemComplexity = systemComplexity;
   }
 
   /**
@@ -37,11 +52,21 @@ export class ProductHealthModel {
   /**
    * The agent's expected impact per change, before system state modifiers.
    * Negative = tends to make things worse. Positive = tends to improve things.
-   * Breakeven is at ER = 0.5 (juniors). Below that, you're degrading the system.
+   *
+   * The breakeven point (where baseImpact = 0) scales with system complexity:
+   *   breakeven_ER = 0.25 × (1 + SC)
+   *
+   * - At SC = 0 (trivial): breakeven at ER = 0.25 (minimum rigor needed)
+   * - At SC = 1 (enterprise): breakeven at ER = 0.5 (original behavior)
+   *
+   * The 0.25 minimum means: even the simplest system requires some rigor.
+   * The scaling means: complex systems demand proportionally more discipline.
    */
   public get baseImpact(): number {
-    const { slope, intercept } = ModelParameters.impact;
-    return this.engineeringRigor * slope - intercept;
+    const { slope } = ModelParameters.impact;
+    // Breakeven ER scales linearly from 0.25 (at SC=0) to 0.5 (at SC=1)
+    const breakevenER = 0.25 * (1 + this.systemComplexity);
+    return slope * (this.engineeringRigor - breakevenER);
   }
 
   /**
@@ -59,10 +84,23 @@ export class ProductHealthModel {
    * Computes how "tractable" the system is at the current health level.
    * Returns 0-1: 0 = tightly coupled mess, 1 = well-structured and maintainable.
    * This drives the compounding effect: damage multiplies in unhealthy systems.
+   *
+   * System Complexity provides a floor on tractability:
+   *   effectiveSystemState = (1 - SC) + SC × rawSystemState
+   *
+   * In a simple system (SC=0.25), even at PH=1, effectiveSystemState ≈ 0.75.
+   * This models the reality that simple systems can never become as "frozen"
+   * as complex systems - there's less coupling to entangle.
    */
   private computeSystemState(currentHealth: number): number {
     const { threshold, steepness } = ModelParameters.systemState;
-    return sigmoid(currentHealth - threshold, steepness);
+    const rawSystemState = sigmoid(currentHealth - threshold, steepness);
+
+    // Linear interpolation: floor at (1 - SC), scaling the remainder by SC
+    // SC = 1 (enterprise): effectiveSystemState = rawSystemState
+    // SC = 0.25 (simple): effectiveSystemState = 0.75 + 0.25 × rawSystemState
+    const floor = 1 - this.systemComplexity;
+    return floor + this.systemComplexity * rawSystemState;
   }
 
   /**
@@ -146,8 +184,10 @@ export class ProductHealthModel {
    *
    * Software naturally tends toward disorder; complexity accumulates with each change.
    * The complexity cost grows over time: base + growth × changeCount.
-   * Scaled by systemState: healthy systems pay this "maintenance cost",
-   * but degraded systems (already chaotic) don't accumulate extra complexity.
+   *
+   * Scaled by:
+   * - systemState: healthy systems pay this "maintenance cost"
+   * - systemComplexity: simpler systems have less inherent complexity to accumulate
    */
   private computeComplexityDrift(
     systemState: number,
@@ -155,7 +195,8 @@ export class ProductHealthModel {
   ): number {
     const { base, growth } = ModelParameters.accumulatedComplexity;
     const currentRate = base + growth * changeCount;
-    return -currentRate * systemState;
+    // Simple systems accumulate less complexity (fewer moving parts)
+    return -currentRate * systemState * this.systemComplexity;
   }
 
   /**

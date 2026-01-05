@@ -9,6 +9,11 @@ import {
   type ScenarioConfig,
   type ScenarioKey,
 } from "./scenarios/ScenarioDefinitions";
+import {
+  ComplexityProfiles,
+  ComplexityProfileKeys,
+  type ComplexityProfileKey,
+} from "./scenarios/ComplexityProfiles";
 import type {
   PhaseConfig,
   SimulationRun,
@@ -22,12 +27,15 @@ export {
   summarizeRuns,
   Scenarios as scenarios,
   ScenarioKeys as scenarioKeys,
+  ComplexityProfiles as complexityProfiles,
+  ComplexityProfileKeys as complexityProfileKeys,
 };
 
 export type {
   PhaseConfig,
   ScenarioConfig,
   ScenarioKey,
+  ComplexityProfileKey,
   SimulationRun,
   SimulationStats,
   TrajectoryConfig,
@@ -35,15 +43,20 @@ export type {
 
 export const simulateScenario = (
   scenario: ScenarioKey,
-  options?: { nSimulations?: number }
+  options?: { nSimulations?: number; systemComplexity?: number }
 ): SimulationStats => {
   const config = Scenarios[scenario];
   const nSimulations = options?.nSimulations ?? 1000;
+  const systemComplexity = options?.systemComplexity ?? 1.0;
 
   const runs = Array.from({ length: nSimulations }, () =>
     config.phases?.length
-      ? simulatePhasedTrajectory(config.phases, config.startValue ?? 8)
-      : simulateTrajectory(config)
+      ? simulatePhasedTrajectory(
+          config.phases,
+          config.startValue ?? 8,
+          systemComplexity
+        )
+      : simulateTrajectory({ ...config, systemComplexity })
   );
 
   return summarizeRuns(runs, config.failureThreshold ?? 3);

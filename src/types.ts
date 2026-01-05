@@ -8,6 +8,8 @@ export type TrajectoryConfig = {
   failureThreshold?: number;
   /** The agent's Engineering Rigor (0-1 scale). */
   engineeringRigor: number;
+  /** The inherent complexity of the system (0-1 scale, default: 1.0 for enterprise). */
+  systemComplexity?: number;
 };
 
 /** Configuration for one phase in a multi-phase simulation. */
@@ -31,4 +33,3 @@ export type SimulationStats = {
   /** 90th percentile PH at each step (optimistic bound). */
   p90Trajectory: number[];
 };
-

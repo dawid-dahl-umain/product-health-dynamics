@@ -1,8 +1,15 @@
-import { scenarioKeys, simulateScenario } from "./simulation";
+import {
+  scenarioKeys,
+  simulateScenario,
+  complexityProfiles,
+  complexityProfileKeys,
+  type ComplexityProfileKey,
+} from "./simulation";
 
 type ParsedArgs = {
   scenario: string;
   runs: number;
+  complexity: ComplexityProfileKey;
 };
 
 const parseArgs = (): ParsedArgs => {
@@ -13,11 +20,26 @@ const parseArgs = (): ParsedArgs => {
   };
   const scenario = pick("--scenario", pick("-s", "ai-vibe"));
   const runs = Number(pick("--runs", pick("-r", "1000")));
-  return { scenario, runs: Number.isFinite(runs) && runs > 0 ? runs : 1000 };
+  const complexity = pick("--complexity", pick("-c", "enterprise"));
+  return {
+    scenario,
+    runs: Number.isFinite(runs) && runs > 0 ? runs : 1000,
+    complexity: complexityProfileKeys.includes(
+      complexity as ComplexityProfileKey
+    )
+      ? (complexity as ComplexityProfileKey)
+      : "enterprise",
+  };
 };
 
-const formatHeader = (scenario: string, runs: number) =>
-  `Running ${scenario} with ${runs} simulations...`;
+const formatHeader = (
+  scenario: string,
+  runs: number,
+  complexity: ComplexityProfileKey
+) => {
+  const profile = complexityProfiles[complexity];
+  return `Running ${scenario} with ${runs} simulations...\nSystem Complexity: ${profile.label} (SC=${profile.systemComplexity})`;
+};
 
 const formatResults = (stats: ReturnType<typeof simulateScenario>) =>
   [
@@ -30,17 +52,19 @@ const formatResults = (stats: ReturnType<typeof simulateScenario>) =>
   ].join("\n");
 
 const main = () => {
-  const { scenario, runs } = parseArgs();
+  const { scenario, runs, complexity } = parseArgs();
   if (!scenarioKeys.includes(scenario as (typeof scenarioKeys)[number])) {
     console.error(
       `Unknown scenario "${scenario}". Options: ${scenarioKeys.join(", ")}`
     );
     process.exit(1);
   }
+  const systemComplexity = complexityProfiles[complexity].systemComplexity;
   const stats = simulateScenario(scenario as (typeof scenarioKeys)[number], {
     nSimulations: runs,
+    systemComplexity,
   });
-  console.log(formatHeader(scenario, runs));
+  console.log(formatHeader(scenario, runs, complexity));
   console.log(formatResults(stats));
 };
 
