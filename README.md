@@ -102,9 +102,9 @@ flowchart LR
     AC["<b>Accumulated</b><br/><b>Complexity</b><br/>Grows with each change<br/><i>even seniors can't escape</i>"]
 
     ER -->|"determines"| BI & BS & MH
-    SC -->|"shifts breakeven"| BI
-    SC -->|"keeps tractable"| SS
-    SC -->|"scales"| AC
+    SC -->|"lowers"| BI
+    SC -->|"affects"| SS
+    SC -->|"grows"| AC
     BI & BS & MH -->|"feed into"| CE
     AC -->|"drags down"| CE
 
