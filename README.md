@@ -83,17 +83,17 @@ flowchart LR
         direction TB
         BI["<b>Base Impact</b><br/>Does each change<br/>help or hurt on average?"]
         BS["<b>Base Sigma</b><br/>How predictable<br/>are the outcomes?"]
-        MH["<b>Max Health</b><br/>Best sustainable<br/>quality level"]
+        MH["<b>Max Product Health</b><br/>Best sustainable<br/>quality level"]
     end
 
     subgraph loop ["YOUR SYSTEM ⟳ (repeats each commit)"]
         direction TB
-        PH["<b>Current Health</b><br/>How easy is the code<br/>to change right now?<br/><i>1 = nightmare, 10 = dream</i>"]
+        PH["<b>Current Product Health</b><br/>How easy is the code<br/>to change right now?<br/><i>1 = nightmare, 10 = dream</i>"]
         SS["<b>Tractability</b><br/>Does the system catch mistakes<br/>or let them cascade?"]
         CE(("<b>Change</b><br/><b>Event</b><br/>roll the dice"))
-        NPH["<b>New Health</b><br/>Better, worse,<br/>or same?"]
+        NPH["<b>New Product Health</b><br/>Better, worse,<br/>or same?"]
 
-        PH -->|"health affects"| SS
+        PH -->|"PH affects"| SS
         SS -->|"modifies outcome"| CE
         CE -->|"produces"| NPH
         NPH -.->|"becomes next"| PH
@@ -239,7 +239,7 @@ For every change event, the new health is calculated as:
 - **High Rigor (Senior):** High μ, low σ. They consistently make things better. Their "bad days" are still mostly neutral.
 - **Low Rigor (AI Vibe):** Negative μ, high σ. Every change is a gamble. Sometimes it works brilliantly (lucky draw), but on average, the system degrades. At low PH, σ is "frozen" (reduced), meaning outcomes become predictably bad instead of erratic.
 
-Resulting health is always clamped between 1 and 10. A soft ceiling ensures that as health approaches or exceeds an agent's `maxPH`, the positive impact of their changes naturally decays.
+Resulting Product Health is always clamped between 1 and 10. A soft ceiling ensures that as health approaches or exceeds an agent's `maxPH`, the positive impact of their changes naturally decays.
 
 ## Agent Profiles
 
@@ -481,7 +481,7 @@ PH_{n+1} = \text{clamp}\Big(PH_n + \mu_{eff} - c(n) \cdot s \cdot SC + \sigma_{e
 | Symbol        | Name                   | What It Means                                                                                             |
 | ------------- | ---------------------- | --------------------------------------------------------------------------------------------------------- |
 | **PH_n**      | Current Product Health | How easy the code is to change right now (1-10 scale).                                                    |
-| **PH\_{n+1}** | Next Product Health    | What the health becomes after one code change.                                                            |
+| **PH\_{n+1}** | Next Product Health    | What the Product Health becomes after one code change.                                                    |
 | **μ_eff**     | Effective Impact       | Help or hurt? Depends on ER, SC, and current system state.                                                |
 | **c(n)**      | Complexity Rate        | Inherent complexity that grows with each change: `0.005 + 0.00005 × n`.                                   |
 | **s**         | Effective System State | How tractable the codebase is. Simple systems stay tractable; complex systems can become "frozen."        |
@@ -496,6 +496,6 @@ PH_{n+1} = \text{clamp}\Big(PH_n + \mu_{eff} - c(n) \cdot s \cdot SC + \sigma_{e
 1. **Your skill (μ_eff)** determines whether changes help or hurt on average.
 2. **System complexity (SC)** sets the difficulty level. Simple systems forgive low rigor; complex systems punish it.
 3. **Time (c(n))** works against everyone—but slower for simple systems.
-4. **System health (s)** amplifies everything. Good code catches mistakes; bad code lets them cascade.
+4. **Tractability (s)** amplifies everything. Good code catches mistakes; bad code lets them cascade.
 5. **Randomness (ε)** means any single change could go either way, but averages reveal the trend.
 6. **In the long run**, only sustained high-skill effort can outpace complexity—and the bar is higher for complex systems.
