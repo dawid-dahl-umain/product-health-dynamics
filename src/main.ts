@@ -86,6 +86,8 @@ const buildAppHtml = (
     </div>
     <div class="controls">
       <button id="reset-zoom">Reset View</button>
+      <button id="show-all">Show All</button>
+      <button id="clear-all">Clear Selection</button>
       <span class="hint">Click legend to show scenarios · Scroll to zoom · Drag to pan</span>
     </div>
   </main>
@@ -105,6 +107,24 @@ const bindEvents = () => {
 
   document.getElementById("reset-zoom")?.addEventListener("click", () => {
     chartInstance?.resetZoom();
+  });
+
+  document.getElementById("show-all")?.addEventListener("click", () => {
+    if (chartInstance) {
+      chartInstance.data.datasets.forEach((_, i) => {
+        chartInstance!.getDatasetMeta(i).hidden = false;
+      });
+      chartInstance.update();
+    }
+  });
+
+  document.getElementById("clear-all")?.addEventListener("click", () => {
+    if (chartInstance) {
+      chartInstance.data.datasets.forEach((_, i) => {
+        chartInstance!.getDatasetMeta(i).hidden = true;
+      });
+      chartInstance.update();
+    }
   });
 };
 
