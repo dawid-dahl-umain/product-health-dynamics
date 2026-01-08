@@ -139,7 +139,7 @@ h2 {
 
 .sim-tabs {
   display: flex;
-  gap: 4px;
+  gap: 8px;
 }
 
 .sim-tab {

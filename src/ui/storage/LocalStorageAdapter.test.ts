@@ -24,7 +24,6 @@ const createTestAppData = (): AppData => ({
     defaultVisibility: "all",
     activeSimulationId: "sim-1",
   },
-  version: 6,
 });
 
 const createMockLocalStorage = () => {
@@ -86,7 +85,6 @@ describe("LocalStorageAdapter", () => {
           defaultVisibility: "averages-only",
           activeSimulationId: "stored-sim",
         },
-        version: 6,
       };
       mockStorage.getItem.mockReturnValue(JSON.stringify(storedData));
 
@@ -222,7 +220,6 @@ describe("LocalStorageAdapter", () => {
           defaultVisibility: "all",
           activeSimulationId: "sim-1",
         },
-        version: 3,
       });
       const adapter = new LocalStorageAdapter(dataWithTwo);
 
@@ -323,7 +320,6 @@ describe("LocalStorageAdapter", () => {
           defaultVisibility: "averages-only",
           activeSimulationId: "imported-sim",
         },
-        version: 5,
       };
 
       // When
@@ -334,137 +330,6 @@ describe("LocalStorageAdapter", () => {
       expect(adapter.getSimulations()[0].name).toBe("Imported Simulation");
       expect(adapter.getSimulations()[0].systemComplexity).toBe(1.5);
       expect(adapter.getGlobalConfig().defaultVisibility).toBe("averages-only");
-    });
-  });
-
-  describe("version migration", () => {
-    it("migrates v1 data with old complexity field to systemComplexity", () => {
-      // Given
-      const oldData = {
-        simulations: [
-          {
-            id: "old-sim",
-            name: "Old Simulation",
-            agents: [],
-            complexity: "simple",
-            nChanges: 500,
-          },
-        ],
-        globalConfig: {
-          defaultVisibility: "all",
-          activeSimulationId: "old-sim",
-        },
-        version: 1,
-      };
-      mockStorage.getItem.mockReturnValue(JSON.stringify(oldData));
-
-      // When
-      const adapter = new LocalStorageAdapter(createTestAppData);
-
-      // Then
-      const exported = adapter.exportData();
-      expect(exported.simulations[0].name).toBe("Old Simulation");
-      expect(exported.simulations[0].systemComplexity).toBe(0.25);
-    });
-
-    it("migrates v1 data with old handoffToId on agents", () => {
-      // Given
-      const oldData = {
-        simulations: [
-          {
-            id: "handoff-sim",
-            name: "Handoff Sim",
-            agents: [
-              {
-                id: "a1",
-                name: "Agent 1",
-                handoffToId: "a2",
-                color: "#ff0000",
-              },
-              { id: "a2", name: "Agent 2", color: "#00ff00" },
-            ],
-            systemComplexity: 0.5,
-            nChanges: 1000,
-          },
-        ],
-        globalConfig: { activeSimulationId: "handoff-sim" },
-        version: 1,
-      };
-      mockStorage.getItem.mockReturnValue(JSON.stringify(oldData));
-
-      // When
-      const adapter = new LocalStorageAdapter(createTestAppData);
-
-      // Then
-      const exported = adapter.exportData();
-      expect(exported.simulations[0].handoffs).toHaveLength(1);
-      expect(exported.simulations[0].handoffs[0].fromAgentId).toBe("a1");
-      expect(exported.simulations[0].handoffs[0].toAgentId).toBe("a2");
-      expect(exported.simulations[0].agents[0].handoffToId).toBeUndefined();
-    });
-
-    it("migrates v2 data with complexityId to systemComplexity", () => {
-      // Given
-      const v2Data = {
-        simulations: [
-          {
-            id: "v2-sim",
-            name: "V2 Simulation",
-            agents: [],
-            complexityId: "enterprise",
-            nChanges: 1000,
-          },
-        ],
-        complexityProfiles: [
-          {
-            id: "enterprise",
-            name: "Enterprise",
-            description: "Enterprise",
-            systemComplexity: 1.0,
-          },
-        ],
-        globalConfig: {
-          defaultVisibility: "all",
-          activeSimulationId: "v2-sim",
-        },
-        version: 2,
-      };
-      mockStorage.getItem.mockReturnValue(JSON.stringify(v2Data));
-
-      // When
-      const adapter = new LocalStorageAdapter(createTestAppData);
-
-      // Then
-      const exported = adapter.exportData();
-      expect(exported.simulations[0].systemComplexity).toBe(1.0);
-    });
-
-    it("preserves systemComplexity for v3 data", () => {
-      // Given
-      const v3Data: AppData = {
-        simulations: [
-          {
-            id: "v3-sim",
-            name: "V3 Simulation",
-            agents: [],
-            systemComplexity: 0.75,
-            nChanges: 1000,
-          },
-        ],
-        globalConfig: {
-          defaultVisibility: "all",
-          activeSimulationId: "v3-sim",
-        },
-        version: 3,
-      };
-      mockStorage.getItem.mockReturnValue(JSON.stringify(v3Data));
-
-      // When
-      const adapter = new LocalStorageAdapter(createTestAppData);
-
-      // Then
-      const exported = adapter.exportData();
-      expect(exported.simulations[0].systemComplexity).toBe(0.75);
     });
   });
 });

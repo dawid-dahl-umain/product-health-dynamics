@@ -31,5 +31,4 @@ export type GlobalConfig = {
 export type AppData = {
   simulations: Simulation[];
   globalConfig: GlobalConfig;
-  version: number;
 };

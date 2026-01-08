@@ -90,7 +90,6 @@ export const createDefaultGlobalConfig = (): GlobalConfig => ({
 export const createDefaultAppData = (): AppData => ({
   simulations: createDefaultSimulations(),
   globalConfig: createDefaultGlobalConfig(),
-  version: 6,
 });
 
 export const generateId = (): string =>

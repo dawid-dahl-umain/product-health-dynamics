@@ -2,13 +2,6 @@ import type { StorageService } from "./StorageService";
 import type { Simulation, GlobalConfig, AppData } from "./types";
 
 const STORAGE_KEY = "product-health-dynamics";
-const CURRENT_VERSION = 6;
-
-const LEGACY_COMPLEXITY_VALUES: Record<string, number> = {
-  simple: 0.25,
-  medium: 0.5,
-  enterprise: 1.0,
-};
 
 export class LocalStorageAdapter implements StorageService {
   private data: AppData;
@@ -24,83 +17,10 @@ export class LocalStorageAdapter implements StorageService {
     if (!stored) return this.defaultDataFactory();
 
     try {
-      const parsed = JSON.parse(stored) as AppData;
-      if (parsed.version !== CURRENT_VERSION) {
-        const migrated = this.migrate(parsed);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
-        return migrated;
-      }
-      return parsed;
+      return JSON.parse(stored) as AppData;
     } catch {
       return this.defaultDataFactory();
     }
-  }
-
-  private migrate(data: AppData): AppData {
-    // Migrate simulations from older versions
-    const legacyData = data as unknown as {
-      simulations: Array<{
-        id: string;
-        name: string;
-        agents: Array<{ handoffToId?: string }>;
-        handoffs?: unknown[];
-        nChanges: number;
-        complexity?: string;
-        complexityId?: string;
-        systemComplexity?: number;
-      }>;
-      complexityProfiles?: Array<{ id: string; systemComplexity: number }>;
-    };
-
-    const migratedSimulations: Simulation[] = legacyData.simulations.map(
-      (sim) => {
-        let systemComplexity = sim.systemComplexity;
-        if (systemComplexity === undefined) {
-          const complexityKey = sim.complexityId ?? sim.complexity ?? "medium";
-          const scFromProfiles = legacyData.complexityProfiles?.find(
-            (p) => p.id === complexityKey
-          )?.systemComplexity;
-          systemComplexity =
-            scFromProfiles ?? LEGACY_COMPLEXITY_VALUES[complexityKey] ?? 0.5;
-        }
-
-        // Migrate handoffs from agents if they don't exist
-        const handoffs = (sim.handoffs as any[] || []).map(h => {
-          if (h.color) delete h.color;
-          return h;
-        });
-        if (handoffs.length === 0) {
-          sim.agents.forEach((agent: any) => {
-            if (agent.handoffToId) {
-              handoffs.push({
-                id: `${agent.id}-handoff`,
-                name: `${agent.name} Handoff`,
-                fromAgentId: agent.id,
-                toAgentId: agent.handoffToId,
-                atChange: Math.round(sim.nChanges * 0.2),
-                color: agent.color,
-              });
-              delete agent.handoffToId;
-            }
-          });
-        }
-
-        return {
-          id: sim.id,
-          name: sim.name,
-          agents: sim.agents as any,
-          handoffs: handoffs as any,
-          nChanges: sim.nChanges,
-          systemComplexity,
-        } as Simulation;
-      }
-    );
-
-    return {
-      simulations: migratedSimulations,
-      globalConfig: data.globalConfig,
-      version: CURRENT_VERSION,
-    };
   }
 
   private persist(): void {
@@ -156,7 +76,7 @@ export class LocalStorageAdapter implements StorageService {
   }
 
   importData(data: AppData): void {
-    this.data = { ...data, version: CURRENT_VERSION };
+    this.data = data;
     this.persist();
   }
 }

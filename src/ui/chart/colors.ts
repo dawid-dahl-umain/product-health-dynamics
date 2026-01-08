@@ -1,8 +1,8 @@
 export const AGENT_PALETTE = [
   "#FF5C8D", // AI Vibe (Vibrant Rose)
   "#FFB84D", // AI Guardrails (Warm Saffron)
-  "#4ADE80", // Junior (Emerald/Mint)
-  "#38BDF8", // Senior (Azure Blue)
+  "#38BDF8", // Junior (Azure Blue)
+  "#4ADE80", // Senior (Emerald/Mint)
   "#A78BFA", // Handoff 1 (Soft Lavender)
   "#2DD4BF", // Handoff 2 (Cool Teal)
   "#F472B6", // Handoff 3 (Warm Pink)
@@ -16,7 +16,7 @@ export const chartColors = {
   textLight: "#94a3b8",
   annotationLine: "rgba(148, 163, 184, 0.3)",
   annotationBg: "#0f172a",
-  bandOpacity: 0.06,
+  bandOpacity: 0.08,
 };
 
 export const getNextColor = (usedColors: string[]): string => {
