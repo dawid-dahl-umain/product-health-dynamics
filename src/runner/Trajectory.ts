@@ -16,7 +16,12 @@ export class TrajectorySimulator {
    * Simulates a single trajectory with one agent type.
    */
   simulate(config: TrajectoryConfig): SimulationRun {
-    const { nChanges, startValue = 8, engineeringRigor, systemComplexity } = config;
+    const {
+      nChanges,
+      startValue = 8,
+      engineeringRigor,
+      systemComplexity,
+    } = config;
     const model = new ProductHealthModel(engineeringRigor, systemComplexity);
 
     const healthTrajectory: number[] = [startValue];
@@ -48,8 +53,18 @@ export class TrajectorySimulator {
     let totalChanges = 0;
 
     for (const phase of phases) {
-      const model = new ProductHealthModel(phase.engineeringRigor, systemComplexity);
-      this.simulatePhase(model, phase.nChanges, totalChanges, healthTrajectory, timeTrajectory, cumulativeTime);
+      const model = new ProductHealthModel(
+        phase.engineeringRigor,
+        systemComplexity
+      );
+      this.simulatePhase(
+        model,
+        phase.nChanges,
+        totalChanges,
+        healthTrajectory,
+        timeTrajectory,
+        cumulativeTime
+      );
       cumulativeTime = timeTrajectory[timeTrajectory.length - 1];
       totalChanges += phase.nChanges;
     }
@@ -70,7 +85,9 @@ export class TrajectorySimulator {
     for (let i = 0; i < nChanges; i++) {
       const currentHealth = healthTrajectory[healthTrajectory.length - 1];
       cumulativeTime += model.computeTimeCost(currentHealth);
-      healthTrajectory.push(model.sampleNextHealth(currentHealth, changeOffset + i, this.rng));
+      healthTrajectory.push(
+        model.sampleNextHealth(currentHealth, changeOffset + i, this.rng)
+      );
       timeTrajectory.push(cumulativeTime);
     }
   }
@@ -94,4 +111,9 @@ export const simulatePhasedTrajectory = (
   startHealth: number,
   systemComplexity: number = 1.0,
   rng: () => number = Math.random
-): SimulationRun => new TrajectorySimulator(rng).simulatePhased(phases, startHealth, systemComplexity);
+): SimulationRun =>
+  new TrajectorySimulator(rng).simulatePhased(
+    phases,
+    startHealth,
+    systemComplexity
+  );
