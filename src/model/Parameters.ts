@@ -108,4 +108,20 @@ export const ModelParameters = {
     base: 0.005,
     growth: 0.00005,
   },
+
+  /**
+   * Time Cost: how long each change takes based on system state.
+   * In degraded systems, changes take longer due to debugging, coordination, regression testing.
+   *
+   * baseTime: Time cost in a perfectly healthy system (normalized to 1.0).
+   * maxTime: Time cost in a completely frozen system (multiplier, e.g., 3 = 3x longer).
+   *
+   * Formula: timeCost = baseTime + (maxTime - baseTime) × (1 - systemState)
+   * At systemState=1 (healthy): timeCost = 1.0
+   * At systemState=0 (frozen): timeCost = maxTime
+   */
+  timeCost: {
+    baseTime: 1.0,
+    maxTime: 3.0,
+  },
 } as const;

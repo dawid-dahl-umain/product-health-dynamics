@@ -16,8 +16,9 @@ export type ScenarioConfig = TrajectoryConfig & {
   phases?: PhaseConfig[];
 };
 
-const DEFAULT_CHANGES = 1000;
-const DEFAULT_START = 8;
+/** Default number of change events for simulations. Exported for use elsewhere. */
+export const DEFAULT_CHANGES = 1000;
+export const DEFAULT_START = 8;
 const HANDOFF_AI_CHANGES = 200;
 const HANDOFF_RECOVERY_CHANGES = 800;
 

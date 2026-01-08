@@ -2,74 +2,96 @@ import { ProductHealthModel } from "../model/ProductHealthModel";
 import type { PhaseConfig, SimulationRun, TrajectoryConfig } from "../types";
 
 /**
+ * Simulates Product Health trajectories over time using Monte Carlo sampling.
+ * Tracks both health and cumulative time (accounting for velocity loss in degraded systems).
+ */
+export class TrajectorySimulator {
+  private readonly rng: () => number;
+
+  constructor(rng: () => number = Math.random) {
+    this.rng = rng;
+  }
+
+  /**
+   * Simulates a single trajectory with one agent type.
+   */
+  simulate(config: TrajectoryConfig): SimulationRun {
+    const { nChanges, startValue = 8, engineeringRigor, systemComplexity } = config;
+    const model = new ProductHealthModel(engineeringRigor, systemComplexity);
+
+    const healthTrajectory: number[] = [startValue];
+    const timeTrajectory: number[] = [0];
+    let cumulativeTime = 0;
+
+    for (let i = 0; i < nChanges; i++) {
+      const currentHealth = healthTrajectory[healthTrajectory.length - 1];
+      cumulativeTime += model.computeTimeCost(currentHealth);
+      healthTrajectory.push(model.sampleNextHealth(currentHealth, i, this.rng));
+      timeTrajectory.push(cumulativeTime);
+    }
+
+    return { healthTrajectory, timeTrajectory, totalTime: cumulativeTime };
+  }
+
+  /**
+   * Simulates a trajectory with multiple phases, each with different Engineering Rigor.
+   * Accumulated change count is preserved across phases.
+   */
+  simulatePhased(
+    phases: PhaseConfig[],
+    startHealth: number,
+    systemComplexity: number = 1.0
+  ): SimulationRun {
+    const healthTrajectory: number[] = [startHealth];
+    const timeTrajectory: number[] = [0];
+    let cumulativeTime = 0;
+    let totalChanges = 0;
+
+    for (const phase of phases) {
+      const model = new ProductHealthModel(phase.engineeringRigor, systemComplexity);
+      this.simulatePhase(model, phase.nChanges, totalChanges, healthTrajectory, timeTrajectory, cumulativeTime);
+      cumulativeTime = timeTrajectory[timeTrajectory.length - 1];
+      totalChanges += phase.nChanges;
+    }
+
+    return { healthTrajectory, timeTrajectory, totalTime: cumulativeTime };
+  }
+
+  private simulatePhase(
+    model: ProductHealthModel,
+    nChanges: number,
+    changeOffset: number,
+    healthTrajectory: number[],
+    timeTrajectory: number[],
+    startTime: number
+  ): void {
+    let cumulativeTime = startTime;
+
+    for (let i = 0; i < nChanges; i++) {
+      const currentHealth = healthTrajectory[healthTrajectory.length - 1];
+      cumulativeTime += model.computeTimeCost(currentHealth);
+      healthTrajectory.push(model.sampleNextHealth(currentHealth, changeOffset + i, this.rng));
+      timeTrajectory.push(cumulativeTime);
+    }
+  }
+}
+
+/**
  * Simulates a single trajectory of Product Health over time.
- *
- * Starting from an initial health value, applies `nChanges` change events
- * using the given Engineering Rigor. Each change is a probabilistic draw
- * from the model.
- *
- * @returns Array of PH values: [start, after change 1, after change 2, ...]
+ * @deprecated Use TrajectorySimulator.simulate() for new code.
  */
 export const simulateTrajectory = (
   config: TrajectoryConfig,
   rng: () => number = Math.random
-): SimulationRun => {
-  const {
-    nChanges,
-    startValue = 8,
-    engineeringRigor,
-    systemComplexity,
-  } = config;
-  const model = new ProductHealthModel(engineeringRigor, systemComplexity);
-  const history: number[] = [startValue];
-
-  for (let i = 0; i < nChanges; i++) {
-    const currentHealth = history[history.length - 1];
-    history.push(model.sampleNextHealth(currentHealth, i, rng));
-  }
-
-  return history;
-};
+): SimulationRun => new TrajectorySimulator(rng).simulate(config);
 
 /**
- * Simulates a trajectory with multiple phases, each with different Engineering Rigor.
- *
- * Use this for scenarios like "AI vibe coding for 200 changes, then senior engineers
- * take over for 800 changes". Each phase picks up where the previous one left off.
- *
- * The accumulated change count is preserved across phases, so accumulated complexity
- * continues to grow even when the agent changes.
- *
- * @param phases - Array of phase configurations
- * @param startHealth - Initial Product Health value
- * @param systemComplexity - System complexity for all phases (default: 1.0 for enterprise)
- * @param rng - Random number generator
- * @returns Array of PH values spanning all phases continuously
+ * Simulates a trajectory with multiple phases.
+ * @deprecated Use TrajectorySimulator.simulatePhased() for new code.
  */
 export const simulatePhasedTrajectory = (
   phases: PhaseConfig[],
   startHealth: number,
   systemComplexity: number = 1.0,
   rng: () => number = Math.random
-): SimulationRun => {
-  const history: number[] = [startHealth];
-  let totalChanges = 0;
-
-  for (const phase of phases) {
-    const model = new ProductHealthModel(
-      phase.engineeringRigor,
-      systemComplexity
-    );
-
-    for (let i = 0; i < phase.nChanges; i++) {
-      const currentHealth = history[history.length - 1];
-      history.push(
-        model.sampleNextHealth(currentHealth, totalChanges + i, rng)
-      );
-    }
-
-    totalChanges += phase.nChanges;
-  }
-
-  return history;
-};
+): SimulationRun => new TrajectorySimulator(rng).simulatePhased(phases, startHealth, systemComplexity);

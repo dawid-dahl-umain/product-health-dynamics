@@ -6,6 +6,7 @@ import { summarizeRuns } from "./runner/Statistics";
 import {
   Scenarios,
   ScenarioKeys,
+  DEFAULT_CHANGES,
   type ScenarioConfig,
   type ScenarioKey,
 } from "./scenarios/ScenarioDefinitions";
@@ -29,6 +30,7 @@ export {
   ScenarioKeys as scenarioKeys,
   ComplexityProfiles as complexityProfiles,
   ComplexityProfileKeys as complexityProfileKeys,
+  DEFAULT_CHANGES,
 };
 
 export type {
@@ -41,22 +43,45 @@ export type {
   TrajectoryConfig,
 };
 
+const scalePhases = (
+  phases: PhaseConfig[] | undefined,
+  targetChanges: number,
+  defaultChanges: number
+): PhaseConfig[] | undefined => {
+  if (!phases?.length) return undefined;
+  const scaleFactor = targetChanges / defaultChanges;
+  return phases.map((phase) => ({
+    ...phase,
+    nChanges: Math.round(phase.nChanges * scaleFactor),
+  }));
+};
+
 export const simulateScenario = (
   scenario: ScenarioKey,
-  options?: { nSimulations?: number; systemComplexity?: number }
+  options?: {
+    nSimulations?: number;
+    systemComplexity?: number;
+    nChanges?: number;
+  }
 ): SimulationStats => {
   const config = Scenarios[scenario];
   const nSimulations = options?.nSimulations ?? 1000;
   const systemComplexity = options?.systemComplexity ?? 1.0;
+  const nChanges = options?.nChanges ?? config.nChanges ?? DEFAULT_CHANGES;
+  const scaledPhases = scalePhases(
+    config.phases,
+    nChanges,
+    config.nChanges ?? DEFAULT_CHANGES
+  );
 
   const runs = Array.from({ length: nSimulations }, () =>
-    config.phases?.length
+    scaledPhases?.length
       ? simulatePhasedTrajectory(
-          config.phases,
+          scaledPhases,
           config.startValue ?? 8,
           systemComplexity
         )
-      : simulateTrajectory({ ...config, systemComplexity })
+      : simulateTrajectory({ ...config, nChanges, systemComplexity })
   );
 
   return summarizeRuns(runs, config.failureThreshold ?? 3);

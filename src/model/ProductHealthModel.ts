@@ -52,21 +52,14 @@ export class ProductHealthModel {
   /**
    * The agent's expected impact per change, before system state modifiers.
    * Negative = tends to make things worse. Positive = tends to improve things.
-   *
-   * The breakeven point (where baseImpact = 0) scales with system complexity:
-   *   breakeven_ER = 0.25 × (1 + SC)
-   *
-   * - At SC = 0 (trivial): breakeven at ER = 0.25 (minimum rigor needed)
-   * - At SC = 1 (enterprise): breakeven at ER = 0.5 (original behavior)
-   *
-   * The 0.25 minimum means: even the simplest system requires some rigor.
-   * The scaling means: complex systems demand proportionally more discipline.
    */
   public get baseImpact(): number {
     const { slope } = ModelParameters.impact;
-    // Breakeven ER scales linearly from 0.25 (at SC=0) to 0.5 (at SC=1)
-    const breakevenER = 0.25 * (1 + this.systemComplexity);
-    return slope * (this.engineeringRigor - breakevenER);
+    return slope * (this.engineeringRigor - this.breakevenRigor);
+  }
+
+  private get breakevenRigor(): number {
+    return 0.25 * (1 + this.systemComplexity);
   }
 
   /**
@@ -83,24 +76,30 @@ export class ProductHealthModel {
   /**
    * Computes how "tractable" the system is at the current health level.
    * Returns 0-1: 0 = tightly coupled mess, 1 = well-structured and maintainable.
-   * This drives the compounding effect: damage multiplies in unhealthy systems.
-   *
-   * System Complexity provides a floor on tractability:
-   *   effectiveSystemState = (1 - SC) + SC × rawSystemState
-   *
-   * In a simple system (SC=0.25), even at PH=1, effectiveSystemState ≈ 0.75.
-   * This models the reality that simple systems can never become as "frozen"
-   * as complex systems - there's less coupling to entangle.
    */
   private computeSystemState(currentHealth: number): number {
     const { threshold, steepness } = ModelParameters.systemState;
     const rawSystemState = sigmoid(currentHealth - threshold, steepness);
+    return this.applyComplexityFloor(rawSystemState);
+  }
 
-    // Linear interpolation: floor at (1 - SC), scaling the remainder by SC
-    // SC = 1 (enterprise): effectiveSystemState = rawSystemState
-    // SC = 0.25 (simple): effectiveSystemState = 0.75 + 0.25 × rawSystemState
-    const floor = 1 - this.systemComplexity;
-    return floor + this.systemComplexity * rawSystemState;
+  private applyComplexityFloor(rawSystemState: number): number {
+    const simplicityFloor = 1 - this.systemComplexity;
+    return simplicityFloor + this.systemComplexity * rawSystemState;
+  }
+
+  /**
+   * Computes the time cost for a change at the current health level.
+   *
+   * In degraded systems, changes take longer due to debugging, coordination,
+   * and regression testing. This models velocity loss alongside quality loss.
+   *
+   * Returns a multiplier: 1.0 = baseline (healthy), up to maxTime (frozen).
+   */
+  public computeTimeCost(currentHealth: number): number {
+    const systemState = this.computeSystemState(currentHealth);
+    const { baseTime, maxTime } = ModelParameters.timeCost;
+    return baseTime + (maxTime - baseTime) * (1 - systemState);
   }
 
   /**
@@ -108,6 +107,10 @@ export class ProductHealthModel {
    *
    * For negative base impact (low ER): damage is amplified in coupled systems.
    * For positive base impact (high ER): improvement requires traction and has diminishing returns.
+   *
+   * The ceiling factor is clamped to [0, 1] to ensure agents above their ceiling
+   * simply cannot improve (factor = 0), rather than having their improvement
+   * mechanism work in reverse (which would occur if the factor went negative).
    */
   public computeExpectedImpact(currentHealth: number): number {
     const systemState = this.computeSystemState(currentHealth);
@@ -119,8 +122,9 @@ export class ProductHealthModel {
 
     const traction = systemState;
     const { exponent } = ModelParameters.ceilingFactor;
-    const ceilingFactor =
+    const rawCeilingFactor =
       1 - Math.pow(currentHealth / this.maxHealth, exponent);
+    const ceilingFactor = Math.max(0, rawCeilingFactor);
     return this.baseImpact * traction * ceilingFactor;
   }
 
@@ -152,31 +156,40 @@ export class ProductHealthModel {
   }
 
   /**
-   * Computes variance attenuation at low Product Health.
+   * Computes variance attenuation at both extremes of Product Health.
    *
-   * In a tightly coupled system, outcomes become "frozen": luck cannot save you.
-   * This prevents instant recovery via lucky variance while allowing mean-driven improvement.
+   * The intuition: outcomes are predictable at both extremes, chaotic in the middle.
+   * - High PH (healthy): well-structured system catches mistakes → predictable outcomes
+   * - Mid PH (transition): some structure but unreliable → chaotic outcomes
+   * - Low PH (frozen): everything coupled, changes predictably cascade → deterministic decay
+   *
+   * Uses bellFactor to create symmetric reduction at both extremes, matching the
+   * physical reality that both healthy and degraded systems have predictable dynamics.
    */
   private computeVarianceAttenuation(systemState: number): number {
     const { floor, range } = ModelParameters.varianceAttenuation;
-    return floor + range * systemState;
+    const bellFactor = this.computeBellCurveFactor(systemState);
+    return floor + range * bellFactor;
   }
 
   /**
-   * Applies soft ceiling resistance when Product Health exceeds the agent's maxHealth.
-   * Gains are exponentially dampened based on how far above ceiling you are.
+   * Computes ceiling resistance factor when Product Health exceeds the agent's maxHealth.
+   *
+   * Unlike the old "soft ceiling" which only attenuated positive deltas (creating
+   * asymmetric variance), this applies SYMMETRIC attenuation to all variance when
+   * above ceiling. This preserves the plateau behavior by reducing volatility rather
+   * than biasing direction.
+   *
+   * Returns 1.0 when at or below ceiling, decays toward 0 as overshoot increases.
    */
-  private applySoftCeiling(delta: number, currentHealth: number): number {
-    const isAboveCeiling = currentHealth > this.maxHealth;
-    const isGaining = delta > 0;
-
-    if (!isGaining || !isAboveCeiling) {
-      return delta;
+  private computeCeilingResistance(currentHealth: number): number {
+    if (currentHealth <= this.maxHealth) {
+      return 1.0;
     }
 
     const overshoot = (currentHealth - this.maxHealth) / this.maxHealth;
     const { decay } = ModelParameters.softCeiling;
-    return delta * Math.exp(-decay * overshoot);
+    return Math.exp(-decay * overshoot);
   }
 
   /**
@@ -186,8 +199,13 @@ export class ProductHealthModel {
    * The complexity cost grows over time: base + growth × changeCount.
    *
    * Scaled by:
-   * - systemState: healthy systems pay this "maintenance cost"
+   * - systemState: only tractable systems pay this "maintenance cost"; frozen systems
+   *   are already at maximum disorder and can't accumulate more
    * - systemComplexity: simpler systems have less inherent complexity to accumulate
+   *
+   * This models reality: a healthy codebase requires ongoing maintenance effort to
+   * stay healthy. A frozen codebase is already chaotic; it can't get worse from
+   * complexity alone (though it still decays from negative impact).
    */
   private computeComplexityDrift(
     systemState: number,
@@ -195,19 +213,13 @@ export class ProductHealthModel {
   ): number {
     const { base, growth } = ModelParameters.accumulatedComplexity;
     const currentRate = base + growth * changeCount;
-    // Simple systems accumulate less complexity (fewer moving parts)
     return -currentRate * systemState * this.systemComplexity;
   }
 
   /**
    * Samples the next Product Health value after one change event.
    * This is the core Monte Carlo step: draws from a normal distribution,
-   * applies soft ceiling logic, and clamps to valid bounds.
-   *
-   * @param currentHealth - The current Product Health (1-10)
-   * @param changeCount - How many changes have occurred (for accumulated complexity)
-   * @param rng - Random number generator (default: Math.random). Inject for testing.
-   * @returns The new Product Health after this change
+   * applies attenuation, and clamps to valid bounds.
    */
   public sampleNextHealth(
     currentHealth: number,
@@ -220,16 +232,26 @@ export class ProductHealthModel {
       systemState,
       changeCount
     );
-    const sigma = this.computeEffectiveSigma(currentHealth);
+    const randomComponent = this.computeAttenuatedRandom(
+      currentHealth,
+      systemState,
+      rng
+    );
 
-    const rawRandom = sigma * gaussianRandom(rng);
-    const attenuatedRandom =
-      rawRandom * this.computeVarianceAttenuation(systemState);
-
-    const rawDelta = mean + complexityDrift + attenuatedRandom;
-    const delta = this.applySoftCeiling(rawDelta, currentHealth);
-
+    const delta = mean + complexityDrift + randomComponent;
     const { min, max } = ModelParameters.health;
     return clamp(currentHealth + delta, min, max);
+  }
+
+  private computeAttenuatedRandom(
+    currentHealth: number,
+    systemState: number,
+    rng: () => number
+  ): number {
+    const sigma = this.computeEffectiveSigma(currentHealth);
+    const rawRandom = sigma * gaussianRandom(rng);
+    const varianceAttenuation = this.computeVarianceAttenuation(systemState);
+    const ceilingResistance = this.computeCeilingResistance(currentHealth);
+    return rawRandom * varianceAttenuation * ceilingResistance;
   }
 }

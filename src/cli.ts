@@ -10,6 +10,7 @@ type ParsedArgs = {
   scenario: string;
   runs: number;
   complexity: ComplexityProfileKey;
+  nChanges: number;
 };
 
 const parseArgs = (): ParsedArgs => {
@@ -21,6 +22,7 @@ const parseArgs = (): ParsedArgs => {
   const scenario = pick("--scenario", pick("-s", "ai-vibe"));
   const runs = Number(pick("--runs", pick("-r", "1000")));
   const complexity = pick("--complexity", pick("-c", "enterprise"));
+  const nChanges = Number(pick("--changes", pick("-n", "1000")));
   return {
     scenario,
     runs: Number.isFinite(runs) && runs > 0 ? runs : 1000,
@@ -29,16 +31,18 @@ const parseArgs = (): ParsedArgs => {
     )
       ? (complexity as ComplexityProfileKey)
       : "enterprise",
+    nChanges: Number.isFinite(nChanges) && nChanges > 0 ? nChanges : 1000,
   };
 };
 
 const formatHeader = (
   scenario: string,
   runs: number,
-  complexity: ComplexityProfileKey
+  complexity: ComplexityProfileKey,
+  nChanges: number
 ) => {
   const profile = complexityProfiles[complexity];
-  return `Running ${scenario} with ${runs} simulations...\nSystem Complexity: ${profile.label} (SC=${profile.systemComplexity})`;
+  return `Running ${scenario} with ${runs} simulations, ${nChanges} changes each...\nSystem Complexity: ${profile.label} (SC=${profile.systemComplexity})`;
 };
 
 const formatResults = (stats: ReturnType<typeof simulateScenario>) =>
@@ -49,10 +53,14 @@ const formatResults = (stats: ReturnType<typeof simulateScenario>) =>
     `Average trajectory (first 10): ${stats.averageTrajectory
       .slice(0, 10)
       .join(", ")}`,
+    `Time metrics:`,
+    `  Total time: ${stats.averageTotalTime} (baseline: ${stats.baselineTime})`,
+    `  Time per change: ${stats.averageTimePerChange}`,
+    `  Time overhead: ${stats.timeOverheadPercent}%`,
   ].join("\n");
 
 const main = () => {
-  const { scenario, runs, complexity } = parseArgs();
+  const { scenario, runs, complexity, nChanges } = parseArgs();
   if (!scenarioKeys.includes(scenario as (typeof scenarioKeys)[number])) {
     console.error(
       `Unknown scenario "${scenario}". Options: ${scenarioKeys.join(", ")}`
@@ -63,8 +71,9 @@ const main = () => {
   const stats = simulateScenario(scenario as (typeof scenarioKeys)[number], {
     nSimulations: runs,
     systemComplexity,
+    nChanges,
   });
-  console.log(formatHeader(scenario, runs, complexity));
+  console.log(formatHeader(scenario, runs, complexity, nChanges));
   console.log(formatResults(stats));
 };
 

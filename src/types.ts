@@ -15,8 +15,15 @@ export type TrajectoryConfig = {
 /** Configuration for one phase in a multi-phase simulation. */
 export type PhaseConfig = Omit<TrajectoryConfig, "failureThreshold">;
 
-/** A single simulation run: array of Product Health values over time. */
-export type SimulationRun = number[];
+/** A single simulation run with health trajectory and time tracking. */
+export type SimulationRun = {
+  /** Product Health values at each change event. */
+  healthTrajectory: number[];
+  /** Cumulative time at each change event. */
+  timeTrajectory: number[];
+  /** Total time for all changes in this run. */
+  totalTime: number;
+};
 
 /** Aggregated statistics from multiple simulation runs. */
 export type SimulationStats = {
@@ -32,4 +39,12 @@ export type SimulationStats = {
   p10Trajectory: number[];
   /** 90th percentile PH at each step (optimistic bound). */
   p90Trajectory: number[];
+  /** Average total time across all runs. */
+  averageTotalTime: number;
+  /** Average time per change (total time / nChanges). */
+  averageTimePerChange: number;
+  /** Baseline time (what it would be at constant systemState=1). */
+  baselineTime: number;
+  /** Time overhead: (averageTotalTime - baselineTime) / baselineTime as percentage. */
+  timeOverheadPercent: number;
 };

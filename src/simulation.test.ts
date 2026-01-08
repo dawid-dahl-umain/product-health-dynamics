@@ -257,11 +257,13 @@ describe("simulateTrajectory", () => {
     };
 
     // When
-    const trajectory = simulateTrajectory(config);
+    const result = simulateTrajectory(config);
 
     // Then
-    expect(trajectory).toHaveLength(11);
-    expect(trajectory[0]).toBe(8);
+    expect(result.healthTrajectory).toHaveLength(11);
+    expect(result.healthTrajectory[0]).toBe(8);
+    expect(result.timeTrajectory).toHaveLength(11);
+    expect(result.totalTime).toBeGreaterThan(0);
   });
 
   it("clamps health between 1 and 10", () => {
@@ -273,10 +275,10 @@ describe("simulateTrajectory", () => {
     };
 
     // When
-    const trajectory = simulateTrajectory(config);
+    const result = simulateTrajectory(config);
 
     // Then
-    trajectory.forEach((health) => {
+    result.healthTrajectory.forEach((health) => {
       expect(health).toBeGreaterThanOrEqual(1);
       expect(health).toBeLessThanOrEqual(10);
     });
@@ -290,10 +292,31 @@ describe("simulateTrajectory", () => {
     };
 
     // When
-    const trajectory = simulateTrajectory(config);
+    const result = simulateTrajectory(config);
 
     // Then
-    expect(trajectory[0]).toBe(8);
+    expect(result.healthTrajectory[0]).toBe(8);
+  });
+
+  it("tracks cumulative time across changes", () => {
+    // Given
+    const config = {
+      nChanges: 10,
+      startValue: 8,
+      engineeringRigor: 0.5,
+    };
+
+    // When
+    const result = simulateTrajectory(config);
+
+    // Then
+    expect(result.timeTrajectory[0]).toBe(0);
+    expect(result.timeTrajectory[10]).toBe(result.totalTime);
+    for (let i = 1; i < result.timeTrajectory.length; i++) {
+      expect(result.timeTrajectory[i]).toBeGreaterThan(
+        result.timeTrajectory[i - 1]
+      );
+    }
   });
 });
 
@@ -306,11 +329,12 @@ describe("simulatePhasedTrajectory", () => {
     ];
 
     // When
-    const trajectory = simulatePhasedTrajectory(phases, 8);
+    const result = simulatePhasedTrajectory(phases, 8);
 
     // Then
-    expect(trajectory).toHaveLength(16);
-    expect(trajectory[0]).toBe(8);
+    expect(result.healthTrajectory).toHaveLength(16);
+    expect(result.healthTrajectory[0]).toBe(8);
+    expect(result.totalTime).toBeGreaterThan(0);
   });
 
   it("transitions between phases continuously", () => {
@@ -321,11 +345,11 @@ describe("simulatePhasedTrajectory", () => {
     ];
 
     // When
-    const trajectory = simulatePhasedTrajectory(phases, 8);
+    const result = simulatePhasedTrajectory(phases, 8);
 
     // Then
-    expect(trajectory).toHaveLength(7);
-    trajectory.forEach((health) => {
+    expect(result.healthTrajectory).toHaveLength(7);
+    result.healthTrajectory.forEach((health) => {
       expect(health).toBeGreaterThanOrEqual(1);
       expect(health).toBeLessThanOrEqual(10);
     });
@@ -336,29 +360,29 @@ describe("summarizeRuns", () => {
   it("calculates correct statistics for identical runs", () => {
     // Given
     const runs = [
-      [8, 7, 6],
-      [8, 7, 6],
+      { healthTrajectory: [8, 7, 6], timeTrajectory: [0, 1, 2], totalTime: 2 },
+      { healthTrajectory: [8, 7, 6], timeTrajectory: [0, 1, 2], totalTime: 2 },
     ];
 
     // When
     const stats = summarizeRuns(runs);
 
     // Then
-    expect(stats).toEqual({
-      averageFinal: 6,
-      averageMin: 6,
-      failureRate: 0,
-      averageTrajectory: [8, 7, 6],
-      p10Trajectory: [8, 7, 6],
-      p90Trajectory: [8, 7, 6],
-    });
+    expect(stats.averageFinal).toBe(6);
+    expect(stats.averageMin).toBe(6);
+    expect(stats.failureRate).toBe(0);
+    expect(stats.averageTrajectory).toEqual([8, 7, 6]);
+    expect(stats.p10Trajectory).toEqual([8, 7, 6]);
+    expect(stats.p90Trajectory).toEqual([8, 7, 6]);
+    expect(stats.averageTotalTime).toBe(2);
+    expect(stats.baselineTime).toBe(2);
   });
 
   it("calculates failure rate based on minimum health", () => {
     // Given
     const runs = [
-      [8, 5, 6],
-      [8, 2, 4],
+      { healthTrajectory: [8, 5, 6], timeTrajectory: [0, 1, 2], totalTime: 2 },
+      { healthTrajectory: [8, 2, 4], timeTrajectory: [0, 1, 2], totalTime: 2 },
     ];
 
     // When
@@ -371,8 +395,8 @@ describe("summarizeRuns", () => {
   it("calculates percentiles across runs", () => {
     // Given
     const runs = [
-      [10, 5],
-      [10, 10],
+      { healthTrajectory: [10, 5], timeTrajectory: [0, 1], totalTime: 1 },
+      { healthTrajectory: [10, 10], timeTrajectory: [0, 1], totalTime: 1 },
     ];
 
     // When
@@ -381,5 +405,29 @@ describe("summarizeRuns", () => {
     // Then
     expect(stats.averageTrajectory).toEqual([10, 7.5]);
     expect(stats.p10Trajectory[1]).toBeLessThan(stats.p90Trajectory[1]);
+  });
+
+  it("calculates time overhead percentage", () => {
+    // Given
+    const runs = [
+      {
+        healthTrajectory: [8, 7, 6],
+        timeTrajectory: [0, 1.5, 3],
+        totalTime: 3,
+      },
+      {
+        healthTrajectory: [8, 7, 6],
+        timeTrajectory: [0, 1.5, 3],
+        totalTime: 3,
+      },
+    ];
+
+    // When
+    const stats = summarizeRuns(runs);
+
+    // Then
+    expect(stats.averageTotalTime).toBe(3);
+    expect(stats.baselineTime).toBe(2);
+    expect(stats.timeOverheadPercent).toBe(50);
   });
 });
