@@ -3,13 +3,21 @@ export type AgentConfig = {
   name: string;
   engineeringRigor: number;
   color: string;
-  handoffToId?: string;
+};
+
+export type HandoffConfig = {
+  id: string;
+  name: string;
+  fromAgentId: string;
+  toAgentId: string;
+  atChange: number;
 };
 
 export type Simulation = {
   id: string;
   name: string;
   agents: AgentConfig[];
+  handoffs: HandoffConfig[];
   systemComplexity: number;
   complexityDescription?: string;
   nChanges: number;

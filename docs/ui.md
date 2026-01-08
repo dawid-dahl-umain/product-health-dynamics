@@ -14,162 +14,70 @@ npm run dev
 
 ### Simulation Tabs
 
-Each tab is a complete, self-contained simulation with its own settings and agents. Click a tab to switch; double-click to rename.
+Manage multiple scenarios simultaneously. Each tab is self-contained.
 
-- **Add Tab (+)**: Create a new blank simulation (auto-opens settings)
-- **Close Tab (×)**: Remove a simulation (requires at least one remaining)
+- **Switch**: Click a tab to view its configuration and chart.
+- **Rename**: Double-click the tab name to edit.
+- **Add (+)**: Create a new blank simulation.
+- **Duplicate**: Copy the active simulation (located in settings).
+- **Export**: Download the active simulation as a JSON file.
 
 ### Settings Panel
 
 Toggle with the **Settings** button in the header.
 
-#### Top Row
+#### System Configuration
 
-| Control    | Description                                           |
-| ---------- | ----------------------------------------------------- |
-| Complexity | Slider (0.1-2.0) for system complexity                |
-| Changes    | Dropdown to select number of change events (250-2000) |
-| Duplicate  | Create a copy of the current simulation               |
-| Export     | Download the simulation as JSON                       |
+- **Complexity**: Slider (`0.1` to `1.0`) representing inherent architectural difficulty.
+- **Changes**: Select simulation length (`250`, `500`, `1,000`, or `2,000` changes).
 
-**Complexity guide:**
+**Complexity Guide:**
 
-- 0.1-0.3: Simple (blog, landing page)
-- 0.3-0.6: Moderate (CRUD backend, auth)
-- 0.6-1.0: Complex (enterprise, integrations)
-- 1.0+: Very complex (legacy, high coupling)
+- `0.1 - 0.3`: **Simple** (Blog, landing page) — Highly forgiving.
+- `0.3 - 0.6`: **Moderate** (CRUD backend) — Requires baseline discipline.
+- `0.6 - 1.0`: **Enterprise** (Legacy, high coupling) — Punishes low rigor.
 
-#### Agents Section
+#### Developer Management
 
-Each agent card displays:
+Configure the agents and scenarios:
 
-- **Color picker**: Click to change the line color
-- **Name input**: Edit the agent's display name
-- **Eng. Rigor slider**: Adjust engineering rigor level (0.10-1.00)
-- **Hands off to dropdown**: Select another agent to hand off to after 20% of changes
-
-Actions:
-
-- **+ Add Agent**: Create a new agent with default settings
-- **Reset Defaults**: Restore the default agent set
+- **Personas**: Independent agents with a fixed **Engineering Rigor** (`0.1` to `1.0`).
+- **Handoff Scenarios**: Define a story where one persona hands off to another.
+  - **From/To**: Select the starting and ending personas.
+  - **Handoff at**: Configure the exact change event number where the transition occurs.
+  - **Color/Name**: Personalize the trajectory visualization for the handoff flow.
 
 ### Global Settings
 
 Access via the sliders icon in the header.
 
-| Setting                          | Description                                        |
-| -------------------------------- | -------------------------------------------------- |
-| Show confidence bands by default | Toggle whether p10/p90 bands are initially visible |
-| Reset All Data                   | Clear localStorage and restore default simulations |
+- **Default Visibility**: Choose whether to show **All** (Mean + 80% confidence bands) or **Averages Only** by default.
+- **Reset All Data**: Clears `localStorage` and restores factory defaults.
 
-### Chart Controls
-
-- **Reset View**: Reset zoom/pan to default
-- **Show All**: Reveal all agents and confidence bands
-- **Clear All**: Hide all chart lines
-- **Legend click**: Toggle a scenario's visibility (all 3 lines together)
-- **Scroll**: Zoom in/out
-- **Drag**: Pan the view
+---
 
 ## Data Persistence
 
-All settings are automatically saved to `localStorage`:
+All data is automatically saved to the browser's `localStorage` and persists across sessions. This includes your simulation tabs, custom agent settings, and global preferences.
 
-- Simulation tabs (name, complexity, agents, changes)
-- Agent configurations (name, engineering rigor, color, handoff)
-- Global settings (default visibility)
-- Active simulation selection
+## Advanced: Customization
 
-Data persists across browser sessions. Use **Reset All Data** in Global Settings to clear.
+### Adding Default Agents
 
-## Export
+Edit `src/ui/defaults.ts` and modify `createDefaultAgents`. This set is used when you click "Reset Defaults" in the UI.
 
-From the Settings panel, click the export icon to download the current simulation as JSON.
+### Custom Storage Adapters
 
-## File Structure
-
-```text
-src/ui/
-  templates/           # HTML template builders
-    icons.ts           # SVG icon constants
-    header.ts          # Header template
-    simulationTabs.ts  # Simulation tabs template
-    configPanel.ts     # Settings panel template
-    agentCard.ts       # Agent card template
-    chartControls.ts   # Chart controls template
-    globalSettingsModal.ts  # Modal template
-    index.ts           # Barrel exports
-
-  chart/
-    colors.ts          # Color utilities
-    config.ts          # Chart.js configuration
-    datasets.ts        # Builds datasets from agents
-    index.ts           # Barrel exports
-
-  storage/
-    types.ts           # AgentConfig, Simulation, GlobalConfig, AppData
-    StorageService.ts  # Storage interface
-    LocalStorageAdapter.ts  # localStorage implementation
-    index.ts           # Barrel exports
-
-  App.ts               # ProductHealthApp class (UI orchestration)
-  defaults.ts          # Default simulations and agents
-  types.ts             # UI constants
-  styles.css           # All styles
-  index.ts             # Public exports
-
-src/main.ts            # Application entry point
-```
-
-## Customization
-
-### Adding New Default Agents
-
-Edit `src/ui/defaults.ts`:
+The app uses a `StorageService` interface. You can swap `LocalStorageAdapter` in `src/ui/App.ts` for a custom implementation (e.g., connecting to a database or cloud storage).
 
 ```typescript
-const createDefaultAgents = (): AgentConfig[] => [
-  {
-    id: "my-agent",
-    name: "My Custom Agent",
-    engineeringRigor: 0.6,
-    color: "#10b981",
-  },
-  // ...
-];
-```
-
-### Changing Color Palette
-
-Edit `src/ui/defaults.ts`:
-
-```typescript
-export const getNextColor = (usedColors: string[]): string => {
-  const palette = ["#ef4444", "#f97316", "#eab308" /* ... */];
-  return palette.find((c) => !usedColors.includes(c)) ?? palette[0];
-};
-```
-
-### Modifying Chart Appearance
-
-Edit `src/ui/chart/config.ts` for Chart.js options (axes, legends, tooltips, zoom).
-
-## Storage Interface
-
-The UI uses a `StorageService` interface, implemented by `LocalStorageAdapter`. To add a backend:
-
-```typescript
-import type { StorageService } from "./storage/StorageService";
-
-export class DatabaseAdapter implements StorageService {
-  getSimulations(): Simulation[] {
-    /* ... */
-  }
-  saveSimulation(sim: Simulation): void {
-    /* ... */
-  }
-  // ... implement all interface methods
+export interface StorageService {
+  getSimulations(): Simulation[];
+  saveSimulation(sim: Simulation): void;
+  // ... see src/ui/storage/types.ts
 }
 ```
 
-Then inject it into `ProductHealthApp` instead of `LocalStorageAdapter`.
+### Chart Styling
+
+Modify `src/ui/chart/config.ts` to adjust Chart.js specific behaviors like axes scaling, tooltips, or zoom sensitivity.

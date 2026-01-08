@@ -1,48 +1,54 @@
 import type {
   AgentConfig,
+  HandoffConfig,
   Simulation,
   GlobalConfig,
   AppData,
 } from "./storage/types";
+
+import { AGENT_PALETTE } from "./chart/colors";
 
 const createDefaultDevelopers = (): AgentConfig[] => [
   {
     id: "vibe",
     name: "AI Vibe Coder",
     engineeringRigor: 0.3,
-    color: "#ef4444",
+    color: AGENT_PALETTE[0],
   },
   {
     id: "guardrails",
     name: "AI with Guardrails",
     engineeringRigor: 0.4,
-    color: "#f97316",
+    color: AGENT_PALETTE[1],
   },
   {
     id: "junior",
     name: "Junior Developer",
     engineeringRigor: 0.5,
-    color: "#eab308",
+    color: AGENT_PALETTE[2],
   },
   {
     id: "senior",
     name: "Senior Developer",
     engineeringRigor: 0.8,
-    color: "#22c55e",
+    color: AGENT_PALETTE[3],
   },
+];
+
+const createDefaultHandoffs = (): HandoffConfig[] => [
   {
     id: "ai-senior-handoff",
     name: "AI → Senior Handoff",
-    engineeringRigor: 0.3,
-    color: "#8b5cf6",
-    handoffToId: "senior",
+    fromAgentId: "vibe",
+    toAgentId: "senior",
+    atChange: 200,
   },
   {
     id: "ai-junior-handoff",
     name: "AI → Junior Handoff",
-    engineeringRigor: 0.3,
-    color: "#3b82f6",
-    handoffToId: "junior",
+    fromAgentId: "vibe",
+    toAgentId: "junior",
+    atChange: 200,
   },
 ];
 
@@ -51,6 +57,7 @@ export const createDefaultSimulations = (): Simulation[] => [
     id: "simple",
     name: "Simple System",
     agents: createDefaultDevelopers(),
+    handoffs: createDefaultHandoffs(),
     systemComplexity: 0.25,
     complexityDescription: "Blog, landing page, basic CMS",
     nChanges: 1000,
@@ -59,6 +66,7 @@ export const createDefaultSimulations = (): Simulation[] => [
     id: "medium",
     name: "Medium System",
     agents: createDefaultDevelopers(),
+    handoffs: createDefaultHandoffs(),
     systemComplexity: 0.5,
     complexityDescription: "CRUD backend with auth, moderate business logic",
     nChanges: 1000,
@@ -67,6 +75,7 @@ export const createDefaultSimulations = (): Simulation[] => [
     id: "enterprise",
     name: "Enterprise System",
     agents: createDefaultDevelopers(),
+    handoffs: createDefaultHandoffs(),
     systemComplexity: 1.0,
     complexityDescription: "Complex architecture, many integrations",
     nChanges: 1000,
@@ -81,30 +90,13 @@ export const createDefaultGlobalConfig = (): GlobalConfig => ({
 export const createDefaultAppData = (): AppData => ({
   simulations: createDefaultSimulations(),
   globalConfig: createDefaultGlobalConfig(),
-  version: 4,
+  version: 6,
 });
 
 export const generateId = (): string =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
-export const getNextColor = (usedColors: string[]): string => {
-  const palette = [
-    "#ef4444",
-    "#f97316",
-    "#eab308",
-    "#22c55e",
-    "#14b8a6",
-    "#3b82f6",
-    "#8b5cf6",
-    "#ec4899",
-    "#f43f5e",
-    "#84cc16",
-  ];
-  return (
-    palette.find((c) => !usedColors.includes(c)) ??
-    palette[Math.floor(Math.random() * palette.length)]
-  );
-};
+export { getNextColor } from "./chart/colors";
 
 export const getDefaultComplexityDescription = (sc: number): string => {
   if (sc <= 0.3) return "Simple system (blog, landing page)";

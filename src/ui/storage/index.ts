@@ -4,5 +4,6 @@ export type {
   GlobalConfig,
   AppData,
   AgentConfig,
+  HandoffConfig,
 } from "./types";
 export { LocalStorageAdapter } from "./LocalStorageAdapter";

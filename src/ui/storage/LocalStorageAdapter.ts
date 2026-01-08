@@ -2,7 +2,7 @@ import type { StorageService } from "./StorageService";
 import type { Simulation, GlobalConfig, AppData } from "./types";
 
 const STORAGE_KEY = "product-health-dynamics";
-const CURRENT_VERSION = 4;
+const CURRENT_VERSION = 6;
 
 const LEGACY_COMPLEXITY_VALUES: Record<string, number> = {
   simple: 0.25,
@@ -37,12 +37,13 @@ export class LocalStorageAdapter implements StorageService {
   }
 
   private migrate(data: AppData): AppData {
-    // Migrate simulations from complexityId to systemComplexity
+    // Migrate simulations from older versions
     const legacyData = data as unknown as {
       simulations: Array<{
         id: string;
         name: string;
-        agents: unknown[];
+        agents: Array<{ handoffToId?: string }>;
+        handoffs?: unknown[];
         nChanges: number;
         complexity?: string;
         complexityId?: string;
@@ -53,23 +54,44 @@ export class LocalStorageAdapter implements StorageService {
 
     const migratedSimulations: Simulation[] = legacyData.simulations.map(
       (sim) => {
-        if (sim.systemComplexity !== undefined) {
-          return sim as unknown as Simulation;
+        let systemComplexity = sim.systemComplexity;
+        if (systemComplexity === undefined) {
+          const complexityKey = sim.complexityId ?? sim.complexity ?? "medium";
+          const scFromProfiles = legacyData.complexityProfiles?.find(
+            (p) => p.id === complexityKey
+          )?.systemComplexity;
+          systemComplexity =
+            scFromProfiles ?? LEGACY_COMPLEXITY_VALUES[complexityKey] ?? 0.5;
         }
 
-        const complexityKey = sim.complexityId ?? sim.complexity ?? "medium";
-        const scFromProfiles = legacyData.complexityProfiles?.find(
-          (p) => p.id === complexityKey
-        )?.systemComplexity;
-        const scValue =
-          scFromProfiles ?? LEGACY_COMPLEXITY_VALUES[complexityKey] ?? 0.5;
+        // Migrate handoffs from agents if they don't exist
+        const handoffs = (sim.handoffs as any[] || []).map(h => {
+          if (h.color) delete h.color;
+          return h;
+        });
+        if (handoffs.length === 0) {
+          sim.agents.forEach((agent: any) => {
+            if (agent.handoffToId) {
+              handoffs.push({
+                id: `${agent.id}-handoff`,
+                name: `${agent.name} Handoff`,
+                fromAgentId: agent.id,
+                toAgentId: agent.handoffToId,
+                atChange: Math.round(sim.nChanges * 0.2),
+                color: agent.color,
+              });
+              delete agent.handoffToId;
+            }
+          });
+        }
 
         return {
           id: sim.id,
           name: sim.name,
-          agents: sim.agents,
+          agents: sim.agents as any,
+          handoffs: handoffs as any,
           nChanges: sim.nChanges,
-          systemComplexity: scValue,
+          systemComplexity,
         } as Simulation;
       }
     );

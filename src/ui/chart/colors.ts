@@ -1,10 +1,29 @@
+export const AGENT_PALETTE = [
+  "#FF5C8D", // AI Vibe (Vibrant Rose)
+  "#FFB84D", // AI Guardrails (Warm Saffron)
+  "#4ADE80", // Junior (Emerald/Mint)
+  "#38BDF8", // Senior (Azure Blue)
+  "#A78BFA", // Handoff 1 (Soft Lavender)
+  "#2DD4BF", // Handoff 2 (Cool Teal)
+  "#F472B6", // Handoff 3 (Warm Pink)
+  "#94A3B8", // Handoff 4 (Refined Slate)
+];
+
 export const chartColors = {
-  grid: "rgba(161, 161, 170, 0.2)",
-  gridLight: "rgba(161, 161, 170, 0.12)",
-  text: "#a1a1aa",
-  textLight: "#e4e4e7",
-  annotationLine: "rgba(161, 161, 170, 0.6)",
-  annotationBg: "rgba(30, 30, 30, 0.95)",
+  grid: "rgba(255, 255, 255, 0.05)",
+  gridLight: "rgba(255, 255, 255, 0.02)",
+  text: "#64748b",
+  textLight: "#94a3b8",
+  annotationLine: "rgba(148, 163, 184, 0.3)",
+  annotationBg: "#0f172a",
+  bandOpacity: 0.06,
+};
+
+export const getNextColor = (usedColors: string[]): string => {
+  return (
+    AGENT_PALETTE.find((c) => !usedColors.includes(c)) ??
+    AGENT_PALETTE[Math.floor(Math.random() * AGENT_PALETTE.length)]
+  );
 };
 
 export const hexToRgba = (hex: string, alpha: number): string => {
@@ -14,3 +33,14 @@ export const hexToRgba = (hex: string, alpha: number): string => {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
+export const adjustColor = (hex: string, percent: number): string => {
+  const num = parseInt(hex.slice(1), 16);
+  const r = (num >> 16) + Math.round(255 * (percent / 100));
+  const g = ((num >> 8) & 0x00ff) + Math.round(255 * (percent / 100));
+  const b = (num & 0x0000ff) + Math.round(255 * (percent / 100));
+
+  const clamp = (val: number) => Math.min(255, Math.max(0, val));
+  const toHex = (val: number) => clamp(val).toString(16).padStart(2, "0");
+
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
+};

@@ -4,7 +4,7 @@ import annotationPlugin from "chartjs-plugin-annotation";
 import zoomPlugin from "chartjs-plugin-zoom";
 import "hammerjs";
 
-import { chartOptions, buildDatasetsForAgents } from "./chart";
+import { chartOptions, buildDatasetsForSimulation } from "./chart";
 import { LocalStorageAdapter } from "./storage";
 import {
   createDefaultAppData,
@@ -12,11 +12,13 @@ import {
   getNextColor,
   getDefaultComplexityDescription,
 } from "./defaults";
+import { adjustColor } from "./chart/colors";
 import {
   buildHeader,
   buildSimulationTabs,
   buildConfigPanel,
   buildAgentCard,
+  buildHandoffCard,
   buildChartControls,
   buildChartContainer,
   buildComplexityDescription,
@@ -26,6 +28,7 @@ import type {
   StorageService,
   Simulation,
   AgentConfig,
+  HandoffConfig,
   GlobalConfig,
 } from "./storage";
 
@@ -212,6 +215,7 @@ export class ProductHealthApp {
         id: generateId(),
         name: `Simulation ${this.simulations.length + 1}`,
         agents: [],
+        handoffs: [],
         systemComplexity: 0.5,
         nChanges: 1000,
       };
@@ -256,11 +260,25 @@ export class ProductHealthApp {
 
     document.getElementById("duplicate-sim")?.addEventListener("click", () => {
       const sim = this.activeSimulation;
+      const idMap = new Map<string, string>();
+      const newAgents = sim.agents.map((a) => {
+        const newId = generateId();
+        idMap.set(a.id, newId);
+        return { ...a, id: newId };
+      });
+      const newHandoffs = sim.handoffs.map((h) => ({
+        ...h,
+        id: generateId(),
+        fromAgentId: idMap.get(h.fromAgentId) ?? h.fromAgentId,
+        toAgentId: idMap.get(h.toAgentId) ?? h.toAgentId,
+      }));
+
       const newSim: Simulation = {
         ...structuredClone(sim),
         id: generateId(),
         name: `${sim.name} (copy)`,
-        agents: sim.agents.map((a) => ({ ...a, id: generateId() })),
+        agents: newAgents,
+        handoffs: newHandoffs,
       };
       this.simulations.push(newSim);
       this.storage.saveSimulation(newSim);
@@ -339,11 +357,8 @@ export class ProductHealthApp {
         this.scheduleChartUpdate();
       } else if (field === "color") {
         agent.color = (target as HTMLInputElement).value;
+        this.updateHandoffIcons();
         this.scheduleChartUpdate();
-      } else if (field === "handoff") {
-        agent.handoffToId = (target as HTMLSelectElement).value || undefined;
-        this.storage.saveSimulation(sim);
-        this.recomputeChart();
       }
     });
 
@@ -357,18 +372,18 @@ export class ProductHealthApp {
 
     agentList?.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
-      const removeBtn = target.closest("[data-action='remove']");
+      const removeBtn = target.closest("[data-action='remove-agent']");
       if (!removeBtn) return;
 
       const card = removeBtn.closest(".agent-card");
       const agentId = card?.getAttribute("data-agent-id");
       const sim = this.activeSimulation;
-      if (!agentId || sim.agents.length <= 1) return;
+      if (!agentId) return;
 
       sim.agents = sim.agents.filter((a) => a.id !== agentId);
-      sim.agents.forEach((a) => {
-        if (a.handoffToId === agentId) a.handoffToId = undefined;
-      });
+      sim.handoffs = sim.handoffs.filter(
+        (h) => h.fromAgentId !== agentId && h.toAgentId !== agentId
+      );
       this.storage.saveSimulation(sim);
       card?.remove();
       this.recomputeChart();
@@ -376,10 +391,10 @@ export class ProductHealthApp {
 
     document.getElementById("add-agent")?.addEventListener("click", () => {
       const sim = this.activeSimulation;
-      const usedColors = sim.agents.map((a) => a.color);
+      const usedColors = [...sim.agents.map((a) => a.color)];
       const newAgent: AgentConfig = {
         id: generateId(),
-        name: "New Developer",
+        name: "New Persona",
         engineeringRigor: 0.5,
         color: getNextColor(usedColors),
       };
@@ -387,13 +402,99 @@ export class ProductHealthApp {
       this.storage.saveSimulation(sim);
       document
         .getElementById("agent-list")
-        ?.insertAdjacentHTML("beforeend", buildAgentCard(newAgent, sim.agents));
+        ?.insertAdjacentHTML("beforeend", buildAgentCard(newAgent));
       this.recomputeChart();
     });
 
-    document.getElementById("reset-agents")?.addEventListener("click", () => {
+    // Handoff Events
+    const handoffList = document.getElementById("handoff-list");
+    handoffList?.addEventListener("input", (e) => {
+      const target = e.target as HTMLInputElement | HTMLSelectElement;
+      const card = target.closest(".handoff-card");
+      const handoffId = card?.getAttribute("data-handoff-id");
+      const field = target.getAttribute("data-field");
+      if (!handoffId || !field) return;
+
+      const sim = this.activeSimulation;
+      const handoff = sim.handoffs.find((h) => h.id === handoffId);
+      if (!handoff) return;
+
+      if (field === "name") {
+        handoff.name = (target as HTMLInputElement).value;
+        this.scheduleChartUpdate();
+      } else if (field === "fromAgentId") {
+        handoff.fromAgentId = (target as HTMLSelectElement).value;
+        const icon = card?.querySelector(".handoff-color-icon") as HTMLElement;
+        if (icon) icon.setAttribute("data-from-agent-id", handoff.fromAgentId);
+        this.updateHandoffIcons();
+        this.scheduleChartUpdate();
+      } else if (field === "toAgentId") {
+        handoff.toAgentId = (target as HTMLSelectElement).value;
+        const icon = card?.querySelector(".handoff-color-icon") as HTMLElement;
+        if (icon) icon.setAttribute("data-to-agent-id", handoff.toAgentId);
+        this.updateHandoffIcons();
+        this.scheduleChartUpdate();
+      } else if (field === "atChange") {
+        handoff.atChange = parseInt((target as HTMLInputElement).value, 10);
+        const label = card?.querySelector(".agent-rigor-label");
+        if (label) label.textContent = `Handoff at: ${handoff.atChange}`;
+        this.scheduleChartUpdate();
+      }
+    });
+
+    handoffList?.addEventListener("change", (e) => {
+      const target = e.target as HTMLInputElement | HTMLSelectElement;
+      const field = target.getAttribute("data-field");
+      if (field) {
+        this.storage.saveSimulation(this.activeSimulation);
+      }
+    });
+
+    handoffList?.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      const removeBtn = target.closest("[data-action='remove-handoff']");
+      if (!removeBtn) return;
+
+      const card = removeBtn.closest(".handoff-card");
+      const handoffId = card?.getAttribute("data-handoff-id");
+      const sim = this.activeSimulation;
+      if (!handoffId) return;
+
+      sim.handoffs = sim.handoffs.filter((h) => h.id !== handoffId);
+      this.storage.saveSimulation(sim);
+      card?.remove();
+      this.recomputeChart();
+    });
+
+    document.getElementById("add-handoff")?.addEventListener("click", () => {
+      const sim = this.activeSimulation;
+      if (sim.agents.length < 2) {
+        alert("You need at least two personas to create a handoff.");
+        return;
+      }
+      const newHandoff: HandoffConfig = {
+        id: generateId(),
+        name: "New Handoff",
+        fromAgentId: sim.agents[0].id,
+        toAgentId: sim.agents[1].id,
+        atChange: Math.round(sim.nChanges * 0.2),
+      };
+      sim.handoffs.push(newHandoff);
+      this.storage.saveSimulation(sim);
+      document
+        .getElementById("handoff-list")
+        ?.insertAdjacentHTML(
+          "beforeend",
+          buildHandoffCard(newHandoff, sim.agents, sim.nChanges)
+        );
+      this.recomputeChart();
+    });
+
+    document.getElementById("reset-defaults")?.addEventListener("click", () => {
       const defaultData = createDefaultAppData();
-      const defaultSim = defaultData.simulations[0];
+      const defaultSim = defaultData.simulations.find(
+        (s) => s.systemComplexity === this.activeSimulation.systemComplexity
+      );
       if (defaultSim) {
         const idMap = new Map<string, string>();
         const newAgents = defaultSim.agents.map((a) => {
@@ -401,19 +502,17 @@ export class ProductHealthApp {
           idMap.set(a.id, newId);
           return { ...a, id: newId };
         });
-        newAgents.forEach((a) => {
-          if (a.handoffToId) {
-            a.handoffToId = idMap.get(a.handoffToId) ?? a.handoffToId;
-          }
-        });
+        const newHandoffs = defaultSim.handoffs.map((h) => ({
+          ...h,
+          id: generateId(),
+          fromAgentId: idMap.get(h.fromAgentId) ?? h.fromAgentId,
+          toAgentId: idMap.get(h.toAgentId) ?? h.toAgentId,
+        }));
+
         this.activeSimulation.agents = newAgents;
+        this.activeSimulation.handoffs = newHandoffs;
         this.storage.saveSimulation(this.activeSimulation);
-        const agentList = document.getElementById("agent-list");
-        if (agentList) {
-          agentList.innerHTML = this.activeSimulation.agents
-            .map((a) => buildAgentCard(a, this.activeSimulation.agents))
-            .join("");
-        }
+        this.render();
         this.recomputeChart();
       }
     });
@@ -442,21 +541,14 @@ export class ProductHealthApp {
   }
 
   private bindGlobalSettingsEvents(): void {
-    const closeModal = () => {
-      this.uiState.globalSettingsOpen = false;
-      document
-        .getElementById("global-modal-overlay")
-        ?.classList.remove("visible");
-    };
-
     document
       .getElementById("close-global-modal")
-      ?.addEventListener("click", closeModal);
+      ?.addEventListener("click", () => this.closeGlobalSettings());
     document
       .getElementById("global-modal-overlay")
       ?.addEventListener("click", (e) => {
         if ((e.target as HTMLElement).id === "global-modal-overlay")
-          closeModal();
+          this.closeGlobalSettings();
       });
 
     document
@@ -479,10 +571,18 @@ export class ProductHealthApp {
         this.storage.clearAll();
         this.simulations = this.storage.getSimulations();
         this.globalConfig = this.storage.getGlobalConfig();
+        this.closeGlobalSettings();
         this.render();
         this.recomputeChart();
       }
     });
+  }
+
+  private closeGlobalSettings(): void {
+    this.uiState.globalSettingsOpen = false;
+    document
+      .getElementById("global-modal-overlay")
+      ?.classList.remove("visible");
   }
 
   private deleteSimulation(simId: string): void {
@@ -495,6 +595,24 @@ export class ProductHealthApp {
     }
     this.render();
     this.recomputeChart();
+  }
+
+  private updateHandoffIcons(): void {
+    const sim = this.activeSimulation;
+    const handoffIcons = document.querySelectorAll<HTMLElement>(
+      ".handoff-color-icon"
+    );
+    handoffIcons.forEach((icon) => {
+      const fromId = icon.getAttribute("data-from-agent-id");
+      const toId = icon.getAttribute("data-to-agent-id");
+      const fromAgent = sim.agents.find((a) => a.id === fromId);
+      const toAgent = sim.agents.find((a) => a.id === toId);
+      if (fromAgent && toAgent) {
+        const fromColor = adjustColor(fromAgent.color, -20);
+        const toColor = adjustColor(toAgent.color, -20);
+        icon.style.background = `linear-gradient(90deg, ${fromColor} 50%, ${toColor} 50%)`;
+      }
+    });
   }
 
   private updateComplexityDisplay(): void {
@@ -523,8 +641,9 @@ export class ProductHealthApp {
 
     setTimeout(() => {
       const sim = this.activeSimulation;
-      const datasets = buildDatasetsForAgents(
+      const datasets = buildDatasetsForSimulation(
         sim.agents,
+        sim.handoffs,
         { systemComplexity: sim.systemComplexity, nChanges: sim.nChanges },
         this.globalConfig.defaultVisibility
       );

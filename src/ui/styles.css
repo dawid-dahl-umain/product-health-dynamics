@@ -12,6 +12,7 @@
   --accent-hover: #2563eb;
   --danger: #ef4444;
   --danger-hover: #dc2626;
+  --chart-legend-size: 8;
 }
 
 * {
@@ -70,6 +71,7 @@ h2 {
   height: 36px;
   border-radius: 8px;
   cursor: pointer;
+  padding: 0;
   transition: all 0.15s ease;
 }
 
@@ -90,8 +92,8 @@ h2 {
 }
 
 #global-settings-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
 }
 
 .settings-toggle {
@@ -121,8 +123,8 @@ h2 {
 }
 
 .settings-toggle svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 
 /* Simulation Tabs */
@@ -399,6 +401,7 @@ h2 {
   height: 40px;
   border-radius: 8px;
   cursor: pointer;
+  padding: 0;
   transition: all 0.15s ease;
 }
 
@@ -459,6 +462,15 @@ select:focus {
   cursor: pointer;
   padding: 0;
   background: transparent;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.handoff-color-icon {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border);
+  border-radius: 50%;
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -534,19 +546,14 @@ select:focus {
   border: none;
 }
 
-.agent-handoff-row {
+.handoff-row {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-bottom: 4px;
 }
 
-.agent-handoff-label {
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  white-space: nowrap;
-}
-
-.agent-handoff-select {
+.handoff-select {
   flex: 1;
   background: var(--bg-base);
   border: 1px solid var(--border);
@@ -558,8 +565,9 @@ select:focus {
   min-width: 0;
 }
 
-.agent-handoff-select:hover {
-  border-color: var(--border-focus);
+.handoff-arrow {
+  color: var(--text-dim);
+  font-weight: bold;
 }
 
 .agent-remove {
@@ -792,6 +800,7 @@ button:hover {
   height: 32px;
   border-radius: 6px;
   cursor: pointer;
+  padding: 0;
 }
 
 .modal-close:hover {
@@ -800,8 +809,8 @@ button:hover {
 }
 
 .modal-close svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }
 
 .modal-body {

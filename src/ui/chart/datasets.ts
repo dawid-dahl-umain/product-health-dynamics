@@ -1,16 +1,61 @@
 import { TrajectorySimulator, summarizeRuns } from "../../simulation";
-import { hexToRgba } from "./colors";
-import type { AgentConfig } from "../storage/types";
+import { hexToRgba, chartColors, adjustColor } from "./colors";
+import type { AgentConfig, HandoffConfig } from "../storage/types";
 
 export type Dataset = {
   label: string;
   data: { x: number; y: number }[];
   borderColor: string;
-  backgroundColor: string;
+  borderWidth?: number;
+  backgroundColor: any;
   fill: string | boolean;
   tension: number;
   pointRadius: number;
+  pointStyle?: any;
   hidden: boolean;
+  segment?: {
+    borderColor?: (ctx: any) => string | undefined;
+    backgroundColor?: (ctx: any) => string | undefined;
+  };
+};
+
+const getLegendSize = (): number => {
+  const root = document.documentElement;
+  const size = getComputedStyle(root).getPropertyValue("--chart-legend-size");
+  return parseInt(size, 10) || 10;
+};
+
+const createLegendIcon = (
+  color1: string,
+  color2?: string
+): HTMLCanvasElement => {
+  const canvas = document.createElement("canvas");
+  const baseSize = getLegendSize();
+  const resolution = 4;
+  const size = baseSize * resolution;
+  const center = size / 2;
+  const padding = resolution * 1.5;
+
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return canvas;
+
+  ctx.beginPath();
+  ctx.arc(center, center, center - padding, 0, Math.PI * 2);
+  ctx.clip();
+
+  if (color2) {
+    ctx.fillStyle = color1;
+    ctx.fillRect(0, 0, center, size);
+    ctx.fillStyle = color2;
+    ctx.fillRect(center, 0, center, size);
+  } else {
+    ctx.fillStyle = color1;
+    ctx.fillRect(0, 0, size, size);
+  }
+
+  return canvas;
 };
 
 type SimulationOptions = {
@@ -21,36 +66,9 @@ type SimulationOptions = {
 
 type AgentLookup = Map<string, AgentConfig>;
 
-const runAgentSimulation = (
-  agent: AgentConfig,
-  agentLookup: AgentLookup,
-  options: SimulationOptions
-) => {
+const runAgentSimulation = (agent: AgentConfig, options: SimulationOptions) => {
   const { systemComplexity, nChanges, nSimulations = 200 } = options;
   const simulator = new TrajectorySimulator();
-
-  const handoffTarget = agent.handoffToId
-    ? agentLookup.get(agent.handoffToId)
-    : undefined;
-
-  if (handoffTarget) {
-    const handoffPoint = Math.round(nChanges * 0.2);
-    const recoveryChanges = nChanges - handoffPoint;
-    const runs = Array.from({ length: nSimulations }, () =>
-      simulator.simulatePhased(
-        [
-          { engineeringRigor: agent.engineeringRigor, nChanges: handoffPoint },
-          {
-            engineeringRigor: handoffTarget.engineeringRigor,
-            nChanges: recoveryChanges,
-          },
-        ],
-        8,
-        systemComplexity
-      )
-    );
-    return summarizeRuns(runs);
-  }
 
   const runs = Array.from({ length: nSimulations }, () =>
     simulator.simulate({
@@ -63,10 +81,52 @@ const runAgentSimulation = (
   return summarizeRuns(runs);
 };
 
+const runHandoffSimulation = (
+  handoff: HandoffConfig,
+  agentLookup: AgentLookup,
+  options: SimulationOptions
+) => {
+  const { systemComplexity, nChanges, nSimulations = 200 } = options;
+  const simulator = new TrajectorySimulator();
+
+  const fromAgent = agentLookup.get(handoff.fromAgentId);
+  const toAgent = agentLookup.get(handoff.toAgentId);
+
+  if (!fromAgent || !toAgent) {
+    return runAgentSimulation(
+      fromAgent || ({ engineeringRigor: 0.5 } as any),
+      options
+    );
+  }
+
+  const handoffPoint = Math.min(handoff.atChange, nChanges);
+  const recoveryChanges = Math.max(0, nChanges - handoffPoint);
+
+  const runs = Array.from({ length: nSimulations }, () =>
+    simulator.simulatePhased(
+      [
+        {
+          engineeringRigor: fromAgent.engineeringRigor,
+          nChanges: handoffPoint,
+        },
+        {
+          engineeringRigor: toAgent.engineeringRigor,
+          nChanges: recoveryChanges,
+        },
+      ],
+      8,
+      systemComplexity
+    )
+  );
+  return summarizeRuns(runs);
+};
+
 const statsToDatasets = (
-  agent: AgentConfig,
+  label: string,
+  color: string,
   stats: ReturnType<typeof summarizeRuns>,
-  defaultVisibility: "all" | "averages-only"
+  defaultVisibility: "all" | "averages-only",
+  handoffInfo?: { atChange: number; fromColor: string; toColor: string }
 ): Dataset[] => {
   const avgPoints = stats.averageTrajectory.map((value, index) => ({
     x: index,
@@ -83,19 +143,48 @@ const statsToDatasets = (
 
   const hideBands = defaultVisibility === "averages-only";
 
+  const getSegmentOptions = (isBand: boolean) => {
+    if (!handoffInfo) return undefined;
+
+    const fromColor = isBand
+      ? hexToRgba(handoffInfo.fromColor, chartColors.bandOpacity)
+      : handoffInfo.fromColor;
+    const toColor = isBand
+      ? hexToRgba(handoffInfo.toColor, chartColors.bandOpacity)
+      : handoffInfo.toColor;
+
+    return {
+      borderColor: isBand
+        ? () => "transparent"
+        : (ctx: any) =>
+            ctx.p0DataIndex < handoffInfo.atChange ? fromColor : toColor,
+      backgroundColor: isBand
+        ? (ctx: any) =>
+            ctx.p0DataIndex < handoffInfo.atChange ? fromColor : toColor
+        : undefined,
+    };
+  };
+
+  const legendIcon = handoffInfo
+    ? createLegendIcon(handoffInfo.fromColor, handoffInfo.toColor)
+    : createLegendIcon(color);
+
   return [
     {
-      label: `${agent.name} (p90)`,
+      label: `${label} (p90)`,
       data: p90Points,
       borderColor: "transparent",
-      backgroundColor: hexToRgba(agent.color, 0.15),
+      backgroundColor: handoffInfo
+        ? hexToRgba(handoffInfo.fromColor, chartColors.bandOpacity)
+        : hexToRgba(color, chartColors.bandOpacity),
       fill: "+1",
       tension: 0.25,
       pointRadius: 0,
       hidden: hideBands,
+      segment: getSegmentOptions(true),
     },
     {
-      label: `${agent.name} (p10)`,
+      label: `${label} (p10)`,
       data: p10Points,
       borderColor: "transparent",
       backgroundColor: "transparent",
@@ -103,29 +192,59 @@ const statsToDatasets = (
       tension: 0.25,
       pointRadius: 0,
       hidden: hideBands,
+      segment: getSegmentOptions(true),
     },
     {
-      label: agent.name,
+      label: `   ${label}`,
       data: avgPoints,
-      borderColor: agent.color,
-      backgroundColor: agent.color,
+      borderColor: handoffInfo ? handoffInfo.fromColor : color,
+      borderWidth: 2.5,
+      backgroundColor: legendIcon,
       fill: false,
       tension: 0.25,
       pointRadius: 0,
+      pointStyle: legendIcon,
       hidden: false,
+      segment: getSegmentOptions(false),
     },
   ];
 };
 
-export const buildDatasetsForAgents = (
+export const buildDatasetsForSimulation = (
   agents: AgentConfig[],
+  handoffs: HandoffConfig[],
   options: SimulationOptions,
   defaultVisibility: "all" | "averages-only" = "all"
 ): Dataset[] => {
   const agentLookup = new Map(agents.map((a) => [a.id, a]));
-  return agents.flatMap((agent) => {
-    const stats = runAgentSimulation(agent, agentLookup, options);
-    return statsToDatasets(agent, stats, defaultVisibility);
-  });
-};
 
+  const agentDatasets = agents.flatMap((agent) => {
+    const stats = runAgentSimulation(agent, options);
+    return statsToDatasets(agent.name, agent.color, stats, defaultVisibility);
+  });
+
+  const handoffDatasets = handoffs.flatMap((handoff) => {
+    const fromAgent = agentLookup.get(handoff.fromAgentId);
+    const toAgent = agentLookup.get(handoff.toAgentId);
+    const stats = runHandoffSimulation(handoff, agentLookup, options);
+
+    const handoffInfo =
+      fromAgent && toAgent
+        ? {
+            atChange: handoff.atChange,
+            fromColor: adjustColor(fromAgent.color, -20),
+            toColor: adjustColor(toAgent.color, -20),
+          }
+        : undefined;
+
+    return statsToDatasets(
+      handoff.name,
+      "#ccc",
+      stats,
+      defaultVisibility,
+      handoffInfo
+    );
+  });
+
+  return [...agentDatasets, ...handoffDatasets];
+};

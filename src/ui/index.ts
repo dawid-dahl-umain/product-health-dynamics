@@ -1,4 +1,4 @@
-export { chartOptions, buildDatasetsForAgents, type Dataset } from "./chart";
+export { chartOptions, buildDatasetsForSimulation, type Dataset } from "./chart";
 export type {
   StorageService,
   Simulation,

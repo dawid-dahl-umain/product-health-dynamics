@@ -1,5 +1,6 @@
 import { ICON_DUPLICATE, ICON_EXPORT } from "./icons";
 import { buildAgentCard } from "./agentCard";
+import { buildHandoffCard } from "./handoffCard";
 import { CHANGES_OPTIONS } from "../types";
 import { getDefaultComplexityDescription } from "../defaults";
 import type { Simulation } from "../storage/types";
@@ -14,7 +15,13 @@ export const buildConfigPanel = ({
   settingsOpen,
 }: ConfigPanelProps): string => {
   const agentCards = simulation.agents
-    .map((agent) => buildAgentCard(agent, simulation.agents))
+    .map((agent) => buildAgentCard(agent))
+    .join("");
+
+  const handoffCards = simulation.handoffs
+    .map((handoff) =>
+      buildHandoffCard(handoff, simulation.agents, simulation.nChanges)
+    )
     .join("");
 
   const scValue = simulation.systemComplexity.toFixed(2);
@@ -63,16 +70,31 @@ export const buildConfigPanel = ({
             <button class="btn-icon" id="export-sim" title="Export Simulation">${ICON_EXPORT}</button>
           </div>
         </div>
-        <div class="config-section">
-          <div class="config-section-header">
-            <span class="config-section-title">Developers</span>
+        
+        <div class="config-columns">
+          <div class="config-section">
+            <div class="config-section-header">
+              <span class="config-section-title">Personas</span>
+            </div>
+            <div class="agent-list" id="agent-list">
+              ${agentCards}
+            </div>
+            <div class="agent-actions">
+              <button class="btn-secondary" id="add-agent">+ Add Persona</button>
+            </div>
           </div>
-          <div class="agent-list" id="agent-list">
-            ${agentCards}
-          </div>
-          <div class="agent-actions">
-            <button class="btn-secondary" id="add-agent">+ Add Developer</button>
-            <button class="btn-secondary" id="reset-agents">Reset Defaults</button>
+
+          <div class="config-section">
+            <div class="config-section-header">
+              <span class="config-section-title">Handoff Scenarios</span>
+            </div>
+            <div class="agent-list" id="handoff-list">
+              ${handoffCards}
+            </div>
+            <div class="agent-actions">
+              <button class="btn-secondary" id="add-handoff">+ Add Handoff</button>
+              <button class="btn-secondary" id="reset-defaults">Reset Defaults</button>
+            </div>
           </div>
         </div>
       </div>

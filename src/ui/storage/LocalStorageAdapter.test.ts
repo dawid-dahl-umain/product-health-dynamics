@@ -15,6 +15,7 @@ const createTestAppData = (): AppData => ({
           color: "#ff0000",
         },
       ],
+      handoffs: [],
       systemComplexity: 0.5,
       nChanges: 500,
     },
@@ -23,7 +24,7 @@ const createTestAppData = (): AppData => ({
     defaultVisibility: "all",
     activeSimulationId: "sim-1",
   },
-  version: 3,
+  version: 6,
 });
 
 const createMockLocalStorage = () => {
@@ -76,6 +77,7 @@ describe("LocalStorageAdapter", () => {
             id: "stored-sim",
             name: "Stored Simulation",
             agents: [],
+            handoffs: [],
             systemComplexity: 1.0,
             nChanges: 1000,
           },
@@ -84,7 +86,7 @@ describe("LocalStorageAdapter", () => {
           defaultVisibility: "averages-only",
           activeSimulationId: "stored-sim",
         },
-        version: 3,
+        version: 6,
       };
       mockStorage.getItem.mockReturnValue(JSON.stringify(storedData));
 
@@ -145,6 +147,7 @@ describe("LocalStorageAdapter", () => {
         id: "sim-1",
         name: "Updated Simulation",
         agents: [],
+        handoffs: [],
         systemComplexity: 0.75,
         nChanges: 2000,
       };
@@ -167,6 +170,7 @@ describe("LocalStorageAdapter", () => {
         id: "sim-2",
         name: "New Simulation",
         agents: [],
+        handoffs: [],
         systemComplexity: 0.3,
         nChanges: 500,
       };
@@ -201,6 +205,7 @@ describe("LocalStorageAdapter", () => {
             id: "sim-1",
             name: "First",
             agents: [],
+            handoffs: [],
             systemComplexity: 0.25,
             nChanges: 500,
           },
@@ -208,6 +213,7 @@ describe("LocalStorageAdapter", () => {
             id: "sim-2",
             name: "Second",
             agents: [],
+            handoffs: [],
             systemComplexity: 0.5,
             nChanges: 500,
           },
@@ -267,6 +273,7 @@ describe("LocalStorageAdapter", () => {
         id: "extra",
         name: "Extra",
         agents: [],
+        handoffs: [],
         systemComplexity: 1.0,
         nChanges: 1000,
       });
@@ -307,6 +314,7 @@ describe("LocalStorageAdapter", () => {
             id: "imported-sim",
             name: "Imported Simulation",
             agents: [],
+            handoffs: [],
             systemComplexity: 1.5,
             nChanges: 2000,
           },
@@ -315,7 +323,7 @@ describe("LocalStorageAdapter", () => {
           defaultVisibility: "averages-only",
           activeSimulationId: "imported-sim",
         },
-        version: 3,
+        version: 5,
       };
 
       // When
@@ -355,9 +363,44 @@ describe("LocalStorageAdapter", () => {
 
       // Then
       const exported = adapter.exportData();
-      expect(exported.version).toBe(4);
       expect(exported.simulations[0].name).toBe("Old Simulation");
       expect(exported.simulations[0].systemComplexity).toBe(0.25);
+    });
+
+    it("migrates v1 data with old handoffToId on agents", () => {
+      // Given
+      const oldData = {
+        simulations: [
+          {
+            id: "handoff-sim",
+            name: "Handoff Sim",
+            agents: [
+              {
+                id: "a1",
+                name: "Agent 1",
+                handoffToId: "a2",
+                color: "#ff0000",
+              },
+              { id: "a2", name: "Agent 2", color: "#00ff00" },
+            ],
+            systemComplexity: 0.5,
+            nChanges: 1000,
+          },
+        ],
+        globalConfig: { activeSimulationId: "handoff-sim" },
+        version: 1,
+      };
+      mockStorage.getItem.mockReturnValue(JSON.stringify(oldData));
+
+      // When
+      const adapter = new LocalStorageAdapter(createTestAppData);
+
+      // Then
+      const exported = adapter.exportData();
+      expect(exported.simulations[0].handoffs).toHaveLength(1);
+      expect(exported.simulations[0].handoffs[0].fromAgentId).toBe("a1");
+      expect(exported.simulations[0].handoffs[0].toAgentId).toBe("a2");
+      expect(exported.simulations[0].agents[0].handoffToId).toBeUndefined();
     });
 
     it("migrates v2 data with complexityId to systemComplexity", () => {
@@ -373,7 +416,12 @@ describe("LocalStorageAdapter", () => {
           },
         ],
         complexityProfiles: [
-          { id: "enterprise", name: "Enterprise", description: "Enterprise", systemComplexity: 1.0 },
+          {
+            id: "enterprise",
+            name: "Enterprise",
+            description: "Enterprise",
+            systemComplexity: 1.0,
+          },
         ],
         globalConfig: {
           defaultVisibility: "all",
@@ -388,7 +436,6 @@ describe("LocalStorageAdapter", () => {
 
       // Then
       const exported = adapter.exportData();
-      expect(exported.version).toBe(4);
       expect(exported.simulations[0].systemComplexity).toBe(1.0);
     });
 

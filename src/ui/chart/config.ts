@@ -26,19 +26,40 @@ const onLegendClick = (
 export const chartOptions: ChartOptions<"line"> = {
   responsive: true,
   maintainAspectRatio: false,
+  elements: {
+    point: {
+      radius: 0,
+    },
+  },
   scales: {
     x: {
       type: "linear",
-      title: { display: true, text: "Change events" },
+      title: {
+        display: true,
+        text: "Change events",
+        color: chartColors.text,
+        font: { size: 11, weight: 600 },
+      },
       grid: { color: chartColors.grid },
-      ticks: { color: chartColors.text },
+      ticks: {
+        color: chartColors.text,
+        font: { size: 10 },
+      },
     },
     y: {
       min: 1,
       max: 10,
-      title: { display: true, text: "Product Health (1–10)" },
+      title: {
+        display: true,
+        text: "Product Health (1–10)",
+        color: chartColors.text,
+        font: { size: 11, weight: 600 },
+      },
       grid: { color: chartColors.gridLight },
-      ticks: { color: chartColors.text },
+      ticks: {
+        color: chartColors.text,
+        font: { size: 10 },
+      },
     },
   },
   plugins: {
@@ -46,6 +67,15 @@ export const chartOptions: ChartOptions<"line"> = {
       onClick: onLegendClick,
       labels: {
         color: chartColors.textLight,
+        usePointStyle: true,
+        pointStyleWidth: 8,
+        boxWidth: 20,
+        boxHeight: 12,
+        font: {
+          size: 11,
+          weight: 500,
+        },
+        padding: 24,
         filter: (item) =>
           !item.text.includes("(p10)") && !item.text.includes("(p90)"),
       },
@@ -69,14 +99,14 @@ export const chartOptions: ChartOptions<"line"> = {
           label: {
             display: true,
             content: "Shape → Scale start",
-            color: chartColors.text,
+            color: chartColors.textLight,
             backgroundColor: chartColors.annotationBg,
             position: "start",
             xAdjust: 20,
             yAdjust: -12,
             font: {
-              size: 10,
-              weight: "bold",
+              size: 9,
+              weight: 600,
             },
             padding: 4,
           },
@@ -96,4 +126,3 @@ export const chartOptions: ChartOptions<"line"> = {
     },
   },
 };
-
