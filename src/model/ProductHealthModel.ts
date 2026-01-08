@@ -156,20 +156,33 @@ export class ProductHealthModel {
   }
 
   /**
-   * Computes variance attenuation at both extremes of Product Health.
+   * Computes variance attenuation based on system state and impact direction.
    *
-   * The intuition: outcomes are predictable at both extremes, chaotic in the middle.
-   * - High PH (healthy): well-structured system catches mistakes → predictable outcomes
-   * - Mid PH (transition): some structure but unreliable → chaotic outcomes
-   * - Low PH (frozen): everything coupled, changes predictably cascade → deterministic decay
+   * The intuition: degradation is deterministic, improvement has uncertainty.
+   * - Negative impact (low-ER): mistakes cascade predictably, low variance
+   * - Positive impact (high-ER): improvements face uncertain complexity, variance scales
    *
-   * Uses bellFactor to create symmetric reduction at both extremes, matching the
-   * physical reality that both healthy and degraded systems have predictable dynamics.
+   * The variance boost naturally emerges from:
+   * - positiveImpact: only agents improving the system experience variance
+   * - effectiveChallenge: (1-ER) × SC, higher for non-ideal in complex systems
+   * - systemState: boost only applies at high PH (where agents are actively working)
+   *
+   * This creates the desired behavior without hardcoded thresholds:
+   * - ER=1.0: effectiveChallenge=0, no boost (tight bands)
+   * - ER=0.8: positive impact + challenge, gets boost (wider bands in complex systems)
+   * - ER≤0.5: zero or negative impact, no boost (deterministic trajectory)
    */
   private computeVarianceAttenuation(systemState: number): number {
-    const { floor, range } = ModelParameters.varianceAttenuation;
+    const { floor, range, improvementVariance } =
+      ModelParameters.varianceAttenuation;
     const bellFactor = this.computeBellCurveFactor(systemState);
-    return floor + range * bellFactor;
+    const baseAttenuation = floor + range * bellFactor;
+    const positiveImpact = Math.max(0, this.baseImpact);
+    const effectiveChallenge =
+      (1 - this.engineeringRigor) * this.systemComplexity;
+    const varianceBoost =
+      systemState * positiveImpact * effectiveChallenge * improvementVariance;
+    return baseAttenuation + varianceBoost;
   }
 
   /**

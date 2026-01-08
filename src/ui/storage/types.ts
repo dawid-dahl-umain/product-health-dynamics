@@ -10,7 +10,8 @@ export type Simulation = {
   id: string;
   name: string;
   agents: AgentConfig[];
-  complexity: "simple" | "medium" | "enterprise";
+  systemComplexity: number;
+  complexityDescription?: string;
   nChanges: number;
 };
 

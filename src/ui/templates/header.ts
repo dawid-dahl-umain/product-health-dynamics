@@ -1,4 +1,4 @@
-import { ICON_SETTINGS, ICON_GEAR } from "./icons";
+import { ICON_SETTINGS, ICON_ADJUSTMENTS } from "./icons";
 
 type HeaderProps = {
   settingsOpen: boolean;
@@ -10,7 +10,7 @@ export const buildHeader = ({ settingsOpen }: HeaderProps): string => {
     <div class="header">
       <h1>Product Health Trajectories</h1>
       <div class="header-actions">
-        <button class="icon-btn" id="global-settings-btn" title="Global Settings">${ICON_GEAR}</button>
+        <button class="icon-btn" id="global-settings-btn" title="Global Settings">${ICON_ADJUSTMENTS}</button>
         <button class="settings-toggle ${activeClass}" id="settings-toggle">
           ${ICON_SETTINGS}
           Settings

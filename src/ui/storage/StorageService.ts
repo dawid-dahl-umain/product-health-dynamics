@@ -13,4 +13,3 @@ export interface StorageService {
   exportData(): AppData;
   importData(data: AppData): void;
 }
-

@@ -4,10 +4,14 @@ import annotationPlugin from "chartjs-plugin-annotation";
 import zoomPlugin from "chartjs-plugin-zoom";
 import "hammerjs";
 
-import { complexityProfiles } from "../simulation";
 import { chartOptions, buildDatasetsForAgents } from "./chart";
 import { LocalStorageAdapter } from "./storage";
-import { createDefaultAppData, generateId, getNextColor } from "./defaults";
+import {
+  createDefaultAppData,
+  generateId,
+  getNextColor,
+  getDefaultComplexityDescription,
+} from "./defaults";
 import {
   buildHeader,
   buildSimulationTabs,
@@ -18,7 +22,12 @@ import {
   buildComplexityDescription,
   buildGlobalSettingsModal,
 } from "./templates";
-import type { StorageService, Simulation, AgentConfig, GlobalConfig } from "./storage";
+import type {
+  StorageService,
+  Simulation,
+  AgentConfig,
+  GlobalConfig,
+} from "./storage";
 
 Chart.register(annotationPlugin, zoomPlugin, Filler);
 
@@ -63,6 +72,13 @@ export class ProductHealthApp {
     );
   }
 
+  private getDescription(sim: Simulation): string {
+    return (
+      sim.complexityDescription ??
+      getDefaultComplexityDescription(sim.systemComplexity)
+    );
+  }
+
   private render(): void {
     this.root.innerHTML = this.buildHtml();
     this.bindEvents();
@@ -70,7 +86,6 @@ export class ProductHealthApp {
 
   private buildHtml(): string {
     const sim = this.activeSimulation;
-    const profile = complexityProfiles[sim.complexity];
     return `
       <main>
         ${buildHeader({ settingsOpen: this.uiState.settingsOpen })}
@@ -84,8 +99,8 @@ export class ProductHealthApp {
           settingsOpen: this.uiState.settingsOpen,
         })}
         ${buildComplexityDescription({
-          description: profile.description,
-          systemComplexity: profile.systemComplexity,
+          description: this.getDescription(sim),
+          systemComplexity: sim.systemComplexity,
         })}
         ${buildChartContainer()}
         ${buildChartControls()}
@@ -197,19 +212,36 @@ export class ProductHealthApp {
         id: generateId(),
         name: `Simulation ${this.simulations.length + 1}`,
         agents: [],
-        complexity: "simple",
+        systemComplexity: 0.5,
         nChanges: 1000,
       };
       this.simulations.push(newSim);
       this.storage.saveSimulation(newSim);
       this.globalConfig.activeSimulationId = newSim.id;
       this.storage.saveGlobalConfig(this.globalConfig);
+      this.uiState.settingsOpen = true;
       this.render();
       this.recomputeChart();
     });
   }
 
   private bindConfigEvents(): void {
+    document
+      .getElementById("complexity-slider")
+      ?.addEventListener("input", (e) => {
+        const value = parseFloat((e.target as HTMLInputElement).value);
+        const valueDisplay = document.getElementById("complexity-value");
+        if (valueDisplay) valueDisplay.textContent = value.toFixed(2);
+        this.scheduleComplexityUpdate(value);
+      });
+
+    document
+      .getElementById("complexity-description")
+      ?.addEventListener("input", (e) => {
+        const value = (e.target as HTMLInputElement).value;
+        this.scheduleDescriptionUpdate(value);
+      });
+
     document
       .getElementById("changes-select")
       ?.addEventListener("change", (e) => {
@@ -218,20 +250,6 @@ export class ProductHealthApp {
         if (value !== sim.nChanges) {
           sim.nChanges = value;
           this.storage.saveSimulation(sim);
-          this.recomputeChart();
-        }
-      });
-
-    document
-      .getElementById("complexity-select")
-      ?.addEventListener("change", (e) => {
-        const value = (e.target as HTMLSelectElement)
-          .value as Simulation["complexity"];
-        const sim = this.activeSimulation;
-        if (value !== sim.complexity) {
-          sim.complexity = value;
-          this.storage.saveSimulation(sim);
-          this.updateComplexityDisplay();
           this.recomputeChart();
         }
       });
@@ -266,6 +284,35 @@ export class ProductHealthApp {
     });
   }
 
+  private scheduleComplexityUpdate(value: number): void {
+    if (this.updateDebounceTimer) clearTimeout(this.updateDebounceTimer);
+    this.updateDebounceTimer = setTimeout(() => {
+      const sim = this.activeSimulation;
+      sim.systemComplexity = value;
+      if (!sim.complexityDescription) {
+        const descInput = document.getElementById(
+          "complexity-description"
+        ) as HTMLInputElement;
+        if (descInput) {
+          descInput.value = getDefaultComplexityDescription(value);
+        }
+      }
+      this.storage.saveSimulation(sim);
+      this.updateComplexityDisplay();
+      this.recomputeChart();
+    }, 300);
+  }
+
+  private scheduleDescriptionUpdate(value: string): void {
+    if (this.updateDebounceTimer) clearTimeout(this.updateDebounceTimer);
+    this.updateDebounceTimer = setTimeout(() => {
+      const sim = this.activeSimulation;
+      sim.complexityDescription = value || undefined;
+      this.storage.saveSimulation(sim);
+      this.updateComplexityDisplay();
+    }, 300);
+  }
+
   private bindAgentEvents(): void {
     const agentList = document.getElementById("agent-list");
     agentList?.addEventListener("input", (e) => {
@@ -286,7 +333,9 @@ export class ProductHealthApp {
         agent.engineeringRigor = parseFloat((target as HTMLInputElement).value);
         const label = card?.querySelector(".agent-rigor-label");
         if (label)
-          label.textContent = `Rigor: ${agent.engineeringRigor.toFixed(2)}`;
+          label.textContent = `Eng. Rigor: ${agent.engineeringRigor.toFixed(
+            2
+          )}`;
         this.scheduleChartUpdate();
       } else if (field === "color") {
         agent.color = (target as HTMLInputElement).value;
@@ -330,7 +379,7 @@ export class ProductHealthApp {
       const usedColors = sim.agents.map((a) => a.color);
       const newAgent: AgentConfig = {
         id: generateId(),
-        name: "New Agent",
+        name: "New Developer",
         engineeringRigor: 0.5,
         color: getNextColor(usedColors),
       };
@@ -338,23 +387,26 @@ export class ProductHealthApp {
       this.storage.saveSimulation(sim);
       document
         .getElementById("agent-list")
-        ?.insertAdjacentHTML(
-          "beforeend",
-          buildAgentCard(newAgent, sim.agents)
-        );
+        ?.insertAdjacentHTML("beforeend", buildAgentCard(newAgent, sim.agents));
       this.recomputeChart();
     });
 
     document.getElementById("reset-agents")?.addEventListener("click", () => {
       const defaultData = createDefaultAppData();
-      const defaultSim = defaultData.simulations.find(
-        (s) => s.complexity === this.activeSimulation.complexity
-      );
+      const defaultSim = defaultData.simulations[0];
       if (defaultSim) {
-        this.activeSimulation.agents = defaultSim.agents.map((a) => ({
-          ...a,
-          id: generateId(),
-        }));
+        const idMap = new Map<string, string>();
+        const newAgents = defaultSim.agents.map((a) => {
+          const newId = generateId();
+          idMap.set(a.id, newId);
+          return { ...a, id: newId };
+        });
+        newAgents.forEach((a) => {
+          if (a.handoffToId) {
+            a.handoffToId = idMap.get(a.handoffToId) ?? a.handoffToId;
+          }
+        });
+        this.activeSimulation.agents = newAgents;
         this.storage.saveSimulation(this.activeSimulation);
         const agentList = document.getElementById("agent-list");
         if (agentList) {
@@ -447,15 +499,12 @@ export class ProductHealthApp {
 
   private updateComplexityDisplay(): void {
     const sim = this.activeSimulation;
-    const profile = complexityProfiles[sim.complexity];
     const descEl = document.querySelector(".complexity-description");
     if (descEl) {
-      descEl.textContent = `${profile.description} (SC = ${profile.systemComplexity})`;
+      descEl.textContent = `${this.getDescription(
+        sim
+      )} (SC = ${sim.systemComplexity.toFixed(2)})`;
     }
-    const complexitySelect = document.getElementById(
-      "complexity-select"
-    ) as HTMLSelectElement;
-    if (complexitySelect) complexitySelect.value = sim.complexity;
   }
 
   private scheduleChartUpdate(): void {
@@ -474,10 +523,9 @@ export class ProductHealthApp {
 
     setTimeout(() => {
       const sim = this.activeSimulation;
-      const profile = complexityProfiles[sim.complexity];
       const datasets = buildDatasetsForAgents(
         sim.agents,
-        { systemComplexity: profile.systemComplexity, nChanges: sim.nChanges },
+        { systemComplexity: sim.systemComplexity, nChanges: sim.nChanges },
         this.globalConfig.defaultVisibility
       );
 
@@ -497,4 +545,3 @@ export class ProductHealthApp {
     }, 10);
   }
 }
-

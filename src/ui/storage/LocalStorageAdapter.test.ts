@@ -15,7 +15,7 @@ const createTestAppData = (): AppData => ({
           color: "#ff0000",
         },
       ],
-      complexity: "simple",
+      systemComplexity: 0.5,
       nChanges: 500,
     },
   ],
@@ -23,7 +23,7 @@ const createTestAppData = (): AppData => ({
     defaultVisibility: "all",
     activeSimulationId: "sim-1",
   },
-  version: 1,
+  version: 3,
 });
 
 const createMockLocalStorage = () => {
@@ -76,7 +76,7 @@ describe("LocalStorageAdapter", () => {
             id: "stored-sim",
             name: "Stored Simulation",
             agents: [],
-            complexity: "enterprise",
+            systemComplexity: 1.0,
             nChanges: 1000,
           },
         ],
@@ -84,7 +84,7 @@ describe("LocalStorageAdapter", () => {
           defaultVisibility: "averages-only",
           activeSimulationId: "stored-sim",
         },
-        version: 1,
+        version: 3,
       };
       mockStorage.getItem.mockReturnValue(JSON.stringify(storedData));
 
@@ -95,6 +95,7 @@ describe("LocalStorageAdapter", () => {
       // Then
       expect(simulations).toHaveLength(1);
       expect(simulations[0].name).toBe("Stored Simulation");
+      expect(simulations[0].systemComplexity).toBe(1.0);
     });
 
     it("returns default data when localStorage contains invalid JSON", () => {
@@ -144,7 +145,7 @@ describe("LocalStorageAdapter", () => {
         id: "sim-1",
         name: "Updated Simulation",
         agents: [],
-        complexity: "enterprise",
+        systemComplexity: 0.75,
         nChanges: 2000,
       };
 
@@ -154,6 +155,7 @@ describe("LocalStorageAdapter", () => {
       // Then
       const sim = adapter.getSimulation("sim-1");
       expect(sim?.name).toBe("Updated Simulation");
+      expect(sim?.systemComplexity).toBe(0.75);
       expect(sim?.nChanges).toBe(2000);
       expect(mockStorage.setItem).toHaveBeenCalled();
     });
@@ -165,7 +167,7 @@ describe("LocalStorageAdapter", () => {
         id: "sim-2",
         name: "New Simulation",
         agents: [],
-        complexity: "medium",
+        systemComplexity: 0.3,
         nChanges: 500,
       };
 
@@ -199,14 +201,14 @@ describe("LocalStorageAdapter", () => {
             id: "sim-1",
             name: "First",
             agents: [],
-            complexity: "simple",
+            systemComplexity: 0.25,
             nChanges: 500,
           },
           {
             id: "sim-2",
             name: "Second",
             agents: [],
-            complexity: "medium",
+            systemComplexity: 0.5,
             nChanges: 500,
           },
         ],
@@ -214,7 +216,7 @@ describe("LocalStorageAdapter", () => {
           defaultVisibility: "all",
           activeSimulationId: "sim-1",
         },
-        version: 1,
+        version: 3,
       });
       const adapter = new LocalStorageAdapter(dataWithTwo);
 
@@ -265,7 +267,7 @@ describe("LocalStorageAdapter", () => {
         id: "extra",
         name: "Extra",
         agents: [],
-        complexity: "enterprise",
+        systemComplexity: 1.0,
         nChanges: 1000,
       });
 
@@ -305,7 +307,7 @@ describe("LocalStorageAdapter", () => {
             id: "imported-sim",
             name: "Imported Simulation",
             agents: [],
-            complexity: "enterprise",
+            systemComplexity: 1.5,
             nChanges: 2000,
           },
         ],
@@ -313,7 +315,7 @@ describe("LocalStorageAdapter", () => {
           defaultVisibility: "averages-only",
           activeSimulationId: "imported-sim",
         },
-        version: 1,
+        version: 3,
       };
 
       // When
@@ -322,12 +324,13 @@ describe("LocalStorageAdapter", () => {
       // Then
       expect(adapter.getSimulations()).toHaveLength(1);
       expect(adapter.getSimulations()[0].name).toBe("Imported Simulation");
+      expect(adapter.getSimulations()[0].systemComplexity).toBe(1.5);
       expect(adapter.getGlobalConfig().defaultVisibility).toBe("averages-only");
     });
   });
 
   describe("version migration", () => {
-    it("migrates data with older version", () => {
+    it("migrates v1 data with old complexity field to systemComplexity", () => {
       // Given
       const oldData = {
         simulations: [
@@ -343,7 +346,7 @@ describe("LocalStorageAdapter", () => {
           defaultVisibility: "all",
           activeSimulationId: "old-sim",
         },
-        version: 0,
+        version: 1,
       };
       mockStorage.getItem.mockReturnValue(JSON.stringify(oldData));
 
@@ -352,9 +355,69 @@ describe("LocalStorageAdapter", () => {
 
       // Then
       const exported = adapter.exportData();
-      expect(exported.version).toBe(1);
+      expect(exported.version).toBe(4);
       expect(exported.simulations[0].name).toBe("Old Simulation");
+      expect(exported.simulations[0].systemComplexity).toBe(0.25);
+    });
+
+    it("migrates v2 data with complexityId to systemComplexity", () => {
+      // Given
+      const v2Data = {
+        simulations: [
+          {
+            id: "v2-sim",
+            name: "V2 Simulation",
+            agents: [],
+            complexityId: "enterprise",
+            nChanges: 1000,
+          },
+        ],
+        complexityProfiles: [
+          { id: "enterprise", name: "Enterprise", description: "Enterprise", systemComplexity: 1.0 },
+        ],
+        globalConfig: {
+          defaultVisibility: "all",
+          activeSimulationId: "v2-sim",
+        },
+        version: 2,
+      };
+      mockStorage.getItem.mockReturnValue(JSON.stringify(v2Data));
+
+      // When
+      const adapter = new LocalStorageAdapter(createTestAppData);
+
+      // Then
+      const exported = adapter.exportData();
+      expect(exported.version).toBe(4);
+      expect(exported.simulations[0].systemComplexity).toBe(1.0);
+    });
+
+    it("preserves systemComplexity for v3 data", () => {
+      // Given
+      const v3Data: AppData = {
+        simulations: [
+          {
+            id: "v3-sim",
+            name: "V3 Simulation",
+            agents: [],
+            systemComplexity: 0.75,
+            nChanges: 1000,
+          },
+        ],
+        globalConfig: {
+          defaultVisibility: "all",
+          activeSimulationId: "v3-sim",
+        },
+        version: 3,
+      };
+      mockStorage.getItem.mockReturnValue(JSON.stringify(v3Data));
+
+      // When
+      const adapter = new LocalStorageAdapter(createTestAppData);
+
+      // Then
+      const exported = adapter.exportData();
+      expect(exported.simulations[0].systemComplexity).toBe(0.75);
     });
   });
 });
-

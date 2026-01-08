@@ -7,7 +7,7 @@ export type {
   AgentConfig,
 } from "./storage";
 export { LocalStorageAdapter } from "./storage";
-export { CHANGES_OPTIONS, COMPLEXITY_OPTIONS, AGENT_COLORS } from "./types";
+export { CHANGES_OPTIONS, AGENT_COLORS } from "./types";
 export type { UIState } from "./types";
 export {
   createDefaultAppData,
@@ -15,5 +15,6 @@ export {
   createDefaultGlobalConfig,
   generateId,
   getNextColor,
+  getDefaultComplexityDescription,
 } from "./defaults";
 export { ProductHealthApp } from "./App";

@@ -1,14 +1,20 @@
 # Product Health Dynamics
 
-A Monte Carlo simulation that predicts how software quality evolves based on **engineering rigor** and **system complexity**. It reveals the hidden cost of "vibe coding" and quantifies the effort required to recover.
+A simulation that predicts how software quality evolves based on **engineering rigor** and **system complexity**. It reveals the hidden cost of "vibe coding" and quantifies the effort required to recover.
 
-> **The vibe coding story:**
+> _You've built an app. It works. And one day as you are polishing some styling, the AI accidentally deletes 40% of the tests in the backend part of the app. You do not notice, because you are vibe coding, and in the process of making coffee in another room._
 >
-> You build an app with AI. It works. One day while polishing styling, the AI accidentally deletes 40% of your backend tests. You don't notice because you're making coffee.
+> _You happily go about your day, blissfully unaware of all what is going on inside the code realms._
 >
-> Two weeks later, you add a feature. It works. Then features X and Y break. You ask the AI to fix them while keeping the new feature working. Now feature A, B, and C break. Feature D breaks intermittently.
+> _Fast forward two weeks. You now ask the AI to add a new feature. It does. Worked yet again, "vibe coding is great!"_
 >
-> This is where every vibe-coded project ends up.
+> _Then suddenly, BOOM!_
+>
+> _Apparently feature x and y broke, now when feature z was added. If we only had tests that would have prevented this..._
+>
+> _Now we're in a bad situation. Because when I vibe-asked the AI to fix feature x and y while also keeping feature z working, they all started working... but then feature a, b and c suddenly broke, and feature d breaks also, but not always._
+>
+> _This is the situation I predict every vibe coded project will eventually end up in, if one keeps doing it._
 
 **The question this model answers:** Why does AI-assisted "vibe coding" work at first, then suddenly fall apart? What does recovery actually cost, in both quality AND time?
 
@@ -62,40 +68,56 @@ A Monte Carlo simulation that predicts how software quality evolves based on **e
 flowchart LR
     subgraph inputs ["INPUTS (you choose)"]
         direction TB
-        ER["<b>Engineering Rigor</b><br/>0 = vibe coding<br/>1 = senior engineer"]
-        SC["<b>System Complexity</b><br/>0.25 = blog<br/>1.0 = enterprise"]
+        ER["<b>Engineering Rigor</b><br/>How disciplined is the developer?<br/><i>0 = vibe coding, 1 = senior engineer</i>"]
+        SC["<b>System Complexity</b><br/>How complex is the system?<br/><i>0.25 = blog, 1.0 = enterprise</i>"]
     end
 
     subgraph derived ["DERIVED (from ER + SC)"]
         direction TB
-        BI["<b>Base Impact</b><br/>Help or hurt<br/>on average?"]
-        BS["<b>Base Sigma</b><br/>How predictable<br/>are outcomes?"]
-        MH["<b>Max Health</b><br/>Sustainable<br/>ceiling"]
+        BI["<b>Base Impact</b><br/>Does each change<br/>help or hurt on average?"]
+        BS["<b>Base Sigma</b><br/>How predictable<br/>are the outcomes?"]
+        MH["<b>Max Product Health</b><br/>Best sustainable<br/>quality level"]
     end
 
-    subgraph loop ["EACH CHANGE EVENT ⟳"]
+    subgraph loop ["YOUR SYSTEM ⟳ (repeats each commit)"]
         direction TB
-        PH["<b>Current PH</b><br/>1-10"]
-        SS["<b>System State</b><br/>Tractability"]
-        TC["<b>Time Cost</b><br/>1-3x"]
-        CE(("<b>Roll</b><br/><b>Dice</b>"))
-        NPH["<b>New PH</b>"]
+        PH["<b>Current Product Health</b><br/>How easy is the code<br/>to change right now?<br/><i>1 = nightmare, 10 = dream</i>"]
+        SS["<b>Tractability</b><br/>Hard to improve?<br/>Easy to damage?"]
+        CE(("<b>Change</b><br/><b>Event</b><br/>roll the dice"))
+        NPH["<b>New Product Health</b><br/>Better, worse,<br/>or same?"]
 
-        PH -->|"affects"| SS
-        SS -->|"modifies"| CE
-        SS -->|"determines"| TC
+        PH -->|"PH affects"| SS
+        SS -->|"modifies outcome"| CE
         CE -->|"produces"| NPH
-        NPH -.->|"becomes"| PH
+        NPH -.->|"becomes next"| PH
     end
+
+    AC["<b>Accumulated</b><br/><b>Complexity</b><br/>Grows with each change<br/><i>hard to outpace, even for seniors</i>"]
+    TC["<b>Time Cost</b><br/>How long does each<br/>change take?<br/><i>1x when healthy, 3x when degraded</i>"]
 
     ER -->|"determines"| BI & BS & MH
-    SC -->|"scales"| BI
-    SC -->|"floors"| SS
+    SC -->|"shifts breakeven"| BI
+    SC -->|"limits floor"| SS
+    SC -->|"scales"| AC
     BI & BS & MH -->|"feed into"| CE
+    AC -->|"drags down"| CE
+    SS -->|"determines"| TC
 
     style inputs fill:none,stroke:#4ade80,stroke-width:2px
     style derived fill:none,stroke:#fb923c,stroke-width:2px
     style loop fill:none,stroke:#60a5fa,stroke-width:2px
+
+    classDef inputNode fill:#166534,stroke:#4ade80,color:#fff
+    classDef derivedNode fill:#9a3412,stroke:#fb923c,color:#fff
+    classDef loopNode fill:#1e40af,stroke:#60a5fa,color:#fff
+    classDef timeNode fill:#581c87,stroke:#a855f7,color:#fff
+    classDef eventNode fill:#0f172a,stroke:#60a5fa,color:#fff
+
+    class ER,SC inputNode
+    class BI,BS,MH derivedNode
+    class PH,SS,NPH loopNode
+    class CE eventNode
+    class AC,TC timeNode
 ```
 
 ### The Two Inputs
@@ -187,19 +209,24 @@ Each change is a probabilistic event. The model draws from a Normal distribution
 ΔPH = μ_eff + complexityDrift + σ_eff × N(0,1) × attenuation
 ```
 
-| Term            | What It Represents                                           |
-| --------------- | ------------------------------------------------------------ |
-| μ_eff           | Expected impact (help or hurt)                               |
-| complexityDrift | Inherent disorder accumulating over time                     |
-| σ_eff × N(0,1)  | Random component (the dice roll)                             |
-| attenuation     | How much randomness matters (frozen systems are predictable) |
+| Term            | What It Represents                       |
+| --------------- | ---------------------------------------- |
+| μ_eff           | Expected impact (help or hurt)           |
+| complexityDrift | Inherent disorder accumulating over time |
+| σ_eff × N(0,1)  | Random component (the dice roll)         |
+| attenuation     | How much randomness matters (see below)  |
 
-**Key insight:** Variance is reduced at BOTH extremes of Product Health:
+**Key insight: Degradation is deterministic; improvement has uncertainty.**
 
-- High PH: Tests and structure make outcomes predictable (mostly good)
-- Low PH: Everything is coupled; outcomes are predictably bad
+- **Low PH (frozen):** Variance is low for everyone. The system is so coupled that outcomes are predictably bad.
+- **High PH with negative impact:** Variance is low. Low-ER agents crash deterministically; tests and structure cannot save them from their negative expected value.
+- **High PH with positive impact:** Variance scales with complexity. High-ER agents face uncertain challenges; even good work can have unexpected complications in complex systems.
 
-This creates the characteristic sigmoid shape: plateau at high PH, accelerating decline through the transition zone, bottoming out at PH=1.
+This creates asymmetric confidence bands:
+
+- Low-ER agents have tight bands as they crash (deterministic decay)
+- High-ER agents have wider bands in complex systems (improvement uncertainty)
+- Ideal agents (ER=1) maintain tight bands everywhere (skill transcends complexity)
 
 ---
 
@@ -311,8 +338,10 @@ src/
     ScenarioDefinitions.ts  # Scenario configurations
 
   ui/                       # Web interface (see docs/ui.md)
+    templates/              # HTML template builders
     chart/                  # Chart.js visualization
     storage/                # LocalStorage persistence layer
+    App.ts                  # UI orchestration class
     defaults.ts             # Default agents and simulations
     types.ts                # UI constants
     styles.css              # All styles
@@ -336,18 +365,19 @@ For those who want the complete formulas.
 
 ### Parameters
 
-| Parameter               |         Value | Rationale                             |
-| ----------------------- | ------------: | ------------------------------------- |
-| Impact slope            |           2.4 | Produces ±1.2 max base impact at SC=1 |
-| σ_min                   |           0.1 | Minimum variance at ER=1              |
-| σ_max                   |           0.5 | Maximum variance at ER=0              |
-| Ceiling base/slope      |           5/5 | Range from 5 (ER=0) to 10 (ER=1)      |
-| Sigmoid threshold       |             5 | Midpoint of PH scale                  |
-| Sigmoid steepness       |           1.5 | Moderate transition curve             |
-| Ceiling exponent        |             2 | Quadratic diminishing returns         |
-| Attenuation floor/range |     0.15/0.85 | Variance reduction at extremes        |
-| Complexity base/growth  | 0.005/0.00005 | ~5% senior decline over 1000 changes  |
-| Time base/max           |       1.0/3.0 | Healthy = 1x, frozen = 3x             |
+| Parameter               |         Value | Rationale                                 |
+| ----------------------- | ------------: | ----------------------------------------- |
+| Impact slope            |           2.4 | Produces ±1.2 max base impact at SC=1     |
+| σ_min                   |           0.1 | Minimum variance at ER=1                  |
+| σ_max                   |           0.5 | Maximum variance at ER=0                  |
+| Ceiling base/slope      |           5/5 | Range from 5 (ER=0) to 10 (ER=1)          |
+| Sigmoid threshold       |             5 | Midpoint of PH scale                      |
+| Sigmoid steepness       |           1.5 | Moderate transition curve                 |
+| Ceiling exponent        |             2 | Quadratic diminishing returns             |
+| Attenuation floor/range |     0.15/0.85 | Base variance reduction (bell curve)      |
+| Improvement variance    |           2.5 | Extra variance for positive-impact agents |
+| Complexity base/growth  | 0.005/0.00005 | ~5% senior decline over 1000 changes      |
+| Time base/max           |       1.0/3.0 | Healthy = 1x, frozen = 3x                 |
 
 ### Complete Formulas
 
@@ -394,11 +424,29 @@ bellFactor = 4 \times s \times (1 - s)
 drift = -(0.005 + 0.00005 \times n) \times s \times SC
 ```
 
-**Variance attenuation (symmetric at extremes):**
+**Variance attenuation (asymmetric for improvement):**
 
 ```math
-attenuation = 0.15 + 0.85 \times bellFactor
+baseAttenuation = 0.15 + 0.85 \times bellFactor
 ```
+
+```math
+effectiveChallenge = (1 - ER) \times SC
+```
+
+```math
+varianceBoost = s \times \max(0, \mu_{base}) \times effectiveChallenge \times 2.5
+```
+
+```math
+attenuation = baseAttenuation + varianceBoost
+```
+
+The variance boost only applies when:
+
+- `μ_base > 0` (agent is improving the system)
+- `systemState` is high (agent is at healthy PH)
+- `effectiveChallenge > 0` (agent is non-ideal in a complex system)
 
 **Ceiling resistance (when PH > maxPH):**
 
@@ -428,17 +476,17 @@ PH_{n+1} = clamp(PH_n + \Delta PH, 1, 10)
 PH_{n+1} = clamp\Big(PH_n + \mu_{eff} + drift + \sigma_{eff} \cdot \varepsilon \cdot a \cdot r, \; 1, \; 10\Big)
 ```
 
-| Symbol | Name               | Meaning                                             |
-| ------ | ------------------ | --------------------------------------------------- |
-| PH_n   | Current Health     | Quality right now (1-10)                            |
-| μ_eff  | Effective Impact   | Help or hurt, modified by system state              |
-| drift  | Complexity Drift   | Inherent disorder accumulating                      |
-| σ_eff  | Effective Sigma    | Unpredictability of outcome                         |
-| ε      | Random Draw        | N(0,1), the dice roll                               |
-| a      | Attenuation        | Variance reduction at extremes                      |
-| r      | Ceiling Resistance | Symmetric variance reduction above ceiling          |
-| s      | System State       | Tractability (0 = frozen, 1 = healthy)              |
-| SC     | System Complexity  | Inherent difficulty (0.25 = blog, 1.0 = enterprise) |
+| Symbol | Name               | Meaning                                                     |
+| ------ | ------------------ | ----------------------------------------------------------- |
+| PH_n   | Current Health     | Quality right now (1-10)                                    |
+| μ_eff  | Effective Impact   | Help or hurt, modified by system state                      |
+| drift  | Complexity Drift   | Inherent disorder accumulating                              |
+| σ_eff  | Effective Sigma    | Unpredictability of outcome                                 |
+| ε      | Random Draw        | N(0,1), the dice roll                                       |
+| a      | Attenuation        | Variance scaling (low at extremes, boosted for improvement) |
+| r      | Ceiling Resistance | Variance reduction above ceiling                            |
+| s      | System State       | Tractability (0 = frozen, 1 = healthy)                      |
+| SC     | System Complexity  | Inherent difficulty (0.25 = blog, 1.0 = enterprise)         |
 
 ### The Story
 
@@ -446,6 +494,7 @@ PH_{n+1} = clamp\Big(PH_n + \mu_{eff} + drift + \sigma_{eff} \cdot \varepsilon \
 2. **Complexity (SC)** sets the difficulty; simple systems forgive, complex systems punish
 3. **Time (drift)** works against everyone, but slower for simple systems
 4. **Tractability (s)** amplifies everything; good code catches mistakes, bad code cascades them
-5. **Randomness (ε)** means any single change could go either way, but averages reveal the trend
-6. **Time cost** means degraded systems are slow, not just bad
-7. **In the long run**, only sustained high-skill effort can outpace complexity
+5. **Degradation is deterministic**; low-skill agents crash predictably, their trajectory is sealed
+6. **Improvement has uncertainty**; even skilled agents face unexpected challenges in complex systems
+7. **Time cost** means degraded systems are slow, not just bad
+8. **In the long run**, only sustained high-skill effort can outpace complexity

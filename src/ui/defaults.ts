@@ -5,7 +5,7 @@ import type {
   AppData,
 } from "./storage/types";
 
-const createDefaultAgents = (): AgentConfig[] => [
+const createDefaultDevelopers = (): AgentConfig[] => [
   {
     id: "vibe",
     name: "AI Vibe Coder",
@@ -20,13 +20,13 @@ const createDefaultAgents = (): AgentConfig[] => [
   },
   {
     id: "junior",
-    name: "Junior Engineer",
+    name: "Junior Developer",
     engineeringRigor: 0.5,
     color: "#eab308",
   },
   {
     id: "senior",
-    name: "Senior Engineer",
+    name: "Senior Developer",
     engineeringRigor: 0.8,
     color: "#22c55e",
   },
@@ -50,22 +50,25 @@ export const createDefaultSimulations = (): Simulation[] => [
   {
     id: "simple",
     name: "Simple System",
-    agents: createDefaultAgents(),
-    complexity: "simple",
+    agents: createDefaultDevelopers(),
+    systemComplexity: 0.25,
+    complexityDescription: "Blog, landing page, basic CMS",
     nChanges: 1000,
   },
   {
     id: "medium",
     name: "Medium System",
-    agents: createDefaultAgents(),
-    complexity: "medium",
+    agents: createDefaultDevelopers(),
+    systemComplexity: 0.5,
+    complexityDescription: "CRUD backend with auth, moderate business logic",
     nChanges: 1000,
   },
   {
     id: "enterprise",
     name: "Enterprise System",
-    agents: createDefaultAgents(),
-    complexity: "enterprise",
+    agents: createDefaultDevelopers(),
+    systemComplexity: 1.0,
+    complexityDescription: "Complex architecture, many integrations",
     nChanges: 1000,
   },
 ];
@@ -78,7 +81,7 @@ export const createDefaultGlobalConfig = (): GlobalConfig => ({
 export const createDefaultAppData = (): AppData => ({
   simulations: createDefaultSimulations(),
   globalConfig: createDefaultGlobalConfig(),
-  version: 1,
+  version: 4,
 });
 
 export const generateId = (): string =>
@@ -101,4 +104,10 @@ export const getNextColor = (usedColors: string[]): string => {
     palette.find((c) => !usedColors.includes(c)) ??
     palette[Math.floor(Math.random() * palette.length)]
   );
+};
+
+export const getDefaultComplexityDescription = (sc: number): string => {
+  if (sc <= 0.3) return "Simple system (blog, landing page)";
+  if (sc <= 0.6) return "Moderate system (CRUD backend, auth)";
+  return "Complex system (enterprise, many integrations)";
 };

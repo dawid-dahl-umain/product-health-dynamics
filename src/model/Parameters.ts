@@ -59,14 +59,19 @@ export const ModelParameters = {
   },
 
   /**
-   * Controls variance attenuation at low Product Health.
-   * In a tightly coupled system, luck cannot save you; outcomes are driven by mean.
-   * floor: Minimum variance retained even at PH=1 (some noise remains).
-   * range: Portion of variance that scales with system state.
+   * Controls variance attenuation based on system state and impact direction.
+   *
+   * floor: Minimum variance at PH extremes (deterministic dynamics).
+   * range: Variance scaling with bell curve (peaks at mid-PH transition).
+   * improvementVariance: Extra variance for positive-impact agents at high PH.
+   *   - Scales with: systemState × positiveImpact × effectiveChallenge
+   *   - Only affects agents actively improving the system (positive baseImpact)
+   *   - Naturally zero for low-ER (negative impact) and ideal (zero challenge)
    */
   varianceAttenuation: {
     floor: 0.15,
     range: 0.85,
+    improvementVariance: 2.5,
   },
 
   /**

@@ -26,9 +26,3 @@ export const AGENT_COLORS = [
   "#f43f5e",
   "#84cc16",
 ];
-
-export const COMPLEXITY_OPTIONS = [
-  { value: "simple", label: "Simple", sc: 0.25 },
-  { value: "medium", label: "Medium", sc: 0.5 },
-  { value: "enterprise", label: "Enterprise", sc: 1.0 },
-] as const;

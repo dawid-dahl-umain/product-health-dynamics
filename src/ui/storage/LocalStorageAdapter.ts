@@ -2,7 +2,13 @@ import type { StorageService } from "./StorageService";
 import type { Simulation, GlobalConfig, AppData } from "./types";
 
 const STORAGE_KEY = "product-health-dynamics";
-const CURRENT_VERSION = 1;
+const CURRENT_VERSION = 4;
+
+const LEGACY_COMPLEXITY_VALUES: Record<string, number> = {
+  simple: 0.25,
+  medium: 0.5,
+  enterprise: 1.0,
+};
 
 export class LocalStorageAdapter implements StorageService {
   private data: AppData;
@@ -20,7 +26,9 @@ export class LocalStorageAdapter implements StorageService {
     try {
       const parsed = JSON.parse(stored) as AppData;
       if (parsed.version !== CURRENT_VERSION) {
-        return this.migrate(parsed);
+        const migrated = this.migrate(parsed);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+        return migrated;
       }
       return parsed;
     } catch {
@@ -29,7 +37,48 @@ export class LocalStorageAdapter implements StorageService {
   }
 
   private migrate(data: AppData): AppData {
-    return { ...this.defaultDataFactory(), ...data, version: CURRENT_VERSION };
+    // Migrate simulations from complexityId to systemComplexity
+    const legacyData = data as unknown as {
+      simulations: Array<{
+        id: string;
+        name: string;
+        agents: unknown[];
+        nChanges: number;
+        complexity?: string;
+        complexityId?: string;
+        systemComplexity?: number;
+      }>;
+      complexityProfiles?: Array<{ id: string; systemComplexity: number }>;
+    };
+
+    const migratedSimulations: Simulation[] = legacyData.simulations.map(
+      (sim) => {
+        if (sim.systemComplexity !== undefined) {
+          return sim as unknown as Simulation;
+        }
+
+        const complexityKey = sim.complexityId ?? sim.complexity ?? "medium";
+        const scFromProfiles = legacyData.complexityProfiles?.find(
+          (p) => p.id === complexityKey
+        )?.systemComplexity;
+        const scValue =
+          scFromProfiles ?? LEGACY_COMPLEXITY_VALUES[complexityKey] ?? 0.5;
+
+        return {
+          id: sim.id,
+          name: sim.name,
+          agents: sim.agents,
+          nChanges: sim.nChanges,
+          systemComplexity: scValue,
+        } as Simulation;
+      }
+    );
+
+    return {
+      simulations: migratedSimulations,
+      globalConfig: data.globalConfig,
+      version: CURRENT_VERSION,
+    };
   }
 
   private persist(): void {
@@ -89,4 +138,3 @@ export class LocalStorageAdapter implements StorageService {
     this.persist();
   }
 }
-

@@ -14,39 +14,48 @@ npm run dev
 
 ### Simulation Tabs
 
-Each tab represents an independent simulation with its own agents and settings. Click a tab to switch; double-click to rename.
+Each tab is a complete, self-contained simulation with its own settings and agents. Click a tab to switch; double-click to rename.
 
-- **Add Tab (+)**: Create a new blank simulation (no agents, simple complexity)
+- **Add Tab (+)**: Create a new blank simulation (auto-opens settings)
 - **Close Tab (×)**: Remove a simulation (requires at least one remaining)
 
 ### Settings Panel
 
 Toggle with the **Settings** button in the header.
 
-#### Simulation Settings
+#### Top Row
 
-| Option     | Description                                      |
-| ---------- | ------------------------------------------------ |
-| Changes    | Number of change events to simulate (250-2000)   |
-| Complexity | System complexity: Simple, Medium, or Enterprise |
+| Control    | Description                                           |
+| ---------- | ----------------------------------------------------- |
+| Complexity | Slider (0.1-2.0) for system complexity                |
+| Changes    | Dropdown to select number of change events (250-2000) |
+| Duplicate  | Create a copy of the current simulation               |
+| Export     | Download the simulation as JSON                       |
 
-#### Agent Configuration
+**Complexity guide:**
+
+- 0.1-0.3: Simple (blog, landing page)
+- 0.3-0.6: Moderate (CRUD backend, auth)
+- 0.6-1.0: Complex (enterprise, integrations)
+- 1.0+: Very complex (legacy, high coupling)
+
+#### Agents Section
 
 Each agent card displays:
 
 - **Color picker**: Click to change the line color
 - **Name input**: Edit the agent's display name
-- **Engineering Rigor slider**: Adjust skill/discipline level (0.10-1.00)
-- **Handoff dropdown**: Select another agent to hand off to after 20% of changes
+- **Eng. Rigor slider**: Adjust engineering rigor level (0.10-1.00)
+- **Hands off to dropdown**: Select another agent to hand off to after 20% of changes
 
 Actions:
 
 - **+ Add Agent**: Create a new agent with default settings
-- **Reset Defaults**: Restore the default agent set for current complexity
+- **Reset Defaults**: Restore the default agent set
 
 ### Global Settings
 
-Access via the gear icon in the header.
+Access via the sliders icon in the header.
 
 | Setting                          | Description                                        |
 | -------------------------------- | -------------------------------------------------- |
@@ -66,7 +75,7 @@ Access via the gear icon in the header.
 
 All settings are automatically saved to `localStorage`:
 
-- Simulation tabs (name, agents, complexity, changes)
+- Simulation tabs (name, complexity, agents, changes)
 - Agent configurations (name, engineering rigor, color, handoff)
 - Global settings (default visibility)
 - Active simulation selection
@@ -75,7 +84,7 @@ Data persists across browser sessions. Use **Reset All Data** in Global Settings
 
 ## Export
 
-From the Settings panel, click the export icon to download the current simulation as JSON. This can be shared or used as a backup.
+From the Settings panel, click the export icon to download the current simulation as JSON.
 
 ## File Structure
 
@@ -92,9 +101,9 @@ src/ui/
     index.ts           # Barrel exports
 
   chart/
-    colors.ts          # Color utilities and chart palette
+    colors.ts          # Color utilities
     config.ts          # Chart.js configuration
-    datasets.ts        # Builds chart datasets from agents
+    datasets.ts        # Builds datasets from agents
     index.ts           # Barrel exports
 
   storage/
@@ -103,10 +112,10 @@ src/ui/
     LocalStorageAdapter.ts  # localStorage implementation
     index.ts           # Barrel exports
 
-  App.ts               # ProductHealthApp class (UI logic)
-  defaults.ts          # Default simulations and agent configurations
-  types.ts             # UI-specific types and constants
-  styles.css           # All UI styles
+  App.ts               # ProductHealthApp class (UI orchestration)
+  defaults.ts          # Default simulations and agents
+  types.ts             # UI constants
+  styles.css           # All styles
   index.ts             # Public exports
 
 src/main.ts            # Application entry point
@@ -126,7 +135,7 @@ const createDefaultAgents = (): AgentConfig[] => [
     engineeringRigor: 0.6,
     color: "#10b981",
   },
-  // ... other agents
+  // ...
 ];
 ```
 
@@ -136,18 +145,14 @@ Edit `src/ui/defaults.ts`:
 
 ```typescript
 export const getNextColor = (usedColors: string[]): string => {
-  const palette = [
-    "#ef4444", // red
-    "#f97316", // orange
-    // ... add or modify colors
-  ];
+  const palette = ["#ef4444", "#f97316", "#eab308" /* ... */];
   return palette.find((c) => !usedColors.includes(c)) ?? palette[0];
 };
 ```
 
 ### Modifying Chart Appearance
 
-Edit `src/ui/chart/config.ts` for Chart.js options (axes, legends, tooltips, zoom behavior).
+Edit `src/ui/chart/config.ts` for Chart.js options (axes, legends, tooltips, zoom).
 
 ## Storage Interface
 

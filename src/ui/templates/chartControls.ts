@@ -22,5 +22,5 @@ export const buildComplexityDescription = ({
   description,
   systemComplexity,
 }: ComplexityDescriptionProps): string =>
-  `<p class="complexity-description">${description} (SC = ${systemComplexity})</p>`;
+  `<p class="complexity-description">${description} (Complexity = ${systemComplexity})</p>`;
 

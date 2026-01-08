@@ -6,7 +6,7 @@ export const buildAgentCard = (
   allAgents: AgentConfig[]
 ): string => {
   const handoffOptions = allAgents
-    .filter((a) => a.id !== agent.id)
+    .filter((a) => a.id !== agent.id && !a.handoffToId)
     .map(
       (a) =>
         `<option value="${a.id}" ${
@@ -22,7 +22,7 @@ export const buildAgentCard = (
       <div class="agent-main">
         <input type="text" class="agent-name-input" value="${agent.name}" data-field="name" />
         <div class="agent-rigor">
-          <span class="agent-rigor-label">Rigor: ${rigorValue}</span>
+          <span class="agent-rigor-label">Eng. Rigor: ${rigorValue}</span>
           <input type="range" min="0.1" max="1" step="0.05" value="${agent.engineeringRigor}" data-field="rigor" />
         </div>
         <div class="agent-handoff-row">
@@ -37,4 +37,3 @@ export const buildAgentCard = (
     </div>
   `;
 };
-
