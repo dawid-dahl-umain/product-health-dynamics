@@ -96,9 +96,9 @@ flowchart LR
     TC["<b>Time Cost</b><br/>How long does each<br/>change take?<br/><i>1x when healthy, 3x when degraded</i>"]
 
     ER -->|"determines"| BI & BS & MH
-    SC -->|"shifts breakeven"| BI
-    SC -->|"limits floor"| SS
-    SC -->|"scales"| AC
+    SC -->|"harder to improve"| BI
+    SC -->|"can freeze harder"| SS
+    SC -->|"faster buildup"| AC
     BI & BS & MH -->|"feed into"| CE
     AC -->|"drags down"| CE
     SS -->|"determines"| TC
