@@ -92,28 +92,3 @@ export class TrajectorySimulator {
     }
   }
 }
-
-/**
- * Simulates a single trajectory of Product Health over time.
- * @deprecated Use TrajectorySimulator.simulate() for new code.
- */
-export const simulateTrajectory = (
-  config: TrajectoryConfig,
-  rng: () => number = Math.random
-): SimulationRun => new TrajectorySimulator(rng).simulate(config);
-
-/**
- * Simulates a trajectory with multiple phases.
- * @deprecated Use TrajectorySimulator.simulatePhased() for new code.
- */
-export const simulatePhasedTrajectory = (
-  phases: PhaseConfig[],
-  startHealth: number,
-  systemComplexity: number = 1.0,
-  rng: () => number = Math.random
-): SimulationRun =>
-  new TrajectorySimulator(rng).simulatePhased(
-    phases,
-    startHealth,
-    systemComplexity
-  );

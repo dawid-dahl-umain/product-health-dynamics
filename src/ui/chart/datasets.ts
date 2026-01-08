@@ -1,11 +1,6 @@
-import {
-  simulateTrajectory,
-  simulatePhasedTrajectory,
-  summarizeRuns,
-} from "../simulation";
+import { TrajectorySimulator, summarizeRuns } from "../../simulation";
 import { hexToRgba } from "./colors";
-import type { AgentConfig } from "../ui/types";
-import { AgentProfiles } from "../scenarios/AgentProfiles";
+import type { AgentConfig } from "../storage/types";
 
 export type Dataset = {
   label: string;
@@ -24,18 +19,29 @@ type SimulationOptions = {
   nSimulations?: number;
 };
 
-const runAgentSimulation = (agent: AgentConfig, options: SimulationOptions) => {
-  const { systemComplexity, nChanges, nSimulations = 200 } = options;
+type AgentLookup = Map<string, AgentConfig>;
 
-  if (agent.enableHandoff) {
+const runAgentSimulation = (
+  agent: AgentConfig,
+  agentLookup: AgentLookup,
+  options: SimulationOptions
+) => {
+  const { systemComplexity, nChanges, nSimulations = 200 } = options;
+  const simulator = new TrajectorySimulator();
+
+  const handoffTarget = agent.handoffToId
+    ? agentLookup.get(agent.handoffToId)
+    : undefined;
+
+  if (handoffTarget) {
     const handoffPoint = Math.round(nChanges * 0.2);
     const recoveryChanges = nChanges - handoffPoint;
     const runs = Array.from({ length: nSimulations }, () =>
-      simulatePhasedTrajectory(
+      simulator.simulatePhased(
         [
           { engineeringRigor: agent.engineeringRigor, nChanges: handoffPoint },
           {
-            engineeringRigor: AgentProfiles.senior.engineeringRigor,
+            engineeringRigor: handoffTarget.engineeringRigor,
             nChanges: recoveryChanges,
           },
         ],
@@ -47,7 +53,7 @@ const runAgentSimulation = (agent: AgentConfig, options: SimulationOptions) => {
   }
 
   const runs = Array.from({ length: nSimulations }, () =>
-    simulateTrajectory({
+    simulator.simulate({
       engineeringRigor: agent.engineeringRigor,
       systemComplexity,
       nChanges,
@@ -59,7 +65,8 @@ const runAgentSimulation = (agent: AgentConfig, options: SimulationOptions) => {
 
 const statsToDatasets = (
   agent: AgentConfig,
-  stats: ReturnType<typeof summarizeRuns>
+  stats: ReturnType<typeof summarizeRuns>,
+  defaultVisibility: "all" | "averages-only"
 ): Dataset[] => {
   const avgPoints = stats.averageTrajectory.map((value, index) => ({
     x: index,
@@ -74,6 +81,8 @@ const statsToDatasets = (
     y: value,
   }));
 
+  const hideBands = defaultVisibility === "averages-only";
+
   return [
     {
       label: `${agent.name} (p90)`,
@@ -83,7 +92,7 @@ const statsToDatasets = (
       fill: "+1",
       tension: 0.25,
       pointRadius: 0,
-      hidden: false,
+      hidden: hideBands,
     },
     {
       label: `${agent.name} (p10)`,
@@ -93,7 +102,7 @@ const statsToDatasets = (
       fill: false,
       tension: 0.25,
       pointRadius: 0,
-      hidden: false,
+      hidden: hideBands,
     },
     {
       label: agent.name,
@@ -110,9 +119,13 @@ const statsToDatasets = (
 
 export const buildDatasetsForAgents = (
   agents: AgentConfig[],
-  options: SimulationOptions
-): Dataset[] =>
-  agents.flatMap((agent) => {
-    const stats = runAgentSimulation(agent, options);
-    return statsToDatasets(agent, stats);
+  options: SimulationOptions,
+  defaultVisibility: "all" | "averages-only" = "all"
+): Dataset[] => {
+  const agentLookup = new Map(agents.map((a) => [a.id, a]));
+  return agents.flatMap((agent) => {
+    const stats = runAgentSimulation(agent, agentLookup, options);
+    return statsToDatasets(agent, stats, defaultVisibility);
   });
+};
+

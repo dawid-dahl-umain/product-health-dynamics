@@ -267,12 +267,16 @@ When a client suggests AI-assisted non-engineers can replace professional engine
 
 ## Usage
 
+### Web Interface
+
 ```bash
-npm install          # Install dependencies
-npm run dev          # Start visualization at http://localhost:5173
+npm install
+npm run dev          # http://localhost:5173
 ```
 
-CLI:
+See [Web Interface Documentation](./docs/ui.md) for details on configuration, agents, and persistence.
+
+### CLI
 
 ```bash
 npm run simulate:ai                              # AI Vibe Coder, enterprise
@@ -298,7 +302,7 @@ src/
     ProductHealthModel.ts   # Core simulation (ER, SC → impact, variance, time)
 
   runner/
-    Trajectory.ts           # Monte Carlo runner
+    Trajectory.ts           # Monte Carlo runner (TrajectorySimulator class)
     Statistics.ts           # Aggregates runs into summary metrics
 
   scenarios/
@@ -306,11 +310,22 @@ src/
     ComplexityProfiles.ts   # SC values (simple, medium, enterprise)
     ScenarioDefinitions.ts  # Scenario configurations
 
-  chart/                    # Chart.js visualization
+  ui/                       # Web interface (see docs/ui.md)
+    chart/                  # Chart.js visualization
+    storage/                # LocalStorage persistence layer
+    defaults.ts             # Default agents and simulations
+    types.ts                # UI constants
+    styles.css              # All styles
+
   utils/                    # Math helpers (sigmoid, gaussian, percentile)
   types.ts                  # Shared type definitions
   simulation.ts             # Public API
   cli.ts                    # Command-line interface
+  main.ts                   # Web app entry point
+
+docs/
+  ui.md                     # Web interface documentation
+  theoretical-grounding.md  # Academic references (Lehman's Laws)
 ```
 
 ---

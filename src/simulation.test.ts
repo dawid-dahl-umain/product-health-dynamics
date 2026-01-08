@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ProductHealthModel } from "./model/ProductHealthModel";
-import {
-  simulatePhasedTrajectory,
-  simulateTrajectory,
-} from "./runner/Trajectory";
+import { TrajectorySimulator } from "./runner/Trajectory";
 import { summarizeRuns } from "./runner/Statistics";
 
 describe("ProductHealthModel", () => {
@@ -247,9 +244,10 @@ describe("ProductHealthModel", () => {
   });
 });
 
-describe("simulateTrajectory", () => {
+describe("TrajectorySimulator.simulate", () => {
   it("produces trajectory with correct length", () => {
     // Given
+    const simulator = new TrajectorySimulator();
     const config = {
       nChanges: 10,
       startValue: 8,
@@ -257,7 +255,7 @@ describe("simulateTrajectory", () => {
     };
 
     // When
-    const result = simulateTrajectory(config);
+    const result = simulator.simulate(config);
 
     // Then
     expect(result.healthTrajectory).toHaveLength(11);
@@ -268,6 +266,7 @@ describe("simulateTrajectory", () => {
 
   it("clamps health between 1 and 10", () => {
     // Given
+    const simulator = new TrajectorySimulator();
     const config = {
       nChanges: 100,
       startValue: 8,
@@ -275,7 +274,7 @@ describe("simulateTrajectory", () => {
     };
 
     // When
-    const result = simulateTrajectory(config);
+    const result = simulator.simulate(config);
 
     // Then
     result.healthTrajectory.forEach((health) => {
@@ -286,13 +285,14 @@ describe("simulateTrajectory", () => {
 
   it("uses default start value of 8", () => {
     // Given
+    const simulator = new TrajectorySimulator();
     const config = {
       nChanges: 5,
       engineeringRigor: 0.5,
     };
 
     // When
-    const result = simulateTrajectory(config);
+    const result = simulator.simulate(config);
 
     // Then
     expect(result.healthTrajectory[0]).toBe(8);
@@ -300,6 +300,7 @@ describe("simulateTrajectory", () => {
 
   it("tracks cumulative time across changes", () => {
     // Given
+    const simulator = new TrajectorySimulator();
     const config = {
       nChanges: 10,
       startValue: 8,
@@ -307,7 +308,7 @@ describe("simulateTrajectory", () => {
     };
 
     // When
-    const result = simulateTrajectory(config);
+    const result = simulator.simulate(config);
 
     // Then
     expect(result.timeTrajectory[0]).toBe(0);
@@ -320,16 +321,17 @@ describe("simulateTrajectory", () => {
   });
 });
 
-describe("simulatePhasedTrajectory", () => {
+describe("TrajectorySimulator.simulatePhased", () => {
   it("produces trajectory spanning all phases", () => {
     // Given
+    const simulator = new TrajectorySimulator();
     const phases = [
       { nChanges: 5, engineeringRigor: 0.1 },
       { nChanges: 10, engineeringRigor: 0.8 },
     ];
 
     // When
-    const result = simulatePhasedTrajectory(phases, 8);
+    const result = simulator.simulatePhased(phases, 8);
 
     // Then
     expect(result.healthTrajectory).toHaveLength(16);
@@ -339,13 +341,14 @@ describe("simulatePhasedTrajectory", () => {
 
   it("transitions between phases continuously", () => {
     // Given
+    const simulator = new TrajectorySimulator();
     const phases = [
       { nChanges: 3, engineeringRigor: 0.1 },
       { nChanges: 3, engineeringRigor: 0.8 },
     ];
 
     // When
-    const result = simulatePhasedTrajectory(phases, 8);
+    const result = simulator.simulatePhased(phases, 8);
 
     // Then
     expect(result.healthTrajectory).toHaveLength(7);

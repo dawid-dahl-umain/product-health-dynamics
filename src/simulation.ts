@@ -1,7 +1,4 @@
-import {
-  simulatePhasedTrajectory,
-  simulateTrajectory,
-} from "./runner/Trajectory";
+import { TrajectorySimulator } from "./runner/Trajectory";
 import { summarizeRuns } from "./runner/Statistics";
 import {
   Scenarios,
@@ -23,8 +20,7 @@ import type {
 } from "./types";
 
 export {
-  simulateTrajectory,
-  simulatePhasedTrajectory,
+  TrajectorySimulator,
   summarizeRuns,
   Scenarios as scenarios,
   ScenarioKeys as scenarioKeys,
@@ -74,14 +70,15 @@ export const simulateScenario = (
     config.nChanges ?? DEFAULT_CHANGES
   );
 
+  const simulator = new TrajectorySimulator();
   const runs = Array.from({ length: nSimulations }, () =>
     scaledPhases?.length
-      ? simulatePhasedTrajectory(
+      ? simulator.simulatePhased(
           scaledPhases,
           config.startValue ?? 8,
           systemComplexity
         )
-      : simulateTrajectory({ ...config, nChanges, systemComplexity })
+      : simulator.simulate({ ...config, nChanges, systemComplexity })
   );
 
   return summarizeRuns(runs, config.failureThreshold ?? 3);

@@ -13,3 +13,4 @@ export const hexToRgba = (hex: string, alpha: number): string => {
   const b = parseInt(hex.slice(5, 7), 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
+

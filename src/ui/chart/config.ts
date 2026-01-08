@@ -23,7 +23,6 @@ const onLegendClick = (
   chart.update();
 };
 
-/** Chart.js options for the Product Health visualization */
 export const chartOptions: ChartOptions<"line"> = {
   responsive: true,
   maintainAspectRatio: false,
@@ -97,3 +96,4 @@ export const chartOptions: ChartOptions<"line"> = {
     },
   },
 };
+
