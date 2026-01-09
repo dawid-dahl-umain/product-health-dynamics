@@ -643,6 +643,71 @@ export class ProductHealthApp {
         this.scheduleAnnotationLabelUpdate(label);
       });
 
+    const runsInput = document.getElementById(
+      "simulation-runs-input"
+    ) as HTMLInputElement;
+    runsInput?.addEventListener("input", (e) => {
+      const target = e.target as HTMLInputElement;
+      const val = parseInt(target.value, 10);
+      const hint =
+        target.parentElement?.previousElementSibling?.querySelector(
+          ".modal-hint"
+        );
+
+      if (val > 800) {
+        target.style.borderColor = "var(--color-danger)";
+        if (hint) {
+          hint.textContent = "Maximum allowed is 800 runs";
+          (hint as HTMLElement).style.color = "var(--color-danger)";
+        }
+        if (this.updateDebounceTimer) clearTimeout(this.updateDebounceTimer);
+      } else if (val < 50) {
+        target.style.borderColor = "var(--color-danger)";
+        if (hint) {
+          hint.textContent = "Minimum required is 50 runs";
+          (hint as HTMLElement).style.color = "var(--color-danger)";
+        }
+        if (this.updateDebounceTimer) clearTimeout(this.updateDebounceTimer);
+      } else {
+        target.style.borderColor = "";
+        if (hint) {
+          hint.textContent =
+            "Number of simulations to average (max 800). Higher values are smoother but slower.";
+          (hint as HTMLElement).style.color = "";
+        }
+        this.scheduleSimulationRunsUpdate(val);
+      }
+    });
+
+    runsInput?.addEventListener("blur", (e) => {
+      const target = e.target as HTMLInputElement;
+      let val = parseInt(target.value, 10);
+      const hint =
+        target.parentElement?.previousElementSibling?.querySelector(
+          ".modal-hint"
+        );
+
+      let corrected = false;
+      if (val > 800) {
+        val = 800;
+        corrected = true;
+      } else if (val < 50 || isNaN(val)) {
+        val = 50;
+        corrected = true;
+      }
+
+      if (corrected) {
+        target.value = String(val);
+        target.style.borderColor = "";
+        if (hint) {
+          hint.textContent =
+            "Number of simulations to average (max 800). Higher values are smoother but slower.";
+          (hint as HTMLElement).style.color = "";
+        }
+        this.scheduleSimulationRunsUpdate(val);
+      }
+    });
+
     document.getElementById("reset-all-data")?.addEventListener("click", () => {
       if (
         confirm(
@@ -675,6 +740,15 @@ export class ProductHealthApp {
       this.storage.saveGlobalConfig(this.globalConfig);
       this.updateChartAnnotation();
     }, 100);
+  }
+
+  private scheduleSimulationRunsUpdate(value: number): void {
+    if (this.updateDebounceTimer) clearTimeout(this.updateDebounceTimer);
+    this.updateDebounceTimer = setTimeout(() => {
+      this.globalConfig.simulationRuns = Math.max(50, Math.min(800, value));
+      this.storage.saveGlobalConfig(this.globalConfig);
+      this.recomputeChart();
+    }, 500);
   }
 
   private updateChartAnnotation(): void {
@@ -762,6 +836,7 @@ export class ProductHealthApp {
           systemComplexity: sim.systemComplexity,
           nChanges: sim.nChanges,
           startingHealth: sim.startingHealth ?? 8,
+          nSimulations: this.globalConfig.simulationRuns ?? 200,
         },
         this.globalConfig.defaultVisibility
       );

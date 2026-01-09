@@ -29,6 +29,7 @@ export type GlobalConfig = {
   activeSimulationId: string;
   shapeScaleAnnotationPosition: number;
   shapeScaleAnnotationLabel: string;
+  simulationRuns: number;
 };
 
 export type AppData = {
