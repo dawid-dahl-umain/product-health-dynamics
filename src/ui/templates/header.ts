@@ -8,7 +8,7 @@ export const buildHeader = ({ settingsOpen }: HeaderProps): string => {
   const activeClass = settingsOpen ? "active" : "";
   return `
     <div class="header">
-      <h1>Product Health Trajectories</h1>
+      <h1>Product Health Dynamics</h1>
       <div class="header-actions">
         <button class="icon-btn" id="global-settings-btn" title="Global Settings">${ICON_ADJUSTMENTS}</button>
         <button class="settings-toggle ${activeClass}" id="settings-toggle">
@@ -19,4 +19,3 @@ export const buildHeader = ({ settingsOpen }: HeaderProps): string => {
     </div>
   `;
 };
-
