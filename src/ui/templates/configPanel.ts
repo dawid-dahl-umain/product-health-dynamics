@@ -35,7 +35,7 @@ export const buildConfigPanel = ({
         <div class="config-top-row">
           <div class="config-field">
             <div class="config-row-inline">
-              <span class="config-label">Complexity</span>
+              <span class="config-label">System Complexity</span>
               <input 
                 type="range" 
                 id="complexity-slider" 
@@ -82,7 +82,9 @@ export const buildConfigPanel = ({
                 step="1" 
                 value="${simulation.startingHealth ?? 8}"
               />
-              <span class="starting-health-value" id="starting-health-value">${simulation.startingHealth ?? 8}</span>
+              <span class="starting-health-value" id="starting-health-value">${
+                simulation.startingHealth ?? 8
+              }</span>
             </div>
             <span class="config-hint">Initial product health (1-10)</span>
           </div>

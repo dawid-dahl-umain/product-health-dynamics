@@ -1,5 +1,42 @@
-import type { ChartOptions, Chart, LegendItem } from "chart.js";
+import type {
+  ChartOptions,
+  Chart,
+  LegendItem,
+  ActiveElement,
+  ChartEvent,
+} from "chart.js";
 import { chartColors } from "./colors";
+
+export type ChartClickHandler = (
+  datasetLabel: string,
+  xValue: number,
+  yValue: number
+) => void;
+
+let onChartClickHandler: ChartClickHandler | null = null;
+
+export const setChartClickHandler = (handler: ChartClickHandler | null) => {
+  onChartClickHandler = handler;
+};
+
+const handleChartClick = (
+  _event: ChartEvent,
+  elements: ActiveElement[],
+  chart: Chart
+) => {
+  if (elements.length === 0 || !onChartClickHandler) return;
+
+  const element = elements[0];
+  const datasetIndex = element.datasetIndex;
+  const index = element.index;
+  const dataset = chart.data.datasets[datasetIndex];
+  const data = dataset.data[index] as { x: number; y: number };
+
+  if (dataset.label && data) {
+    const label = dataset.label.replace(" (p10)", "").replace(" (p90)", "");
+    onChartClickHandler(label, data.x, data.y);
+  }
+};
 
 const onLegendClick = (
   _event: unknown,
@@ -26,9 +63,16 @@ const onLegendClick = (
 export const chartOptions: ChartOptions<"line"> = {
   responsive: true,
   maintainAspectRatio: false,
+  onClick: handleChartClick as any,
+  interaction: {
+    intersect: false,
+    mode: "nearest",
+  },
   elements: {
     point: {
       radius: 0,
+      hoverRadius: 6,
+      hitRadius: 10,
     },
   },
   scales: {

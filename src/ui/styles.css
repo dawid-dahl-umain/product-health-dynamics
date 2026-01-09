@@ -1,17 +1,38 @@
 :root {
+  /* Base colors */
   --bg-base: #0a0a0b;
   --bg-elevated: #141416;
   --bg-hover: #1e1e22;
   --bg-input: #0d0d0f;
+  --bg-card: #18181b;
   --border: #27272a;
   --border-focus: #3f3f46;
   --text: #fafafa;
   --text-muted: #a1a1aa;
   --text-dim: #71717a;
-  --accent: #3b82f6;
-  --accent-hover: #2563eb;
+
+  /* Developer palette */
+  --color-rose: #ff5c8d;
+  --color-saffron: #ffb84d;
+  --color-azure: #0ea5e9;
+  --color-emerald: #4ade80;
+  --color-lavender: #a78bfa;
+  --color-teal: #2dd4bf;
+  --color-pink: #f472b6;
+  --color-slate: #94a3b8;
+
+  /* Accent (using azure for clean professional look) */
+  --accent: var(--color-azure);
+  --accent-hover: #0284c7;
+  --accent-muted: rgba(14, 165, 233, 0.15);
+
+  /* Status colors */
   --danger: #ef4444;
   --danger-hover: #dc2626;
+  --warning: var(--color-saffron);
+  --success: var(--color-emerald);
+
+  /* Chart */
   --chart-legend-size: 8;
 }
 
@@ -52,6 +73,18 @@ h2 {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-logo {
+  width: 32px;
+  height: 32px;
+  color: var(--accent);
 }
 
 .header-actions {
@@ -118,8 +151,12 @@ h2 {
 
 .settings-toggle.active {
   background: var(--bg-elevated);
-  color: var(--text);
-  border-color: var(--border-focus);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.settings-toggle-text {
+  /* Ensure text doesn't break */
 }
 
 .settings-toggle svg {
@@ -128,11 +165,24 @@ h2 {
 }
 
 /* Simulation Tabs */
+.sim-tabs-wrapper {
+  margin-bottom: 16px;
+}
+
+.sim-tabs-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
 .sim-tabs-container {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 16px;
   overflow-x: auto;
   padding-bottom: 4px;
   scrollbar-width: thin;
@@ -713,11 +763,39 @@ select:focus {
   border-color: var(--border-focus);
 }
 
-/* Complexity Tabs */
+/* Complexity Info */
+.complexity-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.complexity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: color-mix(in srgb, var(--badge-color) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--badge-color) 30%, transparent);
+  border-radius: 100px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--badge-color);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.complexity-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--badge-color);
+}
+
 .complexity-description {
   font-size: 0.85rem;
   color: var(--text-dim);
-  margin-bottom: 16px;
 }
 
 .tabs {
@@ -814,6 +892,17 @@ canvas {
   gap: 10px;
   align-items: center;
   flex-wrap: wrap;
+}
+
+.controls-desktop {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.controls-mobile {
+  display: none;
 }
 
 button {
@@ -1237,8 +1326,15 @@ button:hover {
   }
 
   /* Simulation Tabs - Mobile: Show dropdown, hide tabs */
-  .sim-tabs-container {
+  .sim-tabs-wrapper {
     margin-bottom: 12px;
+  }
+
+  .sim-tabs-label {
+    margin-bottom: 6px;
+  }
+
+  .sim-tabs-container {
     overflow: visible;
   }
 
@@ -1378,9 +1474,49 @@ button:hover {
     justify-content: center;
   }
 
-  .controls button {
+  .controls-desktop {
+    display: none;
+  }
+
+  .controls-mobile {
+    display: flex;
+    gap: 8px;
+    position: relative;
+  }
+
+  .controls-mobile button {
     padding: 8px 12px;
     font-size: 0.75rem;
+  }
+
+  .controls-more-btn {
+    background: var(--bg-light);
+  }
+
+  .controls-dropdown {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 100;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .controls-dropdown.open {
+    display: flex;
+  }
+
+  .controls-dropdown button {
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
   }
 
   .hint {
@@ -1401,10 +1537,15 @@ button:hover {
     padding: 16px;
   }
 
-  /* Complexity Description - Mobile */
+  /* Complexity Info - Mobile */
+  .complexity-info {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
   .complexity-description {
     font-size: 0.8rem;
-    margin-bottom: 12px;
   }
 }
 
@@ -1447,5 +1588,190 @@ button:hover {
 
   .loading {
     height: 280px;
+  }
+}
+
+/* PH Insight Modal */
+.ph-insight-modal {
+  max-width: 360px;
+  text-align: center;
+}
+
+.ph-insight-context {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.ph-insight-developer {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ph-insight-divider {
+  opacity: 0.4;
+}
+
+/* Health Gauge */
+.ph-health-gauge {
+  margin-bottom: 16px;
+}
+
+.ph-health-bar-bg {
+  height: 8px;
+  background: var(--bg-base);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.ph-health-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease-out;
+}
+
+.ph-health-score {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+}
+
+.ph-health-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.ph-health-max {
+  font-size: 1rem;
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
+/* Zone Badge */
+.ph-zone-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+/* Headline */
+.ph-headline {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 16px 0;
+  line-height: 1.4;
+}
+
+/* Details */
+.ph-insight-details {
+  text-align: left;
+  margin-bottom: 16px;
+}
+
+.ph-insight-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.ph-insight-row:last-child {
+  border-bottom: none;
+}
+
+.ph-insight-label {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ph-insight-text {
+  font-size: 0.85rem;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+/* Bottom Line */
+.ph-bottom-line {
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  margin: 0;
+  padding-top: 8px;
+}
+
+/* Source Attribution */
+.ph-source-note {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  text-align: center;
+  margin: 12px 0 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  opacity: 0.7;
+}
+
+.ph-source-note a {
+  color: var(--text-dim);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+
+.ph-source-note a:hover {
+  color: var(--text);
+  opacity: 1;
+}
+
+/* Confetti Animation */
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10000;
+  overflow: hidden;
+}
+
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  opacity: 0;
+  animation: confetti-fall 3s ease-out forwards;
+}
+
+.confetti.subtle {
+  width: 6px;
+  height: 6px;
+  animation-duration: 2.5s;
+}
+
+@keyframes confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translateY(-20px) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(100vh) rotate(720deg);
   }
 }

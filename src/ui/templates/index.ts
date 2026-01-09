@@ -8,5 +8,7 @@ export {
   buildChartControls,
   buildChartContainer,
   buildComplexityDescription,
+  getComplexityLevel,
 } from "./chartControls";
 export { buildGlobalSettingsModal } from "./globalSettingsModal";
+export { buildPHInsightModal } from "./phInsightModal";

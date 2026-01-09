@@ -1,20 +1,31 @@
+export const palette = {
+  rose: "#FF5C8D",
+  saffron: "#FFB84D",
+  azure: "#0EA5E9",
+  emerald: "#4ADE80",
+  lavender: "#A78BFA",
+  teal: "#2DD4BF",
+  pink: "#F472B6",
+  slate: "#94A3B8",
+} as const;
+
 export const DEVELOPER_PALETTE = [
-  "#FF5C8D", // AI Vibe (Vibrant Rose)
-  "#FFB84D", // AI Guardrails (Warm Saffron)
-  "#38BDF8", // Junior (Azure Blue)
-  "#4ADE80", // Senior (Emerald/Mint)
-  "#A78BFA", // Handoff 1 (Soft Lavender)
-  "#2DD4BF", // Handoff 2 (Cool Teal)
-  "#F472B6", // Handoff 3 (Warm Pink)
-  "#94A3B8", // Handoff 4 (Refined Slate)
+  palette.rose, // AI Vibe
+  palette.saffron, // AI Guardrails
+  palette.azure, // Junior
+  palette.emerald, // Senior
+  palette.lavender, // Handoff 1
+  palette.teal, // Handoff 2
+  palette.pink, // Handoff 3
+  palette.slate, // Handoff 4
 ];
 
 export const chartColors = {
   grid: "rgba(255, 255, 255, 0.05)",
   gridLight: "rgba(255, 255, 255, 0.02)",
   text: "#64748b",
-  textLight: "#94a3b8",
-  annotationLine: "rgba(148, 163, 184, 0.3)",
+  textLight: palette.slate,
+  annotationLine: `rgba(148, 163, 184, 0.3)`,
   annotationBg: "#0f172a",
   bandOpacity: 0.08,
 };

@@ -4,7 +4,11 @@ import annotationPlugin from "chartjs-plugin-annotation";
 import zoomPlugin from "chartjs-plugin-zoom";
 import "hammerjs";
 
-import { chartOptions, buildDatasetsForSimulation } from "./chart";
+import {
+  chartOptions,
+  buildDatasetsForSimulation,
+  setChartClickHandler,
+} from "./chart";
 import { LocalStorageAdapter } from "./storage";
 import {
   createDefaultAppData,
@@ -23,6 +27,8 @@ import {
   buildChartContainer,
   buildComplexityDescription,
   buildGlobalSettingsModal,
+  buildPHInsightModal,
+  getComplexityLevel,
 } from "./templates";
 import type {
   StorageService,
@@ -38,6 +44,12 @@ type UIState = {
   settingsOpen: boolean;
   globalSettingsOpen: boolean;
   editingTabId: string | null;
+  phInsight: {
+    visible: boolean;
+    developerName: string;
+    changeNumber: number;
+    healthValue: number;
+  } | null;
 };
 
 export class ProductHealthApp {
@@ -48,6 +60,7 @@ export class ProductHealthApp {
     settingsOpen: false,
     globalSettingsOpen: false,
     editingTabId: null,
+    phInsight: null,
   };
   private chart: Chart | null = null;
   private root: HTMLElement;
@@ -60,6 +73,10 @@ export class ProductHealthApp {
     this.storage = new LocalStorageAdapter(createDefaultAppData);
     this.simulations = this.storage.getSimulations();
     this.globalConfig = this.storage.getGlobalConfig();
+
+    setChartClickHandler((developerName, changeNumber, healthValue) => {
+      this.openPHInsightModal(developerName, changeNumber, healthValue);
+    });
   }
 
   mount(): void {
@@ -112,6 +129,12 @@ export class ProductHealthApp {
         isVisible: this.uiState.globalSettingsOpen,
         globalConfig: this.globalConfig,
         nChanges: this.activeSimulation.nChanges,
+      })}
+      ${buildPHInsightModal({
+        isVisible: this.uiState.phInsight?.visible ?? false,
+        developerName: this.uiState.phInsight?.developerName ?? "",
+        changeNumber: this.uiState.phInsight?.changeNumber ?? 0,
+        healthValue: this.uiState.phInsight?.healthValue ?? 8,
       })}
     `;
   }
@@ -574,51 +597,102 @@ export class ProductHealthApp {
   }
 
   private bindChartControls(): void {
-    document.getElementById("reset-zoom")?.addEventListener("click", () => {
-      this.chart?.resetZoom();
-    });
+    const resetZoom = () => this.chart?.resetZoom();
 
-    document.getElementById("show-all")?.addEventListener("click", () => {
+    const showAll = () => {
       if (!this.chart) return;
       this.chart.data.datasets.forEach((_, i) => {
         this.chart!.getDatasetMeta(i).hidden = false;
       });
       this.chart.update();
-    });
+    };
 
-    document.getElementById("clear-all")?.addEventListener("click", () => {
+    const clearAll = () => {
       if (!this.chart) return;
       this.chart.data.datasets.forEach((_, i) => {
         this.chart!.getDatasetMeta(i).hidden = true;
       });
       this.chart.update();
-    });
+    };
 
+    const toggleDevelopers = () => {
+      if (!this.chart) return;
+      const sim = this.activeSimulation;
+      const developerCount = sim.developers.length * 3;
+      this.chart.data.datasets.forEach((_, i) => {
+        const isDeveloper = i < developerCount;
+        this.chart!.getDatasetMeta(i).hidden = !isDeveloper;
+      });
+      this.chart.update();
+    };
+
+    const toggleHandoffs = () => {
+      if (!this.chart) return;
+      const sim = this.activeSimulation;
+      const developerCount = sim.developers.length * 3;
+      this.chart.data.datasets.forEach((_, i) => {
+        const isDeveloper = i < developerCount;
+        this.chart!.getDatasetMeta(i).hidden = isDeveloper;
+      });
+      this.chart.update();
+    };
+
+    document.getElementById("reset-zoom")?.addEventListener("click", resetZoom);
+    document.getElementById("show-all")?.addEventListener("click", showAll);
+    document.getElementById("clear-all")?.addEventListener("click", clearAll);
     document
       .getElementById("toggle-developers")
-      ?.addEventListener("click", () => {
-        if (!this.chart) return;
-        const sim = this.activeSimulation;
-        const developerCount = sim.developers.length * 3;
-        this.chart.data.datasets.forEach((_, i) => {
-          const isDeveloper = i < developerCount;
-          this.chart!.getDatasetMeta(i).hidden = !isDeveloper;
-        });
-        this.chart.update();
-      });
-
+      ?.addEventListener("click", toggleDevelopers);
     document
       .getElementById("toggle-handoffs")
+      ?.addEventListener("click", toggleHandoffs);
+
+    document
+      .getElementById("reset-zoom-mobile")
+      ?.addEventListener("click", resetZoom);
+    document
+      .getElementById("show-all-mobile")
+      ?.addEventListener("click", showAll);
+    document
+      .getElementById("clear-all-mobile")
       ?.addEventListener("click", () => {
-        if (!this.chart) return;
-        const sim = this.activeSimulation;
-        const developerCount = sim.developers.length * 3;
-        this.chart.data.datasets.forEach((_, i) => {
-          const isDeveloper = i < developerCount;
-          this.chart!.getDatasetMeta(i).hidden = isDeveloper;
-        });
-        this.chart.update();
+        clearAll();
+        this.closeMobileControlsDropdown();
       });
+    document
+      .getElementById("toggle-developers-mobile")
+      ?.addEventListener("click", () => {
+        toggleDevelopers();
+        this.closeMobileControlsDropdown();
+      });
+    document
+      .getElementById("toggle-handoffs-mobile")
+      ?.addEventListener("click", () => {
+        toggleHandoffs();
+        this.closeMobileControlsDropdown();
+      });
+
+    document.getElementById("controls-more")?.addEventListener("click", () => {
+      const dropdown = document.getElementById("controls-dropdown");
+      dropdown?.classList.toggle("open");
+    });
+
+    document.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      const dropdown = document.getElementById("controls-dropdown");
+      const moreBtn = document.getElementById("controls-more");
+      if (
+        dropdown?.classList.contains("open") &&
+        !dropdown.contains(target) &&
+        target !== moreBtn
+      ) {
+        dropdown.classList.remove("open");
+      }
+    });
+  }
+
+  private closeMobileControlsDropdown(): void {
+    document.getElementById("controls-dropdown")?.classList.remove("open");
   }
 
   private bindGlobalSettingsEvents(): void {
@@ -789,6 +863,81 @@ export class ProductHealthApp {
       ?.classList.remove("visible");
   }
 
+  private openPHInsightModal(
+    developerName: string,
+    changeNumber: number,
+    healthValue: number
+  ): void {
+    this.uiState.phInsight = {
+      visible: true,
+      developerName,
+      changeNumber,
+      healthValue,
+    };
+
+    const existingModal = document.getElementById("ph-insight-modal-overlay");
+    if (existingModal) {
+      existingModal.remove();
+    }
+
+    const modalHtml = buildPHInsightModal({
+      isVisible: true,
+      developerName,
+      changeNumber,
+      healthValue,
+    });
+    this.root.insertAdjacentHTML("beforeend", modalHtml);
+    this.bindPHInsightModalEvents();
+
+    if (healthValue >= 8) {
+      this.triggerConfetti(healthValue >= 9 ? "high" : "low");
+    }
+  }
+
+  private triggerConfetti(intensity: "high" | "low"): void {
+    const container = document.createElement("div");
+    container.className = "confetti-container";
+    document.body.appendChild(container);
+
+    const count = intensity === "high" ? 50 : 20;
+    const colors =
+      intensity === "high"
+        ? ["#10b981", "#22c55e", "#84cc16", "#fbbf24", "#60a5fa"]
+        : ["#84cc16", "#a3e635", "#d9f99d"];
+
+    for (let i = 0; i < count; i++) {
+      const confetti = document.createElement("div");
+      confetti.className = `confetti ${intensity === "low" ? "subtle" : ""}`;
+      confetti.style.left = `${Math.random() * 100}%`;
+      confetti.style.backgroundColor =
+        colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+      confetti.style.borderRadius = Math.random() > 0.5 ? "50%" : "2px";
+      container.appendChild(confetti);
+    }
+
+    setTimeout(() => container.remove(), 3500);
+  }
+
+  private closePHInsightModal(): void {
+    this.uiState.phInsight = null;
+    document
+      .getElementById("ph-insight-modal-overlay")
+      ?.classList.remove("visible");
+  }
+
+  private bindPHInsightModalEvents(): void {
+    document
+      .getElementById("close-ph-insight-modal")
+      ?.addEventListener("click", () => this.closePHInsightModal());
+    document
+      .getElementById("ph-insight-modal-overlay")
+      ?.addEventListener("click", (e) => {
+        if ((e.target as HTMLElement).id === "ph-insight-modal-overlay")
+          this.closePHInsightModal();
+      });
+  }
+
   private deleteSimulation(simId: string): void {
     if (this.simulations.length <= 1) return;
     this.storage.deleteSimulation(simId);
@@ -821,11 +970,17 @@ export class ProductHealthApp {
 
   private updateComplexityDisplay(): void {
     const sim = this.activeSimulation;
+    const level = getComplexityLevel(sim.systemComplexity);
+
+    const badgeEl = document.querySelector(".complexity-badge") as HTMLElement;
+    if (badgeEl) {
+      badgeEl.style.setProperty("--badge-color", level.color);
+      badgeEl.innerHTML = `<span class="complexity-dot"></span>${level.label}`;
+    }
+
     const descEl = document.querySelector(".complexity-description");
     if (descEl) {
-      descEl.textContent = `${this.getDescription(
-        sim
-      )} (SC = ${sim.systemComplexity.toFixed(2)})`;
+      descEl.textContent = this.getDescription(sim);
     }
   }
 
