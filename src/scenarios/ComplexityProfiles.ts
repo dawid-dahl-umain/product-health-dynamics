@@ -23,7 +23,7 @@ export const ComplexityProfiles = {
   },
   /** Enterprise system: complex architecture and domain, many integrations. Current default. */
   enterprise: {
-    systemComplexity: 1.0,
+    systemComplexity: 0.85,
     label: "Enterprise System",
     description: "Complex architecture and domain, many integrations",
   },

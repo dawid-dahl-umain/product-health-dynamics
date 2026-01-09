@@ -7,11 +7,9 @@ export const ModelParameters = {
   /**
    * Controls how Engineering Rigor translates to expected impact per change.
    * slope: How much ER matters. Higher = bigger gap between good and bad agents.
-   * intercept: Where the breakeven point is. At ER = intercept/slope, impact is zero.
    */
   impact: {
     slope: 2.4,
-    intercept: 1.2,
   },
 
   /**

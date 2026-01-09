@@ -8,7 +8,7 @@ export const buildChartControls = (): string => `
       <button id="toggle-handoffs" title="Show only handoffs">Handoffs Only</button>
     </div>
     <div class="controls-mobile">
-      <button id="reset-zoom-mobile">Reset</button>
+      <button id="reset-zoom-mobile">Reset View</button>
       <button id="show-all-mobile">Show All</button>
       <button id="controls-more" class="controls-more-btn">More ▾</button>
       <div class="controls-dropdown" id="controls-dropdown">

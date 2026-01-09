@@ -30,8 +30,8 @@ export class ProductHealthModel {
    * - Damage doesn't cascade as severely
    * - Recovery is faster (easier to untangle)
    *
-   * Mathematically: effectiveSystemState = (1 - SC) + SC × rawSystemState
-   * This provides a floor on tractability proportional to simplicity.
+   * Mathematically: floor = (1-SC)^4; effectiveState = floor + (1-floor) × rawState
+   * The quartic decay provides a tractability floor for simple systems.
    */
   public readonly systemComplexity: number;
 
@@ -58,8 +58,19 @@ export class ProductHealthModel {
     return slope * (this.engineeringRigor - this.breakevenRigor);
   }
 
+  /**
+   * Computes the breakeven Engineering Rigor for this system complexity.
+   *
+   * Uses exponential scaling: breakeven = baseline + scale × exp(rate × SC)
+   * This naturally steepens at high SC, achieving:
+   * - SC=0.85 (enterprise): breakeven ≈ 0.5
+   * - SC=1.0 (extreme): breakeven ≈ 0.9 (only ER=0.95+ can improve)
+   */
   private get breakevenRigor(): number {
-    return 0.25 * (1 + this.systemComplexity);
+    const baseline = 0.25;
+    const scale = 0.00109;
+    const rate = 6.4;
+    return baseline + scale * Math.exp(rate * this.systemComplexity);
   }
 
   /**
@@ -93,15 +104,14 @@ export class ProductHealthModel {
 
   /**
    * Computes how "fragile" the system is for DEGRADATION.
-   * Power² of inverse - very stable at high PH, slower crash for visible bands.
+   * Power² of inverse - very stable at high PH, fragile at low PH.
+   * Fragility scales linearly with SC.
    */
   private computeFragility(currentHealth: number): number {
     const normalized = this.normalizedHealth(currentHealth);
     const inverseNorm = 1 - normalized;
     const rawFragility = inverseNorm * inverseNorm;
-    return (
-      rawFragility * this.systemComplexity + (1 - this.systemComplexity) * 0
-    );
+    return rawFragility * this.systemComplexity;
   }
 
   /**
@@ -113,9 +123,18 @@ export class ProductHealthModel {
     return this.applyComplexityFloor(normalized);
   }
 
+  /**
+   * Applies the "simplicity floor" based on system complexity.
+   *
+   * Simple systems never become fully frozen; there's always some tractability.
+   * Uses quartic decay: floor = (1 - SC)^4 for steep falloff.
+   *
+   * At SC=0.85: floor ≈ 0.05% (effectively enterprise-level)
+   * At SC=1.0: floor = 0% (no forgiveness)
+   */
   private applyComplexityFloor(rawSystemState: number): number {
-    const simplicityFloor = 1 - this.systemComplexity;
-    return simplicityFloor + this.systemComplexity * rawSystemState;
+    const simplicityFloor = Math.pow(1 - this.systemComplexity, 4);
+    return simplicityFloor + (1 - simplicityFloor) * rawSystemState;
   }
 
   /**
@@ -238,13 +257,8 @@ export class ProductHealthModel {
    * The complexity cost grows over time: base + growth × changeCount.
    *
    * Scaled by:
-   * - systemState: only tractable systems pay this "maintenance cost"; frozen systems
-   *   are already at maximum disorder and can't accumulate more
+   * - systemState: only tractable systems pay this "maintenance cost"
    * - systemComplexity: simpler systems have less inherent complexity to accumulate
-   *
-   * This models reality: a healthy codebase requires ongoing maintenance effort to
-   * stay healthy. A frozen codebase is already chaotic; it can't get worse from
-   * complexity alone (though it still decays from negative impact).
    */
   private computeComplexityDrift(
     systemState: number,

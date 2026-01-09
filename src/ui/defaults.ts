@@ -78,7 +78,7 @@ export const createDefaultSimulations = (): Simulation[] => [
     name: "Enterprise System",
     developers: createDefaultDevelopers(),
     handoffs: createDefaultHandoffs(),
-    systemComplexity: 1.0,
+    systemComplexity: 0.85,
     complexityDescription: "Complex architecture, many integrations",
     nChanges: 1000,
     startingHealth: 8,
@@ -90,7 +90,7 @@ export const createDefaultGlobalConfig = (): GlobalConfig => ({
   activeSimulationId: "enterprise",
   shapeScaleAnnotationPosition: 0,
   shapeScaleAnnotationLabel: "Shape → Scale",
-  simulationRuns: 50,
+  simulationRuns: 100,
 });
 
 export const createDefaultAppData = (): AppData => ({

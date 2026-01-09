@@ -51,20 +51,20 @@ describe("ProductHealthModel", () => {
       expect(impact).toBeLessThan(0);
     });
 
-    it("returns zero for breakeven rigor (0.5)", () => {
-      // Given
-      const model = new ProductHealthModel(0.5);
+    it("returns zero for breakeven rigor at enterprise complexity", () => {
+      // Given - at SC=0.85, breakeven ER ≈ 0.5
+      const model = new ProductHealthModel(0.5, 0.85);
 
       // When
       const impact = model.baseImpact;
 
-      // Then
-      expect(impact).toBe(0);
+      // Then - should be approximately zero (within tolerance due to exponential formula)
+      expect(Math.abs(impact)).toBeLessThan(0.01);
     });
 
-    it("returns positive for high rigor", () => {
-      // Given
-      const model = new ProductHealthModel(0.8);
+    it("returns positive for high rigor at enterprise complexity", () => {
+      // Given - at SC=0.85, ER=0.8 is above breakeven (0.5)
+      const model = new ProductHealthModel(0.8, 0.85);
 
       // When
       const impact = model.baseImpact;
@@ -150,8 +150,8 @@ describe("ProductHealthModel", () => {
     });
 
     it("returns positive impact for high rigor at mid health", () => {
-      // Given
-      const model = new ProductHealthModel(0.8);
+      // Given - at SC=0.85, ER=0.8 is above breakeven
+      const model = new ProductHealthModel(0.8, 0.85);
 
       // When
       const impact = model.computeExpectedImpact(5);
@@ -161,8 +161,8 @@ describe("ProductHealthModel", () => {
     });
 
     it("returns diminishing impact near ceiling", () => {
-      // Given
-      const model = new ProductHealthModel(0.8);
+      // Given - at SC=0.85, ER=0.8 is above breakeven
+      const model = new ProductHealthModel(0.8, 0.85);
 
       // When
       const impactMid = model.computeExpectedImpact(5);
@@ -189,8 +189,8 @@ describe("ProductHealthModel", () => {
     });
 
     it("returns bell-curve sigma for positive-impact agents", () => {
-      // Given
-      const model = new ProductHealthModel(0.9);
+      // Given - at SC=0.85, ER=0.9 is above breakeven (positive impact)
+      const model = new ProductHealthModel(0.9, 0.85);
 
       // When
       const sigmaLow = model.computeEffectiveSigma(2);

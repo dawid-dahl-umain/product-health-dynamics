@@ -8,7 +8,7 @@ A simulation that predicts how software quality evolves based on **engineering r
 >
 > _Fast forward two weeks. You now ask the AI to add a new feature. It does. Worked yet again, "vibe coding is great!"_
 >
-> _Then suddenly, BOOM!_
+> _Then suddenly, BOOM!_ 💥
 >
 > _Apparently feature x and y broke, now when feature z was added. If we only had tests that would have prevented this..._
 >
@@ -70,10 +70,10 @@ flowchart LR
     subgraph inputs ["INPUTS (you choose)"]
         direction TB
         ER["<b>Engineering Rigor</b><br/>How disciplined is the developer?<br/><i>0 = vibe coding, 1 = senior engineer</i>"]
-        SC["<b>System Complexity</b><br/>How complex is the system?<br/><i>0.25 = blog, 1.0 = enterprise</i>"]
+        SC["<b>System Complexity</b><br/>How complex is the system?<br/><i>0.25 = blog, 0.85 = enterprise</i>"]
     end
 
-    subgraph derived ["DERIVED (from ER + SC)"]
+    subgraph derived ["DERIVED"]
         direction TB
         BI["<b>Base Impact</b><br/>Does each change<br/>help or hurt on average?"]
         BS["<b>Base Sigma</b><br/>How predictable<br/>are the outcomes?"]
@@ -139,19 +139,28 @@ The model has two inputs. Everything else is derived.
 
 **Engineering Rigor (ER)** determines three things:
 
-| Property    | Formula                            | Meaning                       |
-| ----------- | ---------------------------------- | ----------------------------- |
-| Base Impact | `μ = 2.4 × (ER - 0.25 × (1 + SC))` | Expected PH change per commit |
-| Base Sigma  | `σ = 0.1 + 0.7 × (1 - ER)`         | Outcome unpredictability      |
-| Max Health  | `maxPH = 5 + 5 × ER`               | Sustainable ceiling           |
+| Property    | Formula                        | Meaning                       |
+| ----------- | ------------------------------ | ----------------------------- |
+| Base Impact | `μ = 2.4 × (ER - breakevenER)` | Expected PH change per commit |
+| Base Sigma  | `σ = 0.1 + 0.7 × (1 - ER)`     | Outcome unpredictability      |
+| Max Health  | `maxPH = 5 + 5 × ER`           | Sustainable ceiling           |
 
-**System Complexity (SC)** scales the difficulty:
+**System Complexity (SC)** scales the difficulty exponentially:
 
 | SC                | Breakeven ER | Meaning                                |
 | ----------------- | ------------ | -------------------------------------- |
-| 0.25 (blog)       | 0.31         | Even juniors maintain it               |
-| 0.50 (CRUD)       | 0.38         | Some discipline required               |
-| 1.00 (enterprise) | 0.50         | Only skilled engineers sustain quality |
+| 0.25 (blog)       | 0.26         | Even juniors maintain it               |
+| 0.50 (CRUD)       | 0.28         | Some discipline required               |
+| 0.85 (enterprise) | 0.50         | Only skilled engineers sustain quality |
+| 1.00 (extreme)    | 0.91         | Only near-perfect rigor works          |
+
+The breakeven formula uses exponential scaling to capture how complexity compounds:
+
+```text
+breakevenER = 0.25 + 0.00109 × exp(6.4 × SC)
+```
+
+This ensures SC=0.85 (enterprise) requires the same rigor as traditional large systems, while SC=1.0 represents extreme inherent complexity (e.g., quantum computing, brain-computer interfaces) where only exceptional engineers can function.
 
 ### Traction and Fragility
 
@@ -175,20 +184,21 @@ traction = normalized^1.5
 fragility = (1 - normalized)²
 ```
 
-System Complexity provides a floor. Simple systems never become as "frozen" as complex ones:
+System Complexity provides a floor using quartic decay. Simple systems never become as "frozen" as complex ones:
 
 ```text
-effectiveTraction = (1 - SC) + SC × traction
+simplicityFloor = (1 - SC)^4
+effectiveTraction = simplicityFloor + (1 - simplicityFloor) × traction
 effectiveFragility = fragility × SC
 ```
 
-| PH  | Traction | Fragility | Simple (SC=0.25) Traction | Enterprise (SC=1.0) Traction |
-| --- | -------- | --------- | ------------------------- | ---------------------------- |
-| 8   | 0.68     | 0.05      | 0.92                      | 0.68                         |
-| 5   | 0.32     | 0.31      | 0.83                      | 0.32                         |
-| 2   | 0.04     | 0.79      | 0.78                      | 0.04                         |
+| PH  | Traction | Fragility | Simple (SC=0.25) Traction | Enterprise (SC=0.85) Traction |
+| --- | -------- | --------- | ------------------------- | ----------------------------- |
+| 8   | 0.69     | 0.04      | 0.79                      | 0.69                          |
+| 5   | 0.30     | 0.26      | 0.52                      | 0.30                          |
+| 2   | 0.04     | 0.67      | 0.34                      | 0.04                          |
 
-**Plain meaning:** At PH=8, seniors have good traction (0.68) and degradation is contained (fragility 0.05). At PH=2, improvement is nearly impossible (traction 0.04) while damage cascades (fragility 0.79).
+**Plain meaning:** At PH=8, seniors have good traction (0.69) and degradation is contained (fragility 0.04). At PH=2, improvement is nearly impossible (traction 0.04) while damage cascades (fragility 0.67). Simple systems have a 32% floor on traction, so even at low PH they retain some tractability (0.34 vs 0.04).
 
 ### The Compounding Effect
 
@@ -200,10 +210,10 @@ When base impact is negative (degradation):
 effectiveDamage = baseDamage × fragility
 ```
 
-- At PH=8: fragility ≈ 0.05, so only ~5% of potential damage applies. Tests catch regressions, modules contain blast radius.
-- At PH=2: fragility ≈ 0.79, so ~80% of potential damage applies. Every mistake cascades.
+- At PH=8: fragility ≈ 0.04, so only ~4% of potential damage applies. Tests catch regressions, modules contain blast radius.
+- At PH=2: fragility ≈ 0.67, so ~67% of potential damage applies. Every mistake cascades.
 
-The same low-rigor agent causes **~16x more degradation** in a coupled system than a healthy one.
+The same low-rigor agent causes **~16x more degradation** in a degraded system than a healthy one.
 
 When base impact is positive (improvement):
 
@@ -212,7 +222,7 @@ effectiveImprovement = baseImprovement × traction × ceilingFactor
 ```
 
 - At PH=2: traction ≈ 0.04, so only ~4% of improvement effort lands. The system is too tangled to respond.
-- At PH=8: traction ≈ 0.68, so ~68% of improvement effort lands. Healthy systems accept changes gracefully.
+- At PH=8: traction ≈ 0.69, so ~69% of improvement effort lands. Healthy systems accept changes gracefully.
 
 **The S-curve emerges naturally:** At low PH, traction is near zero, so progress is glacial. As PH improves, traction grows, so progress accelerates. Near the ceiling, diminishing returns slow it again. No artificial sigmoid is needed; the behavior emerges from compounding dynamics.
 
@@ -221,15 +231,16 @@ effectiveImprovement = baseImprovement × traction × ceilingFactor
 Degraded systems don't just produce worse outcomes; they're slower. The model tracks cumulative time **as a separate output** (not part of the ΔPH equation):
 
 ```text
-systemState = (1 - SC) + SC × normalized
+floor = (1 - SC)^4
+systemState = floor + (1 - floor) × normalized
 timeCost = 1.0 + 2.0 × (1 - systemState)
 ```
 
-| PH (Enterprise) | Tractability | Time Cost | What It Represents  |
-| --------------- | ------------ | --------- | ------------------- |
-| 10              | 1.0          | 1.0x      | Baseline speed      |
-| 5               | 0.44         | 2.1x      | Twice as slow       |
-| 1               | 0.0          | 3.0x      | Three times as slow |
+| PH (SC=0.85) | Tractability | Time Cost | What It Represents  |
+| ------------ | ------------ | --------- | ------------------- |
+| 10           | 1.0          | 1.0x      | Baseline speed      |
+| 5            | 0.44         | 2.1x      | Twice as slow       |
+| 1            | 0.0          | 3.0x      | Three times as slow |
 
 **The double penalty:** A vibe-coded project ends up with unusable code AND takes 2-3x longer to ship the same number of features. This is why "fast and cheap" development is neither.
 
@@ -273,24 +284,25 @@ This creates asymmetric confidence bands:
 
 ## Agent Profiles
 
-| Agent              |  ER | Base Impact (SC=1.0) | Base Impact (SC=0.25) | Max Health |
-| ------------------ | --: | :------------------: | :-------------------: | :--------: |
-| AI Vibe Coder      | 0.3 |        -0.48         |         -0.03         |    6.5     |
-| AI with Guardrails | 0.4 |        -0.24         |         +0.21         |    7.0     |
-| Junior Engineer    | 0.5 |         0.00         |         +0.45         |    7.5     |
-| Senior Engineer    | 0.8 |        +0.72         |         +1.17         |    9.0     |
+| Agent              |  ER | Base Impact (SC=0.85) | Base Impact (SC=0.25) | Max Health |
+| ------------------ | --: | :-------------------: | :-------------------: | :--------: |
+| AI Vibe Coder      | 0.3 |         -0.48         |         +0.11         |    6.5     |
+| AI with Guardrails | 0.4 |         -0.24         |         +0.35         |    7.0     |
+| Junior Engineer    | 0.5 |         +0.00         |         +0.59         |    7.5     |
+| Senior Engineer    | 0.8 |         +0.72         |         +1.31         |    9.0     |
 
-**Key insight:** In enterprise systems, juniors break even while vibe coders degrade. In simple systems, vibe coders are nearly breakeven (-0.03) and juniors have solid positive impact. Simple systems forgive; complex systems punish.
+**Key insight:** In enterprise systems (SC=0.85), juniors break even while vibe coders degrade. In simple systems, even vibe coders have positive impact (+0.11). Simple systems forgive; complex systems punish.
 
 ---
 
 ## Complexity Profiles
 
-| Profile    | SC   | Example                           | Character                                |
-| ---------- | ---- | --------------------------------- | ---------------------------------------- |
-| Simple     | 0.25 | Blog, landing page                | Very forgiving; most agents can maintain |
-| Medium     | 0.50 | CRUD backend with auth            | Some discipline required                 |
-| Enterprise | 1.00 | Complex domain, many integrations | Only high ER sustains quality            |
+| Profile    | SC   | Example                                    | Character                                |
+| ---------- | ---- | ------------------------------------------ | ---------------------------------------- |
+| Simple     | 0.25 | Blog, landing page                         | Very forgiving; most agents can maintain |
+| Medium     | 0.50 | CRUD backend with auth                     | Some discipline required                 |
+| Enterprise | 0.85 | Complex domain, many integrations          | Only high ER sustains quality            |
+| Extreme    | 1.00 | Quantum systems, brain-computer interfaces | Only ER=0.95+ can function               |
 
 ---
 
@@ -298,7 +310,7 @@ This creates asymmetric confidence bands:
 
 The visualization shows trajectories starting at PH=8, representing the end of the "shape phase" where AI had full context.
 
-**Enterprise (SC=1.0):**
+**Enterprise (SC=0.85):**
 
 - **AI Vibe:** Plateau at high PH, then accelerating decline, bottoming at PH=1
 - **Junior:** Drifts slowly toward PH=3-4
@@ -310,6 +322,12 @@ The visualization shows trajectories starting at PH=8, representing the end of t
 - **AI Vibe:** Nearly breakeven; slow drift, stays much healthier
 - **Junior:** Positive impact; climbs toward ceiling
 - **Handoff:** Rapid recovery from any low point
+
+**Extreme (SC=1.0):**
+
+- **Senior (ER=0.8):** Cannot maintain quality; degrades to PH=1
+- **Elite (ER=0.95):** Barely positive; struggles to maintain PH~6
+- **Perfect (ER=1.0):** Thrives, reaching PH~9
 
 ![Product Health Trajectories](./assets/Screenshot%202026-01-05%20at%2014.02.48.png)
 
@@ -327,8 +345,8 @@ When a client suggests AI-assisted non-engineers can replace professional engine
 
 3. **Reference theory.** This aligns with [Lehman's Laws](./docs/theoretical-grounding.md): complexity grows unless actively reduced, quality declines unless rigorously maintained.
 
-4. **Quantify the tradeoff.** For 1000 changes in an enterprise system:
-   - Senior Engineers: Final PH ~8.7, Time overhead ~1%
+4. **Quantify the tradeoff.** For 1000 changes in an enterprise system (SC=0.85):
+   - Senior Engineers: Final PH ~8.7, Time overhead ~24%
    - AI Vibe Coding: Final PH ~1.0, Time overhead ~180%
 
 ---
@@ -408,7 +426,7 @@ For those who want the complete formulas.
 
 | Parameter               |         Value | Rationale                                      |
 | ----------------------- | ------------: | ---------------------------------------------- |
-| Impact slope            |           2.4 | Produces ±1.2 max base impact at SC=1          |
+| Impact slope            |           2.4 | Produces ±1.2 max base impact at SC=0.85       |
 | σ_min                   |           0.1 | Minimum variance at ER=1                       |
 | σ_max                   |           0.8 | Maximum variance at ER=0 (visible bands)       |
 | Ceiling base/slope      |           5/5 | Range from 5 (ER=0) to 10 (ER=1)               |
@@ -430,14 +448,18 @@ For those who want the complete formulas.
 n = \frac{PH - 1}{9}
 ```
 
-**Traction (for improvement, with complexity floor):**
+**Traction (for improvement, with quartic complexity floor):**
 
 ```math
 traction_{raw} = n^{1.5}
 ```
 
 ```math
-traction = (1 - SC) + SC \times traction_{raw}
+floor = (1 - SC)^4
+```
+
+```math
+traction = floor + (1 - floor) \times traction_{raw}
 ```
 
 **Fragility (for degradation):**
@@ -446,10 +468,16 @@ traction = (1 - SC) + SC \times traction_{raw}
 fragility = (1 - n)^2 \times SC
 ```
 
+**Breakeven Engineering Rigor (exponential scaling):**
+
+```math
+breakeven = 0.25 + 0.00109 \times e^{6.4 \times SC}
+```
+
 **Expected impact:**
 
 ```math
-\mu_{base} = 2.4 \times (ER - 0.25 \times (1 + SC))
+\mu_{base} = 2.4 \times (ER - breakeven)
 ```
 
 ```math
@@ -481,11 +509,17 @@ For degradation (negative impact):
 \sigma_{eff} = \sigma_{base} \times 0.6 \times (0.3 + 0.7 \times fragility)
 ```
 
-**Accumulated complexity:**
+**System state (with quartic floor):**
 
 ```math
-systemState = (1 - SC) + SC \times n
+floor = (1 - SC)^4
 ```
+
+```math
+systemState = floor + (1 - floor) \times n
+```
+
+**Accumulated complexity:**
 
 ```math
 drift = -(0.005 + 0.00005 \times changeCount) \times systemState \times SC
@@ -512,7 +546,7 @@ attenuation = baseAttenuation + varianceBoost
 The variance boost only applies when:
 
 - `μ_base > 0` (agent is improving the system)
-- `systemState` is high (agent at healthy PH, where systemState = (1-SC) + SC × n)
+- `systemState` is high (healthy PH means high systemState)
 - `effectiveChallenge > 0` (agent is non-ideal in a complex system)
 
 **Ceiling resistance (when PH > maxPH):**
@@ -547,18 +581,18 @@ PH_{n+1} = clamp(PH_n + \Delta PH, 1, 10)
 PH_{n+1} = clamp\Big(PH_n + \mu_{eff} + drift + \sigma_{eff} \cdot \varepsilon \cdot a \cdot r, \; 1, \; 10\Big)
 ```
 
-| Symbol    | Name               | Meaning                                                     |
-| --------- | ------------------ | ----------------------------------------------------------- |
-| PH_n      | Current Health     | Quality right now (1-10)                                    |
-| μ_eff     | Effective Impact   | Help or hurt, modified by traction or fragility             |
-| drift     | Complexity Drift   | Inherent disorder accumulating                              |
-| σ_eff     | Effective Sigma    | Unpredictability of outcome                                 |
-| ε         | Random Draw        | N(0,1), the dice roll                                       |
-| a         | Attenuation        | Variance scaling (low at extremes, boosted for improvement) |
-| r         | Ceiling Resistance | Variance reduction above ceiling                            |
-| traction  | Traction           | How well improvements land (n^1.5)                          |
-| fragility | Fragility          | How severely damage cascades ((1-n)²)                       |
-| SC        | System Complexity  | Inherent difficulty (0.25 = blog, 1.0 = enterprise)         |
+| Symbol    | Name               | Meaning                                                             |
+| --------- | ------------------ | ------------------------------------------------------------------- |
+| PH_n      | Current Health     | Quality right now (1-10)                                            |
+| μ_eff     | Effective Impact   | Help or hurt, modified by traction or fragility                     |
+| drift     | Complexity Drift   | Inherent disorder accumulating                                      |
+| σ_eff     | Effective Sigma    | Unpredictability of outcome                                         |
+| ε         | Random Draw        | N(0,1), the dice roll                                               |
+| a         | Attenuation        | Variance scaling (low at extremes, boosted for improvement)         |
+| r         | Ceiling Resistance | Variance reduction above ceiling                                    |
+| traction  | Traction           | How well improvements land (n^1.5)                                  |
+| fragility | Fragility          | How severely damage cascades ((1-n)²)                               |
+| SC        | System Complexity  | Inherent difficulty (0.25 = blog, 0.85 = enterprise, 1.0 = extreme) |
 
 ### The Story
 
