@@ -1,4 +1,4 @@
-import { clamp, gaussianRandom, sigmoid } from "../utils/Math";
+import { clamp, gaussianRandom } from "../utils/Math";
 import { ModelParameters } from "./Parameters";
 
 /**
