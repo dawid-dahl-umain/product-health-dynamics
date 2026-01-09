@@ -1,4 +1,4 @@
-import { ICON_DUPLICATE, ICON_EXPORT, ICON_RESET } from "./icons";
+import { ICON_DUPLICATE, ICON_EXPORT, ICON_RESET, ICON_TRASH } from "./icons";
 import { buildDeveloperCard } from "./developerCard";
 import { buildHandoffCard } from "./handoffCard";
 import { CHANGES_OPTIONS } from "../types";
@@ -87,9 +87,22 @@ export const buildConfigPanel = ({
             <span class="config-hint">Initial product health (1-10)</span>
           </div>
           <div class="sim-actions">
-            <button class="btn-icon" id="duplicate-sim" title="Duplicate Simulation">${ICON_DUPLICATE}</button>
-            <button class="btn-icon" id="export-sim" title="Export Simulation">${ICON_EXPORT}</button>
-            <button class="btn-icon" id="reset-defaults" title="Reset to Defaults">${ICON_RESET}</button>
+            <button class="btn-icon" id="duplicate-sim" title="Duplicate Simulation">
+              ${ICON_DUPLICATE}
+              <span class="btn-label">Duplicate</span>
+            </button>
+            <button class="btn-icon" id="export-sim" title="Export Simulation">
+              ${ICON_EXPORT}
+              <span class="btn-label">Export</span>
+            </button>
+            <button class="btn-icon" id="reset-defaults" title="Reset to Defaults">
+              ${ICON_RESET}
+              <span class="btn-label">Reset</span>
+            </button>
+            <button class="btn-icon btn-danger-icon" id="delete-current-sim" title="Delete Simulation">
+              ${ICON_TRASH}
+              <span class="btn-label">Delete</span>
+            </button>
           </div>
         </div>
 

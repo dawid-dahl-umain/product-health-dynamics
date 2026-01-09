@@ -323,6 +323,22 @@ export class ProductHealthApp {
       a.click();
       URL.revokeObjectURL(url);
     });
+
+    document
+      .getElementById("delete-current-sim")
+      ?.addEventListener("click", () => {
+        if (this.simulations.length <= 1) {
+          alert("You cannot delete the only simulation.");
+          return;
+        }
+        if (
+          confirm(
+            `Are you sure you want to delete simulation "${this.activeSimulation.name}"?`
+          )
+        ) {
+          this.deleteSimulation(this.activeSimulation.id);
+        }
+      });
   }
 
   private scheduleComplexityUpdate(value: number): void {

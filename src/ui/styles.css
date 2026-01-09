@@ -494,9 +494,20 @@ h2 {
   border-color: var(--border-focus);
 }
 
+.btn-danger-icon:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
 .btn-icon svg {
   width: 20px;
   height: 20px;
+}
+
+.btn-label {
+  display: none;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 /* Select/Dropdown */
@@ -1284,7 +1295,21 @@ button:hover {
 
   .sim-actions {
     width: 100%;
-    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .btn-icon {
+    width: 100%;
+    height: auto;
+    padding: 10px;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .btn-label {
+    display: block;
   }
 
   /* Developer Cards - Mobile */
