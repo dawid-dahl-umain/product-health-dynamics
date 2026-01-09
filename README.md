@@ -54,7 +54,8 @@ A simulation that predicts how software quality evolves based on **engineering r
 | **Product Health (PH)**    | Software quality on a 1-10 scale              | How hard or easy changes feel right now                     |
 | **Engineering Rigor (ER)** | Discipline applied to changes (0-1 scale)     | The difference between a calculated move and a gamble       |
 | **System Complexity (SC)** | Inherent architectural complexity (0-1 scale) | How many moving parts? How tightly coupled by nature?       |
-| **System State**           | Tractability derived from current PH and SC   | Healthy = mistakes are caught. Unhealthy = mistakes cascade |
+| **Traction**               | How well improvements land (from PH and SC)   | Healthy = changes land effectively. Degraded = changes slip |
+| **Fragility**              | How severely damage cascades (from PH and SC) | Healthy = mistakes contained. Degraded = mistakes cascade   |
 | **Change Event**           | A single modification to the codebase         | One commit, one roll of the dice                            |
 | **Time Cost**              | How long a change takes relative to baseline  | Healthy = 1x, Degraded = up to 3x                           |
 
@@ -82,12 +83,14 @@ flowchart LR
     subgraph loop ["YOUR SYSTEM ⟳ (repeats each commit)"]
         direction TB
         PH["<b>Current Product Health</b><br/>How easy is the code<br/>to change right now?<br/><i>1 = nightmare, 10 = dream</i>"]
-        SS["<b>Tractability</b><br/>Hard to improve?<br/>Easy to damage?"]
+        TR["<b>Traction</b><br/>How well do<br/>improvements land?<br/><i>Low at bad PH, high at good PH</i>"]
+        FR["<b>Fragility</b><br/>How severely does<br/>damage cascade?<br/><i>High at bad PH, low at good PH</i>"]
         CE(("<b>Change</b><br/><b>Event</b><br/>roll the dice"))
         NPH["<b>New Product Health</b><br/>Better, worse,<br/>or same?"]
 
-        PH -->|"PH affects"| SS
-        SS -->|"modifies outcome"| CE
+        PH -->|"PH affects"| TR & FR
+        TR -->|"gates improvement"| CE
+        FR -->|"amplifies damage"| CE
         CE -->|"produces"| NPH
         NPH -.->|"becomes next"| PH
     end
@@ -97,11 +100,12 @@ flowchart LR
 
     ER -->|"determines"| BI & BS & MH
     SC -->|"harder to improve"| BI
-    SC -->|"can freeze harder"| SS
+    SC -->|"amplifies"| FR
+    SC -->|"slows recovery"| TR
     SC -->|"faster buildup"| AC
     BI & BS & MH -->|"feed into"| CE
     AC -->|"drags down"| CE
-    SS -->|"determines"| TC
+    PH -->|"determines"| TC
 
     style inputs fill:none,stroke:#4ade80,stroke-width:2px
     style derived fill:none,stroke:#fb923c,stroke-width:2px
@@ -115,7 +119,7 @@ flowchart LR
 
     class ER,SC inputNode
     class BI,BS,MH derivedNode
-    class PH,SS,NPH loopNode
+    class PH,TR,FR,NPH loopNode
     class CE eventNode
     class AC,TC timeNode
 ```
@@ -129,7 +133,7 @@ The model has two inputs. Everything else is derived.
 | Property    | Formula                            | Meaning                       |
 | ----------- | ---------------------------------- | ----------------------------- |
 | Base Impact | `μ = 2.4 × (ER - 0.25 × (1 + SC))` | Expected PH change per commit |
-| Base Sigma  | `σ = 0.1 + 0.4 × (1 - ER)`         | Outcome unpredictability      |
+| Base Sigma  | `σ = 0.1 + 0.7 × (1 - ER)`         | Outcome unpredictability      |
 | Max Health  | `maxPH = 5 + 5 × ER`               | Sustainable ceiling           |
 
 **System Complexity (SC)** scales the difficulty:
@@ -140,64 +144,83 @@ The model has two inputs. Everything else is derived.
 | 0.50 (CRUD)       | 0.38         | Some discipline required               |
 | 1.00 (enterprise) | 0.50         | Only skilled engineers sustain quality |
 
-### System State: The Sigmoid
+### Traction and Fragility
 
-Current Product Health determines how tractable the system is. The model uses a sigmoid function centered at PH=5:
+The model separates how Product Health affects **improvement** versus **degradation**. This creates emergent S-curve behavior without artificial thresholds.
+
+**Normalized Health** maps PH (1-10) to a 0-1 scale:
 
 ```text
-rawSystemState = 1 / (1 + e^(-1.5 × (PH - 5)))
+normalized = (PH - 1) / 9
+```
+
+**Traction** (for improvement) uses a power curve that makes progress slow at low PH and faster at high PH:
+
+```text
+traction = normalized^1.5
+```
+
+**Fragility** (for degradation) uses an inverse power curve that makes systems stable at high PH and increasingly fragile at low PH:
+
+```text
+fragility = (1 - normalized)²
 ```
 
 System Complexity provides a floor. Simple systems never become as "frozen" as complex ones:
 
 ```text
-systemState = (1 - SC) + SC × rawSystemState
+effectiveTraction = (1 - SC) + SC × traction
+effectiveFragility = fragility × SC
 ```
 
-| PH  | Raw State | Simple (SC=0.25) | Enterprise (SC=1.0) |
-| --- | --------- | ---------------- | ------------------- |
-| 8   | 0.99      | 1.00             | 0.99                |
-| 5   | 0.50      | 0.88             | 0.50                |
-| 2   | 0.01      | 0.76             | 0.01                |
+| PH  | Traction | Fragility | Simple (SC=0.25) Traction | Enterprise (SC=1.0) Traction |
+| --- | -------- | --------- | ------------------------- | ---------------------------- |
+| 8   | 0.68     | 0.05      | 0.92                      | 0.68                         |
+| 5   | 0.32     | 0.31      | 0.83                      | 0.32                         |
+| 2   | 0.04     | 0.79      | 0.78                      | 0.04                         |
 
-**Plain meaning:** At PH=8, the system is tractable regardless of complexity. At PH=2, a simple system stays 76% tractable; an enterprise system is 99% frozen.
+**Plain meaning:** At PH=8, seniors have good traction (0.68) and degradation is contained (fragility 0.05). At PH=2, improvement is nearly impossible (traction 0.04) while damage cascades (fragility 0.79).
 
 ### The Compounding Effect
 
-This is the core insight: **damage multiplies in unhealthy systems.**
+This is the core insight: **damage multiplies in unhealthy systems, and recovery is slow at first.**
 
-When base impact is negative:
-
-```text
-effectiveDamage = baseDamage × (1 - systemState)
-```
-
-- At PH=8: systemState ≈ 0.99, so only ~1% of potential damage applies. Tests catch regressions, modules contain blast radius.
-- At PH=2: systemState ≈ 0.01, so ~99% of potential damage applies. Every mistake cascades.
-
-The same low-rigor agent causes **~100x more degradation** in a coupled system than a healthy one.
-
-When base impact is positive:
+When base impact is negative (degradation):
 
 ```text
-effectiveImprovement = baseImprovement × systemState × ceilingFactor
+effectiveDamage = baseDamage × fragility
 ```
 
-Improvement requires traction (systemState) and has diminishing returns near the agent's ceiling (ceilingFactor).
+- At PH=8: fragility ≈ 0.05, so only ~5% of potential damage applies. Tests catch regressions, modules contain blast radius.
+- At PH=2: fragility ≈ 0.79, so ~80% of potential damage applies. Every mistake cascades.
+
+The same low-rigor agent causes **~16x more degradation** in a coupled system than a healthy one.
+
+When base impact is positive (improvement):
+
+```text
+effectiveImprovement = baseImprovement × traction × ceilingFactor
+```
+
+- At PH=2: traction ≈ 0.04, so only ~4% of improvement effort lands. The system is too tangled to respond.
+- At PH=8: traction ≈ 0.68, so ~68% of improvement effort lands. Healthy systems accept changes gracefully.
+
+**The S-curve emerges naturally:** At low PH, traction is near zero, so progress is glacial. As PH improves, traction grows, so progress accelerates. Near the ceiling, diminishing returns slow it again. No artificial sigmoid is needed; the behavior emerges from compounding dynamics.
 
 ### Time Cost: The Velocity Penalty
 
-Degraded systems don't just produce worse outcomes; they're slower. The model tracks cumulative time:
+Degraded systems don't just produce worse outcomes; they're slower. The model tracks cumulative time **as a separate output** (not part of the ΔPH equation):
 
 ```text
+systemState = (1 - SC) + SC × normalized
 timeCost = 1.0 + 2.0 × (1 - systemState)
 ```
 
-| System State     | Time Cost | What It Represents  |
-| ---------------- | --------- | ------------------- |
-| 1.0 (healthy)    | 1.0x      | Baseline speed      |
-| 0.5 (transition) | 2.0x      | Twice as slow       |
-| 0.0 (frozen)     | 3.0x      | Three times as slow |
+| PH (Enterprise) | Tractability | Time Cost | What It Represents  |
+| --------------- | ------------ | --------- | ------------------- |
+| 10              | 1.0          | 1.0x      | Baseline speed      |
+| 5               | 0.44         | 2.1x      | Twice as slow       |
+| 1               | 0.0          | 3.0x      | Three times as slow |
 
 **The double penalty:** A vibe-coded project ends up with unusable code AND takes 2-3x longer to ship the same number of features. This is why "fast and cheap" development is neither.
 
@@ -216,16 +239,25 @@ Each change is a probabilistic event. The model draws from a Normal distribution
 | σ_eff × N(0,1)  | Random component (the dice roll)         |
 | attenuation     | How much randomness matters (see below)  |
 
-**Key insight: Degradation is deterministic; improvement has uncertainty.**
+**Key insight: Degradation and improvement have different variance profiles.**
 
-- **Low PH (frozen):** Variance is low for everyone. The system is so coupled that outcomes are predictably bad.
-- **High PH with negative impact:** Variance is low. Low-ER agents crash deterministically; tests and structure cannot save them from their negative expected value.
-- **High PH with positive impact:** Variance scales with complexity. High-ER agents face uncertain challenges; even good work can have unexpected complications in complex systems.
+For **degradation** (negative impact agents):
+
+- Variance has a baseline (0.3) plus scales with fragility
+- At high PH: visible bands during the early decline (fragility is low but baseline ensures some spread)
+- At low PH: higher variance, but all runs converge to PH=1 anyway
+
+For **improvement** (positive impact agents):
+
+- Variance follows a bell curve, peaking in the transition zone (around PH=5)
+- At low PH: lower variance (frozen system, limited outcomes)
+- At mid PH: higher variance (chaotic transition zone)
+- At high PH: lower variance (stable, predictable improvements)
 
 This creates asymmetric confidence bands:
 
-- Low-ER agents have tight bands as they crash (deterministic decay)
-- High-ER agents have wider bands in complex systems (improvement uncertainty)
+- Low-ER agents show visible bands during decline, then converge to PH=1
+- High-ER agents have wider bands in the transition zone, tighter at extremes
 - Ideal agents (ER=1) maintain tight bands everywhere (skill transcends complexity)
 
 ---
@@ -365,30 +397,44 @@ For those who want the complete formulas.
 
 ### Parameters
 
-| Parameter               |         Value | Rationale                                 |
-| ----------------------- | ------------: | ----------------------------------------- |
-| Impact slope            |           2.4 | Produces ±1.2 max base impact at SC=1     |
-| σ_min                   |           0.1 | Minimum variance at ER=1                  |
-| σ_max                   |           0.5 | Maximum variance at ER=0                  |
-| Ceiling base/slope      |           5/5 | Range from 5 (ER=0) to 10 (ER=1)          |
-| Sigmoid threshold       |             5 | Midpoint of PH scale                      |
-| Sigmoid steepness       |           1.5 | Moderate transition curve                 |
-| Ceiling exponent        |             2 | Quadratic diminishing returns             |
-| Attenuation floor/range |     0.15/0.85 | Base variance reduction (bell curve)      |
-| Improvement variance    |           2.5 | Extra variance for positive-impact agents |
-| Complexity base/growth  | 0.005/0.00005 | ~5% senior decline over 1000 changes      |
-| Time base/max           |       1.0/3.0 | Healthy = 1x, frozen = 3x                 |
+| Parameter               |         Value | Rationale                                      |
+| ----------------------- | ------------: | ---------------------------------------------- |
+| Impact slope            |           2.4 | Produces ±1.2 max base impact at SC=1          |
+| σ_min                   |           0.1 | Minimum variance at ER=1                       |
+| σ_max                   |           0.8 | Maximum variance at ER=0 (visible bands)       |
+| Ceiling base/slope      |           5/5 | Range from 5 (ER=0) to 10 (ER=1)               |
+| Traction exponent       |           1.5 | Power curve: slow at low PH, faster at high PH |
+| Fragility exponent      |           2.0 | Power curve: stable at high PH, fragile at low |
+| Ceiling exponent        |             2 | Quadratic diminishing returns                  |
+| Sigma scale floor/range |       0.6/0.4 | Bell curve scaling for variance                |
+| Degradation baseline    |           0.3 | Baseline variance for visible bands            |
+| Attenuation floor/range |     0.15/0.85 | Base variance reduction (bell curve)           |
+| Improvement variance    |           2.5 | Extra variance for positive-impact agents      |
+| Complexity base/growth  | 0.005/0.00005 | ~5% senior decline over 1000 changes           |
+| Time base/max           |       1.0/3.0 | Healthy = 1x, frozen = 3x                      |
 
 ### Complete Formulas
 
-**System state (with complexity floor):**
+**Normalized health (0-1 scale):**
 
 ```math
-s_{raw} = \frac{1}{1 + e^{-1.5 \times (PH - 5)}}
+n = \frac{PH - 1}{9}
+```
+
+**Traction (for improvement, with complexity floor):**
+
+```math
+traction_{raw} = n^{1.5}
 ```
 
 ```math
-s = (1 - SC) + SC \times s_{raw}
+traction = (1 - SC) + SC \times traction_{raw}
+```
+
+**Fragility (for degradation):**
+
+```math
+fragility = (1 - n)^2 \times SC
 ```
 
 **Expected impact:**
@@ -399,29 +445,41 @@ s = (1 - SC) + SC \times s_{raw}
 
 ```math
 \mu_{eff} = \begin{cases}
-\mu_{base} \times (1 - s) & \text{if } \mu_{base} \leq 0 \\
-\mu_{base} \times s \times \max(0, 1 - (PH/maxPH)^2) & \text{if } \mu_{base} > 0
+\mu_{base} \times fragility & \text{if } \mu_{base} \leq 0 \\
+\mu_{base} \times traction \times \max(0, 1 - (PH/maxPH)^2) & \text{if } \mu_{base} > 0
 \end{cases}
 ```
 
 **Sigma (variance):**
 
 ```math
-\sigma_{base} = 0.1 + 0.4 \times (1 - ER)
+\sigma_{base} = 0.1 + 0.7 \times (1 - ER)
 ```
 
+For improvement (positive impact):
+
 ```math
-bellFactor = 4 \times s \times (1 - s)
+bellFactor = 4 \times systemState \times (1 - systemState)
 ```
 
 ```math
 \sigma_{eff} = \sigma_{base} \times (0.6 + 0.4 \times bellFactor)
 ```
 
+For degradation (negative impact):
+
+```math
+\sigma_{eff} = \sigma_{base} \times 0.6 \times (0.3 + 0.7 \times fragility)
+```
+
 **Accumulated complexity:**
 
 ```math
-drift = -(0.005 + 0.00005 \times n) \times s \times SC
+systemState = (1 - SC) + SC \times n
+```
+
+```math
+drift = -(0.005 + 0.00005 \times changeCount) \times systemState \times SC
 ```
 
 **Variance attenuation (asymmetric for improvement):**
@@ -435,7 +493,7 @@ effectiveChallenge = (1 - ER) \times SC
 ```
 
 ```math
-varianceBoost = s \times \max(0, \mu_{base}) \times effectiveChallenge \times 2.5
+varianceBoost = systemState \times \max(0, \mu_{base}) \times effectiveChallenge \times 2.5
 ```
 
 ```math
@@ -445,7 +503,7 @@ attenuation = baseAttenuation + varianceBoost
 The variance boost only applies when:
 
 - `μ_base > 0` (agent is improving the system)
-- `systemState` is high (agent is at healthy PH)
+- `systemState` is high (agent at healthy PH, where systemState = (1-SC) + SC × n)
 - `effectiveChallenge > 0` (agent is non-ideal in a complex system)
 
 **Ceiling resistance (when PH > maxPH):**
@@ -454,10 +512,14 @@ The variance boost only applies when:
 resistance = e^{-5 \times \frac{PH - maxPH}{maxPH}}
 ```
 
-**Time cost:**
+**Time cost (tracked separately, not part of ΔPH):**
 
 ```math
-timeCost = 1.0 + 2.0 \times (1 - s)
+timeCost = 1.0 + 2.0 \times (1 - systemState)
+```
+
+```math
+cumulativeTime = \sum_{i=0}^{n} timeCost_i
 ```
 
 **Change event:**
@@ -476,25 +538,28 @@ PH_{n+1} = clamp(PH_n + \Delta PH, 1, 10)
 PH_{n+1} = clamp\Big(PH_n + \mu_{eff} + drift + \sigma_{eff} \cdot \varepsilon \cdot a \cdot r, \; 1, \; 10\Big)
 ```
 
-| Symbol | Name               | Meaning                                                     |
-| ------ | ------------------ | ----------------------------------------------------------- |
-| PH_n   | Current Health     | Quality right now (1-10)                                    |
-| μ_eff  | Effective Impact   | Help or hurt, modified by system state                      |
-| drift  | Complexity Drift   | Inherent disorder accumulating                              |
-| σ_eff  | Effective Sigma    | Unpredictability of outcome                                 |
-| ε      | Random Draw        | N(0,1), the dice roll                                       |
-| a      | Attenuation        | Variance scaling (low at extremes, boosted for improvement) |
-| r      | Ceiling Resistance | Variance reduction above ceiling                            |
-| s      | System State       | Tractability (0 = frozen, 1 = healthy)                      |
-| SC     | System Complexity  | Inherent difficulty (0.25 = blog, 1.0 = enterprise)         |
+| Symbol    | Name               | Meaning                                                     |
+| --------- | ------------------ | ----------------------------------------------------------- |
+| PH_n      | Current Health     | Quality right now (1-10)                                    |
+| μ_eff     | Effective Impact   | Help or hurt, modified by traction or fragility             |
+| drift     | Complexity Drift   | Inherent disorder accumulating                              |
+| σ_eff     | Effective Sigma    | Unpredictability of outcome                                 |
+| ε         | Random Draw        | N(0,1), the dice roll                                       |
+| a         | Attenuation        | Variance scaling (low at extremes, boosted for improvement) |
+| r         | Ceiling Resistance | Variance reduction above ceiling                            |
+| traction  | Traction           | How well improvements land (n^1.5)                          |
+| fragility | Fragility          | How severely damage cascades ((1-n)²)                       |
+| SC        | System Complexity  | Inherent difficulty (0.25 = blog, 1.0 = enterprise)         |
 
 ### The Story
 
 1. **Skill (μ_eff)** determines whether changes help or hurt on average
 2. **Complexity (SC)** sets the difficulty; simple systems forgive, complex systems punish
 3. **Time (drift)** works against everyone, but slower for simple systems
-4. **Tractability (s)** amplifies everything; good code catches mistakes, bad code cascades them
-5. **Degradation is deterministic**; low-skill agents crash predictably, their trajectory is sealed
-6. **Improvement has uncertainty**; even skilled agents face unexpected challenges in complex systems
-7. **Time cost** means degraded systems are slow, not just bad
-8. **In the long run**, only sustained high-skill effort can outpace complexity
+4. **Traction** gates improvement; at low PH, even good engineers struggle to land changes
+5. **Fragility** amplifies degradation; at low PH, every mistake cascades
+6. **The S-curve emerges naturally** from compounding; no artificial thresholds needed
+7. **Degradation shows variance** during early decline, then converges to PH=1
+8. **Improvement has uncertainty**; even skilled agents face unexpected challenges in complex systems
+9. **Time cost** means degraded systems are slow, not just bad
+10. **In the long run**, only sustained high-skill effort can outpace complexity

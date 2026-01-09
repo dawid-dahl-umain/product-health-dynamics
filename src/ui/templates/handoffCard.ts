@@ -52,7 +52,7 @@ export const buildHandoffCard = (
 
         <div class="developer-rigor">
           <span class="developer-rigor-label">Handoff at: ${handoff.atChange}</span>
-          <input type="range" min="1" max="${maxChanges}" step="10" value="${handoff.atChange}" data-field="atChange" />
+          <input type="range" min="1" max="${maxChanges}" step="1" value="${handoff.atChange}" data-field="atChange" />
         </div>
       </div>
       <button class="developer-remove" data-action="remove-handoff">${ICON_CLOSE}</button>

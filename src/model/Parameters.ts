@@ -18,11 +18,11 @@ export const ModelParameters = {
    * Sigma (σ) = standard deviation = how much outcomes spread around the average.
    * In plain terms: "unpredictability" or "variance" in results.
    * min: σ for perfect rigor (ER=1). Even experts have some randomness.
-   * max: σ for zero rigor (ER=0). How wild swings get with vibe coding.
+   * max: σ for zero rigor (ER=0). Higher value for visible bands during degradation.
    */
   sigma: {
     min: 0.1,
-    max: 0.5,
+    max: 0.8,
   },
 
   /**

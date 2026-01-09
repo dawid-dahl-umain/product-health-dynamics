@@ -35,7 +35,7 @@ Toggle with the **Settings** button in the header.
 
 - `0.1 - 0.3`: **Simple** (Blog, landing page) — Highly forgiving.
 - `0.3 - 0.6`: **Moderate** (CRUD backend) — Requires baseline discipline.
-- `0.6 - 1.0`: **Enterprise** (Legacy, high coupling) — Punishes low rigor.
+- `0.6 - 1.0`: **Enterprise** (Complex architecture, high coupling) — Punishes low rigor.
 
 #### Developer Management
 

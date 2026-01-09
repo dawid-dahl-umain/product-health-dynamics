@@ -74,13 +74,43 @@ export class ProductHealthModel {
   }
 
   /**
-   * Computes how "tractable" the system is at the current health level.
-   * Returns 0-1: 0 = tightly coupled mess, 1 = well-structured and maintainable.
+   * Computes normalized health (0-1 scale).
+   */
+  private normalizedHealth(currentHealth: number): number {
+    return (currentHealth - 1) / 9;
+  }
+
+  /**
+   * Computes how "tractable" the system is for IMPROVEMENT.
+   * Uses power^1.5 curve - resistance at low PH, good traction at high PH.
+   * S-curve emerges from compounding: better PH → better traction → faster improvement.
+   */
+  private computeTraction(currentHealth: number): number {
+    const normalized = this.normalizedHealth(currentHealth);
+    const rawTraction = Math.pow(normalized, 1.5);
+    return this.applyComplexityFloor(rawTraction);
+  }
+
+  /**
+   * Computes how "fragile" the system is for DEGRADATION.
+   * Power² of inverse - very stable at high PH, slower crash for visible bands.
+   */
+  private computeFragility(currentHealth: number): number {
+    const normalized = this.normalizedHealth(currentHealth);
+    const inverseNorm = 1 - normalized;
+    const rawFragility = inverseNorm * inverseNorm;
+    return (
+      rawFragility * this.systemComplexity + (1 - this.systemComplexity) * 0
+    );
+  }
+
+  /**
+   * Computes system state for variance calculations.
+   * Uses linear scaling for smooth variance behavior.
    */
   private computeSystemState(currentHealth: number): number {
-    const { threshold, steepness } = ModelParameters.systemState;
-    const rawSystemState = sigmoid(currentHealth - threshold, steepness);
-    return this.applyComplexityFloor(rawSystemState);
+    const normalized = this.normalizedHealth(currentHealth);
+    return this.applyComplexityFloor(normalized);
   }
 
   private applyComplexityFloor(rawSystemState: number): number {
@@ -105,22 +135,22 @@ export class ProductHealthModel {
   /**
    * Computes the expected (average) impact of the next change.
    *
-   * For negative base impact (low ER): damage is amplified in coupled systems.
-   * For positive base impact (high ER): improvement requires traction and has diminishing returns.
+   * For degradation (negative impact): damage scales with fragility.
+   * - High PH: low fragility (stable system resists degradation)
+   * - Low PH: high fragility (failures cascade)
    *
-   * The ceiling factor is clamped to [0, 1] to ensure agents above their ceiling
-   * simply cannot improve (factor = 0), rather than having their improvement
-   * mechanism work in reverse (which would occur if the factor went negative).
+   * For improvement (positive impact): progress scales with traction².
+   * - Low PH: very low traction (frozen system resists change)
+   * - High PH: good traction (changes land effectively)
+   * - S-curve emerges from compounding
    */
   public computeExpectedImpact(currentHealth: number): number {
-    const systemState = this.computeSystemState(currentHealth);
-
     if (this.baseImpact <= 0) {
-      const fragility = 1 - systemState;
+      const fragility = this.computeFragility(currentHealth);
       return this.baseImpact * fragility;
     }
 
-    const traction = systemState;
+    const traction = this.computeTraction(currentHealth);
     const { exponent } = ModelParameters.ceilingFactor;
     const rawCeilingFactor =
       1 - Math.pow(currentHealth / this.maxHealth, exponent);
@@ -131,19 +161,24 @@ export class ProductHealthModel {
   /**
    * Computes effective sigma (σ_eff): the actual unpredictability for the next change.
    *
-   * Uses a bell-curve scaling: sigma is LOW at both extremes (healthy and frozen),
-   * and HIGH in the chaotic transition zone around PH=5.
-   *
-   * Intuition:
-   * - High PH (healthy): Tests catch problems, modules contain issues, predictable outcomes
-   * - Mid PH (transition): Some structure remains but unreliable, chaotic outcomes
-   * - Low PH (frozen): Everything coupled, every change breaks things, predictably bad
+   * For improvement: bell-curve scaling (uncertainty peaks in transition zone)
+   * For degradation: variance has baseline + scales with fragility
+   *   - High PH: baseline variance for visible bands
+   *   - Low PH: higher variance (but system already crashed)
    */
   public computeEffectiveSigma(currentHealth: number): number {
     const { floor, range } = ModelParameters.sigmaScale;
     const systemState = this.computeSystemState(currentHealth);
     const bellFactor = this.computeBellCurveFactor(systemState);
-    const scale = floor + range * bellFactor;
+
+    if (this.baseImpact >= 0) {
+      const scale = floor + range * bellFactor;
+      return this.baseSigma * scale;
+    }
+
+    const fragility = this.computeFragility(currentHealth);
+    const baseline = 0.3;
+    const scale = floor * (baseline + (1 - baseline) * fragility);
     return this.baseSigma * scale;
   }
 
@@ -156,21 +191,12 @@ export class ProductHealthModel {
   }
 
   /**
-   * Computes variance attenuation based on system state and impact direction.
+   * Computes variance attenuation based on system state.
    *
-   * The intuition: degradation is deterministic, improvement has uncertainty.
-   * - Negative impact (low-ER): mistakes cascade predictably, low variance
-   * - Positive impact (high-ER): improvements face uncertain complexity, variance scales
-   *
-   * The variance boost naturally emerges from:
-   * - positiveImpact: only agents improving the system experience variance
-   * - effectiveChallenge: (1-ER) × SC, higher for non-ideal in complex systems
-   * - systemState: boost only applies at high PH (where agents are actively working)
-   *
-   * This creates the desired behavior without hardcoded thresholds:
-   * - ER=1.0: effectiveChallenge=0, no boost (tight bands)
-   * - ER=0.8: positive impact + challenge, gets boost (wider bands in complex systems)
-   * - ER≤0.5: zero or negative impact, no boost (deterministic trajectory)
+   * Bell-curve attenuation for all agents:
+   * - Floor ensures some attenuation even at extremes
+   * - Bell curve peaks in transition zone
+   * - Additional variance boost for non-ideal agents improving complex systems
    */
   private computeVarianceAttenuation(systemState: number): number {
     const { floor, range, improvementVariance } =

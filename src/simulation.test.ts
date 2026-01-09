@@ -126,15 +126,16 @@ describe("ProductHealthModel", () => {
   });
 
   describe("computeExpectedImpact", () => {
-    it("returns near-zero negative impact for low rigor at high health", () => {
+    it("returns small negative impact for low rigor at high health", () => {
       // Given
       const model = new ProductHealthModel(0.1);
 
       // When
       const impact = model.computeExpectedImpact(8);
 
-      // Then
-      expect(impact).toBeCloseTo(0, 1);
+      // Then - with power curve fragility, impact is small but not near-zero
+      expect(impact).toBeLessThan(0);
+      expect(impact).toBeGreaterThan(-0.2);
     });
 
     it("returns larger negative impact for low rigor at low health", () => {
@@ -173,16 +174,32 @@ describe("ProductHealthModel", () => {
   });
 
   describe("computeEffectiveSigma", () => {
-    it("returns lower sigma at low health (frozen system)", () => {
+    it("returns fragility-scaled sigma for negative-impact agents", () => {
       // Given
       const model = new ProductHealthModel(0.1);
 
       // When
+      const sigmaHigh = model.computeEffectiveSigma(8);
+      const sigmaMid = model.computeEffectiveSigma(5);
       const sigmaLow = model.computeEffectiveSigma(2);
+
+      // Then - sigma scales with fragility (low at high PH, high at low PH)
+      expect(sigmaLow).toBeGreaterThan(sigmaMid);
+      expect(sigmaMid).toBeGreaterThan(sigmaHigh);
+    });
+
+    it("returns bell-curve sigma for positive-impact agents", () => {
+      // Given
+      const model = new ProductHealthModel(0.9);
+
+      // When
+      const sigmaLow = model.computeEffectiveSigma(2);
+      const sigmaMid = model.computeEffectiveSigma(5);
       const sigmaHigh = model.computeEffectiveSigma(8);
 
       // Then
-      expect(sigmaLow).toBeLessThan(sigmaHigh);
+      expect(sigmaMid).toBeGreaterThan(sigmaLow);
+      expect(sigmaMid).toBeGreaterThan(sigmaHigh);
     });
 
     it("returns non-zero sigma even for perfect rigor", () => {
