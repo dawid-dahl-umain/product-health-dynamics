@@ -80,11 +80,16 @@ flowchart LR
         MH["<b>Max Product Health</b><br/>Best sustainable<br/>quality level"]
     end
 
-    subgraph loop ["YOUR SYSTEM ⟳ (repeats each commit)"]
+    subgraph loop ["DEVELOPMENT CYCLE ⟳ (repeats each commit)"]
         direction TB
         PH["<b>Current Product Health</b><br/>How easy is the code<br/>to change right now?<br/><i>1 = nightmare, 10 = dream</i>"]
-        TR["<b>Traction</b><br/>How well do<br/>improvements land?<br/><i>Low at bad PH, high at good PH</i>"]
-        FR["<b>Fragility</b><br/>How severely does<br/>damage cascade?<br/><i>High at bad PH, low at good PH</i>"]
+
+        subgraph state ["System Dynamics"]
+            direction LR
+            TR["<b>Traction</b><br/>How well do<br/>improvements land?<br/><i>Low at bad PH, high at good PH</i>"]
+            FR["<b>Fragility</b><br/>How severely does<br/>damage cascade?<br/><i>High at bad PH, low at good PH</i>"]
+        end
+
         CE(("<b>Change</b><br/><b>Event</b><br/>roll the dice"))
         NPH["<b>New Product Health</b><br/>Better, worse,<br/>or same?"]
 
@@ -94,6 +99,8 @@ flowchart LR
         CE -->|"produces"| NPH
         NPH -.->|"becomes next"| PH
     end
+
+    style state fill:none,stroke:#22d3ee,stroke-width:2px,stroke-dasharray: 5 5
 
     AC["<b>Accumulated</b><br/><b>Complexity</b><br/>Grows with each change<br/><i>hard to outpace, even for seniors</i>"]
     TC["<b>Time Cost</b><br/>How long does each<br/>change take?<br/><i>1x when healthy, 3x when degraded</i>"]
@@ -114,12 +121,14 @@ flowchart LR
     classDef inputNode fill:#166534,stroke:#4ade80,color:#fff
     classDef derivedNode fill:#9a3412,stroke:#fb923c,color:#fff
     classDef loopNode fill:#1e40af,stroke:#60a5fa,color:#fff
+    classDef stateNode fill:#0e7490,stroke:#22d3ee,color:#fff
     classDef timeNode fill:#581c87,stroke:#a855f7,color:#fff
     classDef eventNode fill:#0f172a,stroke:#60a5fa,color:#fff
 
     class ER,SC inputNode
     class BI,BS,MH derivedNode
-    class PH,TR,FR,NPH loopNode
+    class PH,NPH loopNode
+    class TR,FR stateNode
     class CE eventNode
     class AC,TC timeNode
 ```
