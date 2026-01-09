@@ -10,6 +10,7 @@ type PHInsightModalProps = {
 
 type BusinessInsight = {
   zone: string;
+  zoneEmoji: string;
   zoneColor: string;
   customerReality: string;
   businessConsequence: string;
@@ -39,6 +40,7 @@ const getBusinessInsight = (health: number): BusinessInsight => {
   if (h >= 9) {
     return {
       zone: "Elite Promoter",
+      zoneEmoji: "🤩",
       zoneColor: zoneColors.promoter.main,
       customerReality:
         "Peak advocacy. Customers are your biggest growth engine.",
@@ -53,6 +55,7 @@ const getBusinessInsight = (health: number): BusinessInsight => {
   if (h >= 8) {
     return {
       zone: "Promoter",
+      zoneEmoji: "😊",
       zoneColor: zoneColors.promoter.main,
       customerReality:
         "Customers actively recommend you. They generate 80%+ of all referrals.",
@@ -67,6 +70,7 @@ const getBusinessInsight = (health: number): BusinessInsight => {
   if (h >= 7) {
     return {
       zone: "Strong Passive",
+      zoneEmoji: "🙂",
       zoneColor: palette.teal,
       customerReality:
         "Satisfied customers with low churn risk, but not actively promoting.",
@@ -81,6 +85,7 @@ const getBusinessInsight = (health: number): BusinessInsight => {
   if (h >= 6) {
     return {
       zone: "Passive",
+      zoneEmoji: "😐",
       zoneColor: zoneColors.passive.main,
       customerReality:
         "Satisfied but unenthusiastic. Repurchase rates 50% lower than Promoters.",
@@ -95,6 +100,7 @@ const getBusinessInsight = (health: number): BusinessInsight => {
   if (h >= 5) {
     return {
       zone: "Weak Passive",
+      zoneEmoji: "😟",
       zoneColor: "#f59e0b",
       customerReality:
         "Tolerance is wearing thin. Actively comparing alternatives.",
@@ -109,6 +115,7 @@ const getBusinessInsight = (health: number): BusinessInsight => {
   if (h >= 4) {
     return {
       zone: "Detractor",
+      zoneEmoji: "😠",
       zoneColor: zoneColors.detractor.main,
       customerReality:
         "Actively unhappy. Responsible for 80%+ of negative word-of-mouth.",
@@ -123,6 +130,7 @@ const getBusinessInsight = (health: number): BusinessInsight => {
   if (h >= 3) {
     return {
       zone: "Strong Detractor",
+      zoneEmoji: "😰",
       zoneColor: zoneColors.crisis.main,
       customerReality:
         "Trust is broken. Customers are actively leaving and warning others.",
@@ -137,6 +145,7 @@ const getBusinessInsight = (health: number): BusinessInsight => {
   if (h >= 2) {
     return {
       zone: "Churn Crisis",
+      zoneEmoji: "😱",
       zoneColor: zoneColors.collapse.main,
       customerReality: "Product is seen as fundamentally broken.",
       businessConsequence:
@@ -150,6 +159,7 @@ const getBusinessInsight = (health: number): BusinessInsight => {
   if (h >= 1) {
     return {
       zone: "Collapse",
+      zoneEmoji: "😭",
       zoneColor: zoneColors.failure.main,
       customerReality: "Customers are gone or hostile.",
       businessConsequence:
@@ -162,6 +172,7 @@ const getBusinessInsight = (health: number): BusinessInsight => {
   // 0-1: Total Failure
   return {
     zone: "Total Failure",
+    zoneEmoji: "😵",
     zoneColor: "#7f1d1d",
     customerReality: "Complete loss of customer base.",
     businessConsequence: "Business unviable. Wind-down likely.",
@@ -235,6 +246,7 @@ export const buildPHInsightModal = ({
           </div>
 
           <div class="ph-zone-badge" style="background: ${insight.zoneColor}">
+            <span class="ph-zone-emoji">${insight.zoneEmoji}</span>
             ${insight.zone}
           </div>
           

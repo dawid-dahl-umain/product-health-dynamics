@@ -213,6 +213,7 @@ export class ProductHealthApp {
         if (simId) {
           this.uiState.editingTabId = simId;
           this.render();
+          this.recomputeChart();
           const input = document.querySelector(
             `.sim-tab-input[data-sim-id="${simId}"]`
           ) as HTMLInputElement;
@@ -235,6 +236,7 @@ export class ProductHealthApp {
         }
         this.uiState.editingTabId = null;
         this.render();
+        this.recomputeChart();
       };
       input.addEventListener("blur", handleRename);
       input.addEventListener("keydown", (e) => {
@@ -242,6 +244,7 @@ export class ProductHealthApp {
         if ((e as KeyboardEvent).key === "Escape") {
           this.uiState.editingTabId = null;
           this.render();
+          this.recomputeChart();
         }
       });
     });

@@ -1663,15 +1663,25 @@ button:hover {
 
 /* Zone Badge */
 .ph-zone-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px 6px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   color: #fff;
   margin-bottom: 12px;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+.ph-zone-emoji {
+  font-size: 1.2rem;
+  line-height: 1;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3))
+    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  margin-right: 6px;
 }
 
 /* Headline */
