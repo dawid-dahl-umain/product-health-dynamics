@@ -1,4 +1,4 @@
-export const AGENT_PALETTE = [
+export const DEVELOPER_PALETTE = [
   "#FF5C8D", // AI Vibe (Vibrant Rose)
   "#FFB84D", // AI Guardrails (Warm Saffron)
   "#38BDF8", // Junior (Azure Blue)
@@ -21,8 +21,8 @@ export const chartColors = {
 
 export const getNextColor = (usedColors: string[]): string => {
   return (
-    AGENT_PALETTE.find((c) => !usedColors.includes(c)) ??
-    AGENT_PALETTE[Math.floor(Math.random() * AGENT_PALETTE.length)]
+    DEVELOPER_PALETTE.find((c) => !usedColors.includes(c)) ??
+    DEVELOPER_PALETTE[Math.floor(Math.random() * DEVELOPER_PALETTE.length)]
   );
 };
 

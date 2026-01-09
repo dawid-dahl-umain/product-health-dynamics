@@ -39,17 +39,17 @@ Toggle with the **Settings** button in the header.
 
 #### Developer Management
 
-Configure the agents and scenarios:
+Configure the developers and scenarios:
 
-- **Personas**: Independent agents with a fixed **Engineering Rigor** (`0.1` to `1.0`).
-- **Handoff Scenarios**: Define a story where one persona hands off to another.
-  - **From/To**: Select the starting and ending personas.
+- **Developers**: Independent AI agents or humans with a fixed **Engineering Rigor** (`0.1` to `1.0`).
+- **Handoff Scenarios**: Define a story where one developer hands off to another.
+  - **From/To**: Select the starting and ending developers.
   - **Handoff at**: Configure the exact change event number where the transition occurs.
-  - **Color/Name**: Personalize the trajectory visualization for the handoff flow.
+  - **Name**: Personalize the label for the handoff flow. (Trajectory colors are automatically derived from the developers with a darker offset).
 
 ### Global Settings
 
-Access via the sliders icon in the header.
+Access via the **Globe icon** in the header.
 
 - **Default Visibility**: Choose whether to show **All** (Mean + 80% confidence bands) or **Averages Only** by default.
 - **Reset All Data**: Clears `localStorage` and restores factory defaults.
@@ -58,13 +58,13 @@ Access via the sliders icon in the header.
 
 ## Data Persistence
 
-All data is automatically saved to the browser's `localStorage` and persists across sessions. This includes your simulation tabs, custom agent settings, and global preferences.
+All data is automatically saved to the browser's `localStorage` and persists across sessions. This includes your simulation tabs, custom developer settings, and global preferences.
 
 ## Advanced: Customization
 
-### Adding Default Agents
+### Adding Default Data
 
-Edit `src/ui/defaults.ts` and modify `createDefaultAgents`. This set is used when you click "Reset Defaults" in the UI.
+Edit `src/ui/defaults.ts` and modify `createDefaultDevelopers` or `createDefaultHandoffs`. These sets are used when you click "Reset Defaults" in the UI.
 
 ### Custom Storage Adapters
 

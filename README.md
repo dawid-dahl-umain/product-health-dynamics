@@ -333,7 +333,7 @@ src/
     Statistics.ts           # Aggregates runs into summary metrics
 
   scenarios/
-    AgentProfiles.ts        # ER values for each agent type
+    DeveloperProfiles.ts    # ER values for each developer type
     ComplexityProfiles.ts   # SC values (simple, medium, enterprise)
     ScenarioDefinitions.ts  # Scenario configurations
 
@@ -342,7 +342,7 @@ src/
     chart/                  # Chart.js visualization
     storage/                # LocalStorage persistence layer
     App.ts                  # UI orchestration class
-    defaults.ts             # Default agents and simulations
+    defaults.ts             # Default developers and simulations
     types.ts                # UI constants
     styles.css              # All styles
 

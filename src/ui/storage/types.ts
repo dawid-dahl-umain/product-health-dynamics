@@ -1,4 +1,4 @@
-export type AgentConfig = {
+export type DeveloperConfig = {
   id: string;
   name: string;
   engineeringRigor: number;
@@ -8,15 +8,15 @@ export type AgentConfig = {
 export type HandoffConfig = {
   id: string;
   name: string;
-  fromAgentId: string;
-  toAgentId: string;
+  fromDeveloperId: string;
+  toDeveloperId: string;
   atChange: number;
 };
 
 export type Simulation = {
   id: string;
   name: string;
-  agents: AgentConfig[];
+  developers: DeveloperConfig[];
   handoffs: HandoffConfig[];
   systemComplexity: number;
   complexityDescription?: string;

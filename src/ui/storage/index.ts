@@ -3,7 +3,7 @@ export type {
   Simulation,
   GlobalConfig,
   AppData,
-  AgentConfig,
+  DeveloperConfig,
   HandoffConfig,
 } from "./types";
 export { LocalStorageAdapter } from "./LocalStorageAdapter";

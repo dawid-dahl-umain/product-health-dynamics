@@ -7,10 +7,10 @@ const createTestAppData = (): AppData => ({
     {
       id: "sim-1",
       name: "Test Simulation",
-      agents: [
+      developers: [
         {
-          id: "agent-1",
-          name: "Test Agent",
+          id: "developer-1",
+          name: "Test Developer",
           engineeringRigor: 0.5,
           color: "#ff0000",
         },
@@ -75,7 +75,7 @@ describe("LocalStorageAdapter", () => {
           {
             id: "stored-sim",
             name: "Stored Simulation",
-            agents: [],
+            developers: [],
             handoffs: [],
             systemComplexity: 1.0,
             nChanges: 1000,
@@ -144,7 +144,7 @@ describe("LocalStorageAdapter", () => {
       const updated: Simulation = {
         id: "sim-1",
         name: "Updated Simulation",
-        agents: [],
+        developers: [],
         handoffs: [],
         systemComplexity: 0.75,
         nChanges: 2000,
@@ -167,7 +167,7 @@ describe("LocalStorageAdapter", () => {
       const newSim: Simulation = {
         id: "sim-2",
         name: "New Simulation",
-        agents: [],
+        developers: [],
         handoffs: [],
         systemComplexity: 0.3,
         nChanges: 500,
@@ -202,7 +202,7 @@ describe("LocalStorageAdapter", () => {
           {
             id: "sim-1",
             name: "First",
-            agents: [],
+            developers: [],
             handoffs: [],
             systemComplexity: 0.25,
             nChanges: 500,
@@ -210,7 +210,7 @@ describe("LocalStorageAdapter", () => {
           {
             id: "sim-2",
             name: "Second",
-            agents: [],
+            developers: [],
             handoffs: [],
             systemComplexity: 0.5,
             nChanges: 500,
@@ -269,7 +269,7 @@ describe("LocalStorageAdapter", () => {
       adapter.saveSimulation({
         id: "extra",
         name: "Extra",
-        agents: [],
+        developers: [],
         handoffs: [],
         systemComplexity: 1.0,
         nChanges: 1000,
@@ -310,7 +310,7 @@ describe("LocalStorageAdapter", () => {
           {
             id: "imported-sim",
             name: "Imported Simulation",
-            agents: [],
+            developers: [],
             handoffs: [],
             systemComplexity: 1.5,
             nChanges: 2000,

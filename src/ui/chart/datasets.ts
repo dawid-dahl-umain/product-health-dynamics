@@ -1,6 +1,6 @@
 import { TrajectorySimulator, summarizeRuns } from "../../simulation";
 import { hexToRgba, chartColors, adjustColor } from "./colors";
-import type { AgentConfig, HandoffConfig } from "../storage/types";
+import type { DeveloperConfig, HandoffConfig } from "../storage/types";
 
 export type Dataset = {
   label: string;
@@ -64,15 +64,18 @@ type SimulationOptions = {
   nSimulations?: number;
 };
 
-type AgentLookup = Map<string, AgentConfig>;
+type DeveloperLookup = Map<string, DeveloperConfig>;
 
-const runAgentSimulation = (agent: AgentConfig, options: SimulationOptions) => {
+const runDeveloperSimulation = (
+  developer: DeveloperConfig,
+  options: SimulationOptions
+) => {
   const { systemComplexity, nChanges, nSimulations = 200 } = options;
   const simulator = new TrajectorySimulator();
 
   const runs = Array.from({ length: nSimulations }, () =>
     simulator.simulate({
-      engineeringRigor: agent.engineeringRigor,
+      engineeringRigor: developer.engineeringRigor,
       systemComplexity,
       nChanges,
       startValue: 8,
@@ -83,18 +86,18 @@ const runAgentSimulation = (agent: AgentConfig, options: SimulationOptions) => {
 
 const runHandoffSimulation = (
   handoff: HandoffConfig,
-  agentLookup: AgentLookup,
+  developerLookup: DeveloperLookup,
   options: SimulationOptions
 ) => {
   const { systemComplexity, nChanges, nSimulations = 200 } = options;
   const simulator = new TrajectorySimulator();
 
-  const fromAgent = agentLookup.get(handoff.fromAgentId);
-  const toAgent = agentLookup.get(handoff.toAgentId);
+  const fromDeveloper = developerLookup.get(handoff.fromDeveloperId);
+  const toDeveloper = developerLookup.get(handoff.toDeveloperId);
 
-  if (!fromAgent || !toAgent) {
-    return runAgentSimulation(
-      fromAgent || ({ engineeringRigor: 0.5 } as any),
+  if (!fromDeveloper || !toDeveloper) {
+    return runDeveloperSimulation(
+      fromDeveloper || ({ engineeringRigor: 0.5 } as any),
       options
     );
   }
@@ -106,11 +109,11 @@ const runHandoffSimulation = (
     simulator.simulatePhased(
       [
         {
-          engineeringRigor: fromAgent.engineeringRigor,
+          engineeringRigor: fromDeveloper.engineeringRigor,
           nChanges: handoffPoint,
         },
         {
-          engineeringRigor: toAgent.engineeringRigor,
+          engineeringRigor: toDeveloper.engineeringRigor,
           nChanges: recoveryChanges,
         },
       ],
@@ -211,29 +214,34 @@ const statsToDatasets = (
 };
 
 export const buildDatasetsForSimulation = (
-  agents: AgentConfig[],
+  developers: DeveloperConfig[],
   handoffs: HandoffConfig[],
   options: SimulationOptions,
   defaultVisibility: "all" | "averages-only" = "all"
 ): Dataset[] => {
-  const agentLookup = new Map(agents.map((a) => [a.id, a]));
+  const developerLookup = new Map(developers.map((a) => [a.id, a]));
 
-  const agentDatasets = agents.flatMap((agent) => {
-    const stats = runAgentSimulation(agent, options);
-    return statsToDatasets(agent.name, agent.color, stats, defaultVisibility);
+  const developerDatasets = developers.flatMap((developer) => {
+    const stats = runDeveloperSimulation(developer, options);
+    return statsToDatasets(
+      developer.name,
+      developer.color,
+      stats,
+      defaultVisibility
+    );
   });
 
   const handoffDatasets = handoffs.flatMap((handoff) => {
-    const fromAgent = agentLookup.get(handoff.fromAgentId);
-    const toAgent = agentLookup.get(handoff.toAgentId);
-    const stats = runHandoffSimulation(handoff, agentLookup, options);
+    const fromDeveloper = developerLookup.get(handoff.fromDeveloperId);
+    const toDeveloper = developerLookup.get(handoff.toDeveloperId);
+    const stats = runHandoffSimulation(handoff, developerLookup, options);
 
     const handoffInfo =
-      fromAgent && toAgent
+      fromDeveloper && toDeveloper
         ? {
             atChange: handoff.atChange,
-            fromColor: adjustColor(fromAgent.color, -20),
-            toColor: adjustColor(toAgent.color, -20),
+            fromColor: adjustColor(fromDeveloper.color, -20),
+            toColor: adjustColor(toDeveloper.color, -20),
           }
         : undefined;
 
@@ -246,5 +254,5 @@ export const buildDatasetsForSimulation = (
     );
   });
 
-  return [...agentDatasets, ...handoffDatasets];
+  return [...developerDatasets, ...handoffDatasets];
 };

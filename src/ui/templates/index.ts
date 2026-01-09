@@ -1,7 +1,7 @@
 export * from "./icons";
 export { buildHeader } from "./header";
 export { buildSimulationTabs } from "./simulationTabs";
-export { buildAgentCard } from "./agentCard";
+export { buildDeveloperCard } from "./developerCard";
 export { buildHandoffCard } from "./handoffCard";
 export { buildConfigPanel } from "./configPanel";
 export {

@@ -437,14 +437,14 @@ select:focus {
   border-color: var(--accent);
 }
 
-/* Agent Cards */
-.agent-list {
+/* Developer Cards */
+.developer-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 12px;
 }
 
-.agent-card {
+.developer-card {
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -454,7 +454,7 @@ select:focus {
   padding: 12px 14px;
 }
 
-.agent-color-picker {
+.developer-color-picker {
   width: 24px;
   height: 24px;
   border: none;
@@ -475,16 +475,16 @@ select:focus {
   margin-top: 2px;
 }
 
-.agent-color-picker::-webkit-color-swatch-wrapper {
+.developer-color-picker::-webkit-color-swatch-wrapper {
   padding: 0;
 }
 
-.agent-color-picker::-webkit-color-swatch {
+.developer-color-picker::-webkit-color-swatch {
   border: 2px solid var(--border);
   border-radius: 50%;
 }
 
-.agent-main {
+.developer-main {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -492,7 +492,7 @@ select:focus {
   gap: 8px;
 }
 
-.agent-name-input {
+.developer-name-input {
   background: transparent;
   border: none;
   color: var(--text);
@@ -501,23 +501,23 @@ select:focus {
   padding: 0;
 }
 
-.agent-name-input:focus {
+.developer-name-input:focus {
   outline: none;
 }
 
-.agent-rigor {
+.developer-rigor {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.agent-rigor-label {
+.developer-rigor-label {
   font-size: 0.75rem;
   color: var(--text-dim);
   min-width: 50px;
 }
 
-.agent-rigor input[type="range"] {
+.developer-rigor input[type="range"] {
   flex: 1;
   height: 4px;
   -webkit-appearance: none;
@@ -527,7 +527,7 @@ select:focus {
   cursor: pointer;
 }
 
-.agent-rigor input[type="range"]::-webkit-slider-thumb {
+.developer-rigor input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 14px;
@@ -537,7 +537,7 @@ select:focus {
   cursor: pointer;
 }
 
-.agent-rigor input[type="range"]::-moz-range-thumb {
+.developer-rigor input[type="range"]::-moz-range-thumb {
   width: 14px;
   height: 14px;
   background: var(--text);
@@ -570,7 +570,7 @@ select:focus {
   font-weight: bold;
 }
 
-.agent-remove {
+.developer-remove {
   background: transparent;
   border: none;
   color: var(--text-dim);
@@ -583,17 +583,17 @@ select:focus {
   flex-shrink: 0;
 }
 
-.agent-remove:hover {
+.developer-remove:hover {
   background: var(--bg-hover);
   color: var(--danger);
 }
 
-.agent-remove svg {
+.developer-remove svg {
   width: 16px;
   height: 16px;
 }
 
-.agent-actions {
+.developer-actions {
   display: flex;
   gap: 8px;
   margin-top: 12px;
@@ -1054,11 +1054,11 @@ button:hover {
     margin-bottom: 12px;
   }
 
-  .agent-card {
+  .developer-card {
     flex-wrap: wrap;
   }
 
-  .agent-main {
+  .developer-main {
     width: calc(100% - 60px);
   }
 

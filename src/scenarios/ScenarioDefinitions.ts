@@ -1,5 +1,5 @@
 import type { PhaseConfig, TrajectoryConfig } from "../types";
-import { AgentProfiles } from "./AgentProfiles";
+import { DeveloperProfiles } from "./DeveloperProfiles";
 
 /** Identifiers for predefined simulation scenarios. */
 export type ScenarioKey =
@@ -36,44 +36,44 @@ export const Scenarios: Record<ScenarioKey, ScenarioConfig> = {
     label: "AI Vibe Coding",
     nChanges: DEFAULT_CHANGES,
     startValue: DEFAULT_START,
-    ...AgentProfiles.aiVibe,
+    ...DeveloperProfiles.aiVibe,
   },
 
   "ai-guardrails": {
     label: "AI with Guardrails",
     nChanges: DEFAULT_CHANGES,
     startValue: DEFAULT_START,
-    ...AgentProfiles.aiGuardrails,
+    ...DeveloperProfiles.aiGuardrails,
   },
 
   "junior-engineer": {
     label: "Junior Engineer",
     nChanges: DEFAULT_CHANGES,
     startValue: DEFAULT_START,
-    ...AgentProfiles.junior,
+    ...DeveloperProfiles.junior,
   },
 
   "senior-engineers": {
     label: "Senior Engineers",
     nChanges: DEFAULT_CHANGES,
     startValue: DEFAULT_START,
-    ...AgentProfiles.senior,
+    ...DeveloperProfiles.senior,
   },
 
   "ai-handoff": {
     label: "AI to Senior Handoff",
     nChanges: DEFAULT_CHANGES,
     startValue: DEFAULT_START,
-    engineeringRigor: AgentProfiles.aiVibe.engineeringRigor,
+    engineeringRigor: DeveloperProfiles.aiVibe.engineeringRigor,
     phases: [
       {
         nChanges: HANDOFF_AI_CHANGES,
         startValue: DEFAULT_START,
-        ...AgentProfiles.aiVibe,
+        ...DeveloperProfiles.aiVibe,
       },
       {
         nChanges: HANDOFF_RECOVERY_CHANGES,
-        ...AgentProfiles.senior,
+        ...DeveloperProfiles.senior,
       },
     ],
   },
@@ -82,16 +82,16 @@ export const Scenarios: Record<ScenarioKey, ScenarioConfig> = {
     label: "AI to Junior Handoff",
     nChanges: DEFAULT_CHANGES,
     startValue: DEFAULT_START,
-    engineeringRigor: AgentProfiles.aiVibe.engineeringRigor,
+    engineeringRigor: DeveloperProfiles.aiVibe.engineeringRigor,
     phases: [
       {
         nChanges: HANDOFF_AI_CHANGES,
         startValue: DEFAULT_START,
-        ...AgentProfiles.aiVibe,
+        ...DeveloperProfiles.aiVibe,
       },
       {
         nChanges: HANDOFF_RECOVERY_CHANGES,
-        ...AgentProfiles.junior,
+        ...DeveloperProfiles.junior,
       },
     ],
   },

@@ -4,10 +4,10 @@ export type {
   Simulation,
   GlobalConfig,
   AppData,
-  AgentConfig,
+  DeveloperConfig,
 } from "./storage";
 export { LocalStorageAdapter } from "./storage";
-export { CHANGES_OPTIONS, AGENT_COLORS } from "./types";
+export { CHANGES_OPTIONS, DEVELOPER_COLORS } from "./types";
 export type { UIState } from "./types";
 export {
   createDefaultAppData,

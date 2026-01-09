@@ -1,11 +1,11 @@
 /**
  * Engineering Rigor values for different agent types.
  *
- * These are the "personas" in our simulation. Each represents a different
+ * These are the "developers" in our simulation. Each represents a different
  * level of engineering discipline. The ER value determines all their
  * other characteristics (impact, variance, ceiling).
  */
-export const AgentProfiles = {
+export const DeveloperProfiles = {
   /** Pure vibe coding: no tests, no structure, just shipping. */
   aiVibe: {
     engineeringRigor: 0.3,
@@ -24,4 +24,4 @@ export const AgentProfiles = {
   },
 } as const;
 
-export type AgentProfileKey = keyof typeof AgentProfiles;
+export type DeveloperProfileKey = keyof typeof DeveloperProfiles;

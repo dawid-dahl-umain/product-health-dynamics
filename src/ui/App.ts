@@ -17,7 +17,7 @@ import {
   buildHeader,
   buildSimulationTabs,
   buildConfigPanel,
-  buildAgentCard,
+  buildDeveloperCard,
   buildHandoffCard,
   buildChartControls,
   buildChartContainer,
@@ -27,7 +27,7 @@ import {
 import type {
   StorageService,
   Simulation,
-  AgentConfig,
+  DeveloperConfig,
   HandoffConfig,
   GlobalConfig,
 } from "./storage";
@@ -119,7 +119,7 @@ export class ProductHealthApp {
     this.bindHeaderEvents();
     this.bindSimulationTabEvents();
     this.bindConfigEvents();
-    this.bindAgentEvents();
+    this.bindDeveloperEvents();
     this.bindChartControls();
     this.bindGlobalSettingsEvents();
   }
@@ -214,7 +214,7 @@ export class ProductHealthApp {
       const newSim: Simulation = {
         id: generateId(),
         name: `Simulation ${this.simulations.length + 1}`,
-        agents: [],
+        developers: [],
         handoffs: [],
         systemComplexity: 0.5,
         nChanges: 1000,
@@ -261,7 +261,7 @@ export class ProductHealthApp {
     document.getElementById("duplicate-sim")?.addEventListener("click", () => {
       const sim = this.activeSimulation;
       const idMap = new Map<string, string>();
-      const newAgents = sim.agents.map((a) => {
+      const newDevelopers = sim.developers.map((a) => {
         const newId = generateId();
         idMap.set(a.id, newId);
         return { ...a, id: newId };
@@ -269,15 +269,15 @@ export class ProductHealthApp {
       const newHandoffs = sim.handoffs.map((h) => ({
         ...h,
         id: generateId(),
-        fromAgentId: idMap.get(h.fromAgentId) ?? h.fromAgentId,
-        toAgentId: idMap.get(h.toAgentId) ?? h.toAgentId,
+        fromDeveloperId: idMap.get(h.fromDeveloperId) ?? h.fromDeveloperId,
+        toDeveloperId: idMap.get(h.toDeveloperId) ?? h.toDeveloperId,
       }));
 
       const newSim: Simulation = {
         ...structuredClone(sim),
         id: generateId(),
         name: `${sim.name} (copy)`,
-        agents: newAgents,
+        developers: newDevelopers,
         handoffs: newHandoffs,
       };
       this.simulations.push(newSim);
@@ -331,38 +331,40 @@ export class ProductHealthApp {
     }, 300);
   }
 
-  private bindAgentEvents(): void {
-    const agentList = document.getElementById("agent-list");
-    agentList?.addEventListener("input", (e) => {
+  private bindDeveloperEvents(): void {
+    const developerList = document.getElementById("developer-list");
+    developerList?.addEventListener("input", (e) => {
       const target = e.target as HTMLInputElement | HTMLSelectElement;
-      const card = target.closest(".agent-card");
-      const agentId = card?.getAttribute("data-agent-id");
+      const card = target.closest(".developer-card");
+      const developerId = card?.getAttribute("data-developer-id");
       const field = target.getAttribute("data-field");
-      if (!agentId || !field) return;
+      if (!developerId || !field) return;
 
       const sim = this.activeSimulation;
-      const agent = sim.agents.find((a) => a.id === agentId);
-      if (!agent) return;
+      const developer = sim.developers.find((a) => a.id === developerId);
+      if (!developer) return;
 
       if (field === "name") {
-        agent.name = (target as HTMLInputElement).value;
+        developer.name = (target as HTMLInputElement).value;
         this.scheduleChartUpdate();
       } else if (field === "rigor") {
-        agent.engineeringRigor = parseFloat((target as HTMLInputElement).value);
-        const label = card?.querySelector(".agent-rigor-label");
+        developer.engineeringRigor = parseFloat(
+          (target as HTMLInputElement).value
+        );
+        const label = card?.querySelector(".developer-rigor-label");
         if (label)
-          label.textContent = `Eng. Rigor: ${agent.engineeringRigor.toFixed(
+          label.textContent = `Eng. Rigor: ${developer.engineeringRigor.toFixed(
             2
           )}`;
         this.scheduleChartUpdate();
       } else if (field === "color") {
-        agent.color = (target as HTMLInputElement).value;
+        developer.color = (target as HTMLInputElement).value;
         this.updateHandoffIcons();
         this.scheduleChartUpdate();
       }
     });
 
-    agentList?.addEventListener("change", (e) => {
+    developerList?.addEventListener("change", (e) => {
       const target = e.target as HTMLInputElement | HTMLSelectElement;
       const field = target.getAttribute("data-field");
       if (field === "name" || field === "rigor" || field === "color") {
@@ -370,39 +372,40 @@ export class ProductHealthApp {
       }
     });
 
-    agentList?.addEventListener("click", (e) => {
+    developerList?.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
-      const removeBtn = target.closest("[data-action='remove-agent']");
+      const removeBtn = target.closest("[data-action='remove-developer']");
       if (!removeBtn) return;
 
-      const card = removeBtn.closest(".agent-card");
-      const agentId = card?.getAttribute("data-agent-id");
+      const card = removeBtn.closest(".developer-card");
+      const developerId = card?.getAttribute("data-developer-id");
       const sim = this.activeSimulation;
-      if (!agentId) return;
+      if (!developerId) return;
 
-      sim.agents = sim.agents.filter((a) => a.id !== agentId);
+      sim.developers = sim.developers.filter((a) => a.id !== developerId);
       sim.handoffs = sim.handoffs.filter(
-        (h) => h.fromAgentId !== agentId && h.toAgentId !== agentId
+        (h) =>
+          h.fromDeveloperId !== developerId && h.toDeveloperId !== developerId
       );
       this.storage.saveSimulation(sim);
       card?.remove();
       this.recomputeChart();
     });
 
-    document.getElementById("add-agent")?.addEventListener("click", () => {
+    document.getElementById("add-developer")?.addEventListener("click", () => {
       const sim = this.activeSimulation;
-      const usedColors = [...sim.agents.map((a) => a.color)];
-      const newAgent: AgentConfig = {
+      const usedColors = [...sim.developers.map((a) => a.color)];
+      const newDeveloper: DeveloperConfig = {
         id: generateId(),
-        name: "New Persona",
+        name: "New Developer",
         engineeringRigor: 0.5,
         color: getNextColor(usedColors),
       };
-      sim.agents.push(newAgent);
+      sim.developers.push(newDeveloper);
       this.storage.saveSimulation(sim);
       document
-        .getElementById("agent-list")
-        ?.insertAdjacentHTML("beforeend", buildAgentCard(newAgent));
+        .getElementById("developer-list")
+        ?.insertAdjacentHTML("beforeend", buildDeveloperCard(newDeveloper));
       this.recomputeChart();
     });
 
@@ -422,21 +425,23 @@ export class ProductHealthApp {
       if (field === "name") {
         handoff.name = (target as HTMLInputElement).value;
         this.scheduleChartUpdate();
-      } else if (field === "fromAgentId") {
-        handoff.fromAgentId = (target as HTMLSelectElement).value;
+      } else if (field === "fromDeveloperId") {
+        handoff.fromDeveloperId = (target as HTMLSelectElement).value;
         const icon = card?.querySelector(".handoff-color-icon") as HTMLElement;
-        if (icon) icon.setAttribute("data-from-agent-id", handoff.fromAgentId);
+        if (icon)
+          icon.setAttribute("data-from-developer-id", handoff.fromDeveloperId);
         this.updateHandoffIcons();
         this.scheduleChartUpdate();
-      } else if (field === "toAgentId") {
-        handoff.toAgentId = (target as HTMLSelectElement).value;
+      } else if (field === "toDeveloperId") {
+        handoff.toDeveloperId = (target as HTMLSelectElement).value;
         const icon = card?.querySelector(".handoff-color-icon") as HTMLElement;
-        if (icon) icon.setAttribute("data-to-agent-id", handoff.toAgentId);
+        if (icon)
+          icon.setAttribute("data-to-developer-id", handoff.toDeveloperId);
         this.updateHandoffIcons();
         this.scheduleChartUpdate();
       } else if (field === "atChange") {
         handoff.atChange = parseInt((target as HTMLInputElement).value, 10);
-        const label = card?.querySelector(".agent-rigor-label");
+        const label = card?.querySelector(".developer-rigor-label");
         if (label) label.textContent = `Handoff at: ${handoff.atChange}`;
         this.scheduleChartUpdate();
       }
@@ -468,15 +473,15 @@ export class ProductHealthApp {
 
     document.getElementById("add-handoff")?.addEventListener("click", () => {
       const sim = this.activeSimulation;
-      if (sim.agents.length < 2) {
-        alert("You need at least two personas to create a handoff.");
+      if (sim.developers.length < 2) {
+        alert("You need at least two developers to create a handoff.");
         return;
       }
       const newHandoff: HandoffConfig = {
         id: generateId(),
         name: "New Handoff",
-        fromAgentId: sim.agents[0].id,
-        toAgentId: sim.agents[1].id,
+        fromDeveloperId: sim.developers[0].id,
+        toDeveloperId: sim.developers[1].id,
         atChange: Math.round(sim.nChanges * 0.2),
       };
       sim.handoffs.push(newHandoff);
@@ -485,7 +490,7 @@ export class ProductHealthApp {
         .getElementById("handoff-list")
         ?.insertAdjacentHTML(
           "beforeend",
-          buildHandoffCard(newHandoff, sim.agents, sim.nChanges)
+          buildHandoffCard(newHandoff, sim.developers, sim.nChanges)
         );
       this.recomputeChart();
     });
@@ -497,7 +502,7 @@ export class ProductHealthApp {
       );
       if (defaultSim) {
         const idMap = new Map<string, string>();
-        const newAgents = defaultSim.agents.map((a) => {
+        const newDevelopers = defaultSim.developers.map((a) => {
           const newId = generateId();
           idMap.set(a.id, newId);
           return { ...a, id: newId };
@@ -505,11 +510,11 @@ export class ProductHealthApp {
         const newHandoffs = defaultSim.handoffs.map((h) => ({
           ...h,
           id: generateId(),
-          fromAgentId: idMap.get(h.fromAgentId) ?? h.fromAgentId,
-          toAgentId: idMap.get(h.toAgentId) ?? h.toAgentId,
+          fromDeveloperId: idMap.get(h.fromDeveloperId) ?? h.fromDeveloperId,
+          toDeveloperId: idMap.get(h.toDeveloperId) ?? h.toDeveloperId,
         }));
 
-        this.activeSimulation.agents = newAgents;
+        this.activeSimulation.developers = newDevelopers;
         this.activeSimulation.handoffs = newHandoffs;
         this.storage.saveSimulation(this.activeSimulation);
         this.render();
@@ -603,13 +608,13 @@ export class ProductHealthApp {
       ".handoff-color-icon"
     );
     handoffIcons.forEach((icon) => {
-      const fromId = icon.getAttribute("data-from-agent-id");
-      const toId = icon.getAttribute("data-to-agent-id");
-      const fromAgent = sim.agents.find((a) => a.id === fromId);
-      const toAgent = sim.agents.find((a) => a.id === toId);
-      if (fromAgent && toAgent) {
-        const fromColor = adjustColor(fromAgent.color, -20);
-        const toColor = adjustColor(toAgent.color, -20);
+      const fromId = icon.getAttribute("data-from-developer-id");
+      const toId = icon.getAttribute("data-to-developer-id");
+      const fromDeveloper = sim.developers.find((a) => a.id === fromId);
+      const toDeveloper = sim.developers.find((a) => a.id === toId);
+      if (fromDeveloper && toDeveloper) {
+        const fromColor = adjustColor(fromDeveloper.color, -20);
+        const toColor = adjustColor(toDeveloper.color, -20);
         icon.style.background = `linear-gradient(90deg, ${fromColor} 50%, ${toColor} 50%)`;
       }
     });
@@ -642,7 +647,7 @@ export class ProductHealthApp {
     setTimeout(() => {
       const sim = this.activeSimulation;
       const datasets = buildDatasetsForSimulation(
-        sim.agents,
+        sim.developers,
         sim.handoffs,
         { systemComplexity: sim.systemComplexity, nChanges: sim.nChanges },
         this.globalConfig.defaultVisibility

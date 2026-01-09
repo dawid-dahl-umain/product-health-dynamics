@@ -1,5 +1,5 @@
 import { ICON_DUPLICATE, ICON_EXPORT } from "./icons";
-import { buildAgentCard } from "./agentCard";
+import { buildDeveloperCard } from "./developerCard";
 import { buildHandoffCard } from "./handoffCard";
 import { CHANGES_OPTIONS } from "../types";
 import { getDefaultComplexityDescription } from "../defaults";
@@ -14,13 +14,13 @@ export const buildConfigPanel = ({
   simulation,
   settingsOpen,
 }: ConfigPanelProps): string => {
-  const agentCards = simulation.agents
-    .map((agent) => buildAgentCard(agent))
+  const developerCards = simulation.developers
+    .map((developer) => buildDeveloperCard(developer))
     .join("");
 
   const handoffCards = simulation.handoffs
     .map((handoff) =>
-      buildHandoffCard(handoff, simulation.agents, simulation.nChanges)
+      buildHandoffCard(handoff, simulation.developers, simulation.nChanges)
     )
     .join("");
 
@@ -74,13 +74,13 @@ export const buildConfigPanel = ({
         <div class="config-columns">
           <div class="config-section">
             <div class="config-section-header">
-              <span class="config-section-title">Personas</span>
+              <span class="config-section-title">Developers</span>
             </div>
-            <div class="agent-list" id="agent-list">
-              ${agentCards}
+            <div class="developer-list" id="developer-list">
+              ${developerCards}
             </div>
-            <div class="agent-actions">
-              <button class="btn-secondary" id="add-agent">+ Add Persona</button>
+            <div class="developer-actions">
+              <button class="btn-secondary" id="add-developer">+ Add Developer</button>
             </div>
           </div>
 
@@ -88,10 +88,10 @@ export const buildConfigPanel = ({
             <div class="config-section-header">
               <span class="config-section-title">Handoff Scenarios</span>
             </div>
-            <div class="agent-list" id="handoff-list">
+            <div class="developer-list" id="handoff-list">
               ${handoffCards}
             </div>
-            <div class="agent-actions">
+            <div class="developer-actions">
               <button class="btn-secondary" id="add-handoff">+ Add Handoff</button>
               <button class="btn-secondary" id="reset-defaults">Reset Defaults</button>
             </div>

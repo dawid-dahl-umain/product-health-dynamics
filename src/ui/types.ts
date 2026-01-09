@@ -1,7 +1,7 @@
-import { AGENT_PALETTE } from "./chart/colors";
+import { DEVELOPER_PALETTE } from "./chart/colors";
 
 export type {
-  AgentConfig,
+  DeveloperConfig,
   Simulation,
   GlobalConfig,
   AppData,
@@ -16,4 +16,4 @@ export type UIState = {
 
 export const CHANGES_OPTIONS = [250, 500, 1000, 2000] as const;
 
-export const AGENT_COLORS = AGENT_PALETTE;
+export const DEVELOPER_COLORS = DEVELOPER_PALETTE;
