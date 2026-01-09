@@ -18,11 +18,14 @@ const createTestAppData = (): AppData => ({
       handoffs: [],
       systemComplexity: 0.5,
       nChanges: 500,
+      startingHealth: 8,
     },
   ],
   globalConfig: {
     defaultVisibility: "all",
     activeSimulationId: "sim-1",
+    shapeScaleAnnotationPosition: 0,
+    shapeScaleAnnotationLabel: "Shape → Scale",
   },
 });
 
@@ -79,11 +82,14 @@ describe("LocalStorageAdapter", () => {
             handoffs: [],
             systemComplexity: 1.0,
             nChanges: 1000,
+            startingHealth: 8,
           },
         ],
         globalConfig: {
           defaultVisibility: "averages-only",
           activeSimulationId: "stored-sim",
+          shapeScaleAnnotationPosition: 0,
+          shapeScaleAnnotationLabel: "Shape → Scale",
         },
       };
       mockStorage.getItem.mockReturnValue(JSON.stringify(storedData));
@@ -148,6 +154,7 @@ describe("LocalStorageAdapter", () => {
         handoffs: [],
         systemComplexity: 0.75,
         nChanges: 2000,
+        startingHealth: 8,
       };
 
       // When
@@ -171,6 +178,7 @@ describe("LocalStorageAdapter", () => {
         handoffs: [],
         systemComplexity: 0.3,
         nChanges: 500,
+        startingHealth: 8,
       };
 
       // When
@@ -206,6 +214,7 @@ describe("LocalStorageAdapter", () => {
             handoffs: [],
             systemComplexity: 0.25,
             nChanges: 500,
+            startingHealth: 8,
           },
           {
             id: "sim-2",
@@ -214,11 +223,14 @@ describe("LocalStorageAdapter", () => {
             handoffs: [],
             systemComplexity: 0.5,
             nChanges: 500,
+            startingHealth: 8,
           },
         ],
         globalConfig: {
           defaultVisibility: "all",
           activeSimulationId: "sim-1",
+          shapeScaleAnnotationPosition: 0,
+          shapeScaleAnnotationLabel: "Shape → Scale",
         },
       });
       const adapter = new LocalStorageAdapter(dataWithTwo);
@@ -252,6 +264,8 @@ describe("LocalStorageAdapter", () => {
       const newConfig: GlobalConfig = {
         defaultVisibility: "averages-only",
         activeSimulationId: "sim-1",
+        shapeScaleAnnotationPosition: 0,
+        shapeScaleAnnotationLabel: "Shape → Scale",
       };
 
       // When
@@ -273,6 +287,7 @@ describe("LocalStorageAdapter", () => {
         handoffs: [],
         systemComplexity: 1.0,
         nChanges: 1000,
+        startingHealth: 8,
       });
 
       // When
@@ -314,11 +329,14 @@ describe("LocalStorageAdapter", () => {
             handoffs: [],
             systemComplexity: 1.5,
             nChanges: 2000,
+            startingHealth: 8,
           },
         ],
         globalConfig: {
           defaultVisibility: "averages-only",
           activeSimulationId: "imported-sim",
+          shapeScaleAnnotationPosition: 0,
+          shapeScaleAnnotationLabel: "Shape → Scale",
         },
       };
 

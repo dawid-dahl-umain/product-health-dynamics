@@ -61,6 +61,7 @@ const createLegendIcon = (
 type SimulationOptions = {
   systemComplexity: number;
   nChanges: number;
+  startingHealth: number;
   nSimulations?: number;
 };
 
@@ -70,7 +71,12 @@ const runDeveloperSimulation = (
   developer: DeveloperConfig,
   options: SimulationOptions
 ) => {
-  const { systemComplexity, nChanges, nSimulations = 200 } = options;
+  const {
+    systemComplexity,
+    nChanges,
+    startingHealth,
+    nSimulations = 200,
+  } = options;
   const simulator = new TrajectorySimulator();
 
   const runs = Array.from({ length: nSimulations }, () =>
@@ -78,7 +84,7 @@ const runDeveloperSimulation = (
       engineeringRigor: developer.engineeringRigor,
       systemComplexity,
       nChanges,
-      startValue: 8,
+      startValue: startingHealth,
     })
   );
   return summarizeRuns(runs);
@@ -89,7 +95,12 @@ const runHandoffSimulation = (
   developerLookup: DeveloperLookup,
   options: SimulationOptions
 ) => {
-  const { systemComplexity, nChanges, nSimulations = 200 } = options;
+  const {
+    systemComplexity,
+    nChanges,
+    startingHealth,
+    nSimulations = 200,
+  } = options;
   const simulator = new TrajectorySimulator();
 
   const fromDeveloper = developerLookup.get(handoff.fromDeveloperId);
@@ -117,7 +128,7 @@ const runHandoffSimulation = (
           nChanges: recoveryChanges,
         },
       ],
-      8,
+      startingHealth,
       systemComplexity
     )
   );

@@ -28,8 +28,18 @@ export const buildSimulationTabs = ({
     })
     .join("");
 
+  const mobileOptions = simulations
+    .map(
+      (sim) =>
+        `<option value="${sim.id}" ${sim.id === activeSimulationId ? "selected" : ""}>${sim.name}</option>`
+    )
+    .join("");
+
   return `
     <div class="sim-tabs-container">
+      <select class="sim-tabs-mobile" id="sim-tabs-mobile">
+        ${mobileOptions}
+      </select>
       <div class="sim-tabs" id="sim-tabs">${tabs}</div>
       <button class="sim-tab-add" id="add-simulation" title="New Simulation">${ICON_PLUS}</button>
     </div>

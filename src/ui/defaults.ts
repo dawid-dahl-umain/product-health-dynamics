@@ -61,6 +61,7 @@ export const createDefaultSimulations = (): Simulation[] => [
     systemComplexity: 0.25,
     complexityDescription: "Blog, landing page, basic CMS",
     nChanges: 1000,
+    startingHealth: 8,
   },
   {
     id: "medium",
@@ -70,6 +71,7 @@ export const createDefaultSimulations = (): Simulation[] => [
     systemComplexity: 0.5,
     complexityDescription: "CRUD backend with auth, moderate business logic",
     nChanges: 1000,
+    startingHealth: 8,
   },
   {
     id: "enterprise",
@@ -79,12 +81,15 @@ export const createDefaultSimulations = (): Simulation[] => [
     systemComplexity: 1.0,
     complexityDescription: "Complex architecture, many integrations",
     nChanges: 1000,
+    startingHealth: 8,
   },
 ];
 
 export const createDefaultGlobalConfig = (): GlobalConfig => ({
   defaultVisibility: "all",
   activeSimulationId: "enterprise",
+  shapeScaleAnnotationPosition: 0,
+  shapeScaleAnnotationLabel: "Shape → Scale",
 });
 
 export const createDefaultAppData = (): AppData => ({

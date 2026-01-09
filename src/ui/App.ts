@@ -111,6 +111,7 @@ export class ProductHealthApp {
       ${buildGlobalSettingsModal({
         isVisible: this.uiState.globalSettingsOpen,
         globalConfig: this.globalConfig,
+        nChanges: this.activeSimulation.nChanges,
       })}
     `;
   }
@@ -148,6 +149,18 @@ export class ProductHealthApp {
   }
 
   private bindSimulationTabEvents(): void {
+    document
+      .getElementById("sim-tabs-mobile")
+      ?.addEventListener("change", (e) => {
+        const simId = (e.target as HTMLSelectElement).value;
+        if (simId && simId !== this.globalConfig.activeSimulationId) {
+          this.globalConfig.activeSimulationId = simId;
+          this.storage.saveGlobalConfig(this.globalConfig);
+          this.render();
+          this.recomputeChart();
+        }
+      });
+
     document.getElementById("sim-tabs")?.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
       const closeBtn = target.closest("[data-action='close-sim']");
@@ -218,6 +231,7 @@ export class ProductHealthApp {
         handoffs: [],
         systemComplexity: 0.5,
         nChanges: 1000,
+        startingHealth: 8,
       };
       this.simulations.push(newSim);
       this.storage.saveSimulation(newSim);
@@ -256,6 +270,15 @@ export class ProductHealthApp {
           this.storage.saveSimulation(sim);
           this.recomputeChart();
         }
+      });
+
+    document
+      .getElementById("starting-health-slider")
+      ?.addEventListener("input", (e) => {
+        const value = parseInt((e.target as HTMLInputElement).value, 10);
+        const valueDisplay = document.getElementById("starting-health-value");
+        if (valueDisplay) valueDisplay.textContent = String(value);
+        this.scheduleStartingHealthUpdate(value);
       });
 
     document.getElementById("duplicate-sim")?.addEventListener("click", () => {
@@ -328,6 +351,16 @@ export class ProductHealthApp {
       sim.complexityDescription = value || undefined;
       this.storage.saveSimulation(sim);
       this.updateComplexityDisplay();
+    }, 300);
+  }
+
+  private scheduleStartingHealthUpdate(value: number): void {
+    if (this.updateDebounceTimer) clearTimeout(this.updateDebounceTimer);
+    this.updateDebounceTimer = setTimeout(() => {
+      const sim = this.activeSimulation;
+      sim.startingHealth = value;
+      this.storage.saveSimulation(sim);
+      this.recomputeChart();
     }, 300);
   }
 
@@ -516,6 +549,7 @@ export class ProductHealthApp {
 
         this.activeSimulation.developers = newDevelopers;
         this.activeSimulation.handoffs = newHandoffs;
+        this.activeSimulation.startingHealth = defaultSim.startingHealth;
         this.storage.saveSimulation(this.activeSimulation);
         this.render();
         this.recomputeChart();
@@ -543,6 +577,32 @@ export class ProductHealthApp {
       });
       this.chart.update();
     });
+
+    document
+      .getElementById("toggle-developers")
+      ?.addEventListener("click", () => {
+        if (!this.chart) return;
+        const sim = this.activeSimulation;
+        const developerCount = sim.developers.length * 3;
+        this.chart.data.datasets.forEach((_, i) => {
+          const isDeveloper = i < developerCount;
+          this.chart!.getDatasetMeta(i).hidden = !isDeveloper;
+        });
+        this.chart.update();
+      });
+
+    document
+      .getElementById("toggle-handoffs")
+      ?.addEventListener("click", () => {
+        if (!this.chart) return;
+        const sim = this.activeSimulation;
+        const developerCount = sim.developers.length * 3;
+        this.chart.data.datasets.forEach((_, i) => {
+          const isDeveloper = i < developerCount;
+          this.chart!.getDatasetMeta(i).hidden = isDeveloper;
+        });
+        this.chart.update();
+      });
   }
 
   private bindGlobalSettingsEvents(): void {
@@ -567,6 +627,22 @@ export class ProductHealthApp {
         this.recomputeChart();
       });
 
+    document
+      .getElementById("shape-scale-slider")
+      ?.addEventListener("input", (e) => {
+        const value = parseInt((e.target as HTMLInputElement).value, 10);
+        const valueDisplay = document.getElementById("shape-scale-value");
+        if (valueDisplay) valueDisplay.textContent = String(value);
+        this.scheduleAnnotationPositionUpdate(value);
+      });
+
+    document
+      .getElementById("annotation-label-input")
+      ?.addEventListener("input", (e) => {
+        const label = (e.target as HTMLInputElement).value;
+        this.scheduleAnnotationLabelUpdate(label);
+      });
+
     document.getElementById("reset-all-data")?.addEventListener("click", () => {
       if (
         confirm(
@@ -581,6 +657,39 @@ export class ProductHealthApp {
         this.recomputeChart();
       }
     });
+  }
+
+  private scheduleAnnotationPositionUpdate(value: number): void {
+    if (this.updateDebounceTimer) clearTimeout(this.updateDebounceTimer);
+    this.updateDebounceTimer = setTimeout(() => {
+      this.globalConfig.shapeScaleAnnotationPosition = value;
+      this.storage.saveGlobalConfig(this.globalConfig);
+      this.updateChartAnnotation();
+    }, 100);
+  }
+
+  private scheduleAnnotationLabelUpdate(label: string): void {
+    if (this.updateDebounceTimer) clearTimeout(this.updateDebounceTimer);
+    this.updateDebounceTimer = setTimeout(() => {
+      this.globalConfig.shapeScaleAnnotationLabel = label;
+      this.storage.saveGlobalConfig(this.globalConfig);
+      this.updateChartAnnotation();
+    }, 100);
+  }
+
+  private updateChartAnnotation(): void {
+    if (!this.chart) return;
+    const annotation = (this.chart.options.plugins?.annotation as any)
+      ?.annotations?.shapeScale;
+    if (annotation) {
+      const position = this.globalConfig.shapeScaleAnnotationPosition ?? 0;
+      const label =
+        this.globalConfig.shapeScaleAnnotationLabel ?? "Shape → Scale";
+      annotation.xMin = position;
+      annotation.xMax = position;
+      annotation.label.content = label;
+      this.chart.update();
+    }
   }
 
   private closeGlobalSettings(): void {
@@ -649,7 +758,11 @@ export class ProductHealthApp {
       const datasets = buildDatasetsForSimulation(
         sim.developers,
         sim.handoffs,
-        { systemComplexity: sim.systemComplexity, nChanges: sim.nChanges },
+        {
+          systemComplexity: sim.systemComplexity,
+          nChanges: sim.nChanges,
+          startingHealth: sim.startingHealth ?? 8,
+        },
         this.globalConfig.defaultVisibility
       );
 
@@ -666,6 +779,8 @@ export class ProductHealthApp {
         data: { datasets },
         options: chartOptions,
       });
+
+      this.updateChartAnnotation();
     }, 10);
   }
 }

@@ -17,12 +17,7 @@ export class LocalStorageAdapter implements StorageService {
     if (!stored) return this.defaultDataFactory();
 
     try {
-      const data = JSON.parse(stored) as AppData;
-      // Basic validation: if the first simulation is missing developers, it's old data
-      if (data.simulations?.[0] && !data.simulations[0].developers) {
-        return this.defaultDataFactory();
-      }
-      return data;
+      return JSON.parse(stored) as AppData;
     } catch {
       return this.defaultDataFactory();
     }

@@ -135,6 +135,32 @@ h2 {
   margin-bottom: 16px;
   overflow-x: auto;
   padding-bottom: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.sim-tabs-container::-webkit-scrollbar {
+  height: 4px;
+}
+
+.sim-tabs-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sim-tabs-container::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+.sim-tabs-container::-webkit-scrollbar-thumb:hover {
+  background: var(--border-focus);
+}
+
+/* Mobile dropdown - hidden by default on desktop */
+.sim-tabs-mobile {
+  display: none;
+  flex: 1;
+  min-width: 0;
 }
 
 .sim-tabs {
@@ -276,9 +302,34 @@ h2 {
 
 .config-top-row {
   display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.config-second-row {
+  display: flex;
   gap: 16px;
   align-items: center;
   flex-wrap: wrap;
+}
+
+.config-row-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.config-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.config-hint {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  opacity: 0.7;
 }
 
 .config-columns {
@@ -312,16 +363,17 @@ h2 {
   letter-spacing: 0.05em;
 }
 
-.config-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.config-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 8px 0;
+  opacity: 0.5;
 }
 
 .config-label {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
-  min-width: 80px;
+  white-space: nowrap;
 }
 
 #complexity-slider {
@@ -358,20 +410,51 @@ h2 {
   cursor: pointer;
 }
 
-.complexity-value {
+.complexity-value,
+.starting-health-value {
   font-size: 0.85rem;
   font-weight: 500;
   color: var(--text);
   min-width: 40px;
 }
 
-.config-row-description {
-  flex: 1;
-  min-width: 200px;
+#starting-health-slider {
+  width: 120px;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+#starting-health-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+#starting-health-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+#starting-health-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
 }
 
 .complexity-description-input {
-  width: 100%;
+  flex: 1;
+  min-width: 200px;
   padding: 6px 10px;
   background: var(--bg-input);
   border: 1px solid var(--border);
@@ -490,6 +573,7 @@ select:focus {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding-right: 8px;
 }
 
 .developer-name-input {
@@ -514,7 +598,8 @@ select:focus {
 .developer-rigor-label {
   font-size: 0.75rem;
   color: var(--text-dim);
-  min-width: 50px;
+  min-width: 100px;
+  white-space: nowrap;
 }
 
 .developer-rigor input[type="range"] {
@@ -525,6 +610,7 @@ select:focus {
   background: var(--border);
   border-radius: 2px;
   cursor: pointer;
+  min-width: 0;
 }
 
 .developer-rigor input[type="range"]::-webkit-slider-thumb {
@@ -824,6 +910,91 @@ button:hover {
   font-size: 0.9rem;
 }
 
+.modal-row-vertical {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.modal-row-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.modal-hint {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.modal-row-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-text-input {
+  padding: 8px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.modal-text-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.modal-row-slider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-slider-label {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+#shape-scale-slider {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+#shape-scale-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+#shape-scale-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+}
+
+.shape-scale-value {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+  min-width: 40px;
+}
+
 .modal-divider {
   border: none;
   border-top: 1px solid var(--border);
@@ -1036,7 +1207,11 @@ button:hover {
 /* Responsive */
 @media (max-width: 640px) {
   main {
-    padding: 24px 16px 60px;
+    padding: 20px 12px 60px;
+  }
+
+  h1 {
+    font-size: 1.35rem;
   }
 
   .header {
@@ -1050,8 +1225,71 @@ button:hover {
     justify-content: flex-end;
   }
 
+  /* Simulation Tabs - Mobile: Show dropdown, hide tabs */
   .sim-tabs-container {
     margin-bottom: 12px;
+    overflow: visible;
+  }
+
+  .sim-tabs-mobile {
+    display: block;
+  }
+
+  .sim-tabs {
+    display: none;
+  }
+
+  .sim-tab-add {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Config Panel - Mobile */
+  .config-panel {
+    padding: 16px;
+  }
+
+  .config-top-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .config-second-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .config-row-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .config-row-inline input[type="range"] {
+    flex: 1;
+  }
+
+  #complexity-slider {
+    width: 100%;
+    flex: 1;
+  }
+
+  .complexity-description-input {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .sim-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  /* Developer Cards - Mobile */
+  .developer-list {
+    grid-template-columns: 1fr;
   }
 
   .developer-card {
@@ -1059,10 +1297,130 @@ button:hover {
   }
 
   .developer-main {
-    width: calc(100% - 60px);
+    width: calc(100% - 50px);
+    min-width: 0;
+  }
+
+  .developer-rigor {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .developer-rigor-label {
+    min-width: 100%;
+    font-size: 0.7rem;
+  }
+
+  .developer-rigor input[type="range"] {
+    width: 100%;
+  }
+
+  /* Handoff Cards - Mobile */
+  .handoff-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .handoff-select {
+    flex: 1 1 40%;
+    min-width: 0;
+    font-size: 0.7rem;
+    padding: 6px;
+  }
+
+  .handoff-arrow {
+    flex: 0 0 auto;
+    font-size: 0.8rem;
+  }
+
+  /* Chart Container - Mobile */
+  #chart-container {
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  canvas {
+    height: 320px;
+  }
+
+  .loading {
+    height: 320px;
+  }
+
+  /* Controls - Mobile */
+  .controls {
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .controls button {
+    padding: 8px 12px;
+    font-size: 0.75rem;
   }
 
   .hint {
     display: none;
+  }
+
+  /* Modal - Mobile */
+  .modal {
+    margin: 12px;
+    max-width: calc(100% - 24px);
+  }
+
+  .modal-header {
+    padding: 12px 16px;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  /* Complexity Description - Mobile */
+  .complexity-description {
+    font-size: 0.8rem;
+    margin-bottom: 12px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 380px) {
+  main {
+    padding: 16px 10px 50px;
+  }
+
+  h1 {
+    font-size: 1.2rem;
+  }
+
+  .sim-tab {
+    padding: 5px 8px;
+    font-size: 0.75rem;
+  }
+
+  .settings-toggle {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+
+  .settings-toggle svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .developer-card {
+    padding: 10px 12px;
+  }
+
+  .developer-name-input {
+    font-size: 0.85rem;
+  }
+
+  canvas {
+    height: 280px;
+  }
+
+  .loading {
+    height: 280px;
   }
 }
