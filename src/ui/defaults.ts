@@ -90,7 +90,7 @@ export const createDefaultGlobalConfig = (): GlobalConfig => ({
   activeSimulationId: "enterprise",
   shapeScaleAnnotationPosition: 0,
   shapeScaleAnnotationLabel: "Shape → Scale",
-  simulationRuns: 200,
+  simulationRuns: 100,
 });
 
 export const createDefaultAppData = (): AppData => ({

@@ -15,7 +15,7 @@ export const buildGlobalSettingsModal = ({
   const visibilityAll = globalConfig.defaultVisibility === "all";
   const annotationPosition = globalConfig.shapeScaleAnnotationPosition ?? 0;
   const annotationLabel = globalConfig.shapeScaleAnnotationLabel ?? "Shape → Scale";
-  const simulationRuns = globalConfig.simulationRuns ?? 200;
+  const simulationRuns = globalConfig.simulationRuns ?? 100;
 
   return `
     <div class="modal-overlay ${isVisible ? "visible" : ""}" id="global-modal-overlay">

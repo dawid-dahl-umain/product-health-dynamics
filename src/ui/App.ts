@@ -836,7 +836,7 @@ export class ProductHealthApp {
           systemComplexity: sim.systemComplexity,
           nChanges: sim.nChanges,
           startingHealth: sim.startingHealth ?? 8,
-          nSimulations: this.globalConfig.simulationRuns ?? 200,
+          nSimulations: this.globalConfig.simulationRuns ?? 100,
         },
         this.globalConfig.defaultVisibility
       );
