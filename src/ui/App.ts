@@ -970,7 +970,7 @@ export class ProductHealthApp {
   }
 
   private setMermaidZoom(level: number): void {
-    this.mermaidZoom = Math.max(50, Math.min(200, level));
+    this.mermaidZoom = Math.max(50, Math.min(400, level));
 
     const inner = document.getElementById("mermaid-inner");
     const levelDisplay = document.getElementById("mermaid-zoom-level");

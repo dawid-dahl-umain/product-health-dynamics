@@ -329,7 +329,7 @@ The visualization shows trajectories starting at PH=8, representing the end of t
 - **Elite (ER=0.95):** Barely positive; struggles to maintain PH~6
 - **Perfect (ER=1.0):** Thrives, reaching PH~9
 
-![Product Health Trajectories](./assets/Screenshot%202026-01-05%20at%2014.02.48.png)
+![Product Health Trajectories](./assets/chart-values.webp)
 
 > Shaded bands are **confidence bands**: 80% of runs land within them. The solid line is the average.
 

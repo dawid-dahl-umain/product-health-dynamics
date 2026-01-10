@@ -8,15 +8,15 @@ type HelpGuideModalProps = {
 const GITHUB_REPO_URL =
   "https://github.com/dawid-dahl-umain/product-health-dynamics";
 
-const MODEL_DIAGRAM = `flowchart LR
+const MODEL_DIAGRAM = `flowchart TB
     subgraph inputs ["INPUTS (you choose)"]
-        direction TB
+        direction LR
         ER["<b>Engineering Rigor</b><br/>How disciplined is the developer?<br/><i>0 = vibe coding, 1 = senior engineer</i>"]
         SC["<b>System Complexity</b><br/>How complex is the system?<br/><i>0.25 = blog, 0.85 = enterprise</i>"]
     end
 
     subgraph derived ["DERIVED"]
-        direction TB
+        direction LR
         BI["<b>Base Impact</b><br/>Does each change<br/>help or hurt on average?"]
         BS["<b>Base Sigma</b><br/>How predictable<br/>are the outcomes?"]
         MH["<b>Max Product Health</b><br/>Best sustainable<br/>quality level"]

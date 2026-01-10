@@ -2269,15 +2269,18 @@ button:hover {
 .mermaid-inner {
   transform-origin: top left;
   transition: transform 0.15s ease;
+  width: fit-content;
+  height: fit-content;
 }
 
 .mermaid-container .mermaid {
-  min-width: 800px;
+  width: auto;
 }
 
 .mermaid-container svg {
   max-width: none;
   height: auto;
+  display: block;
 }
 
 /* Mobile: Make help guide fullscreen */
