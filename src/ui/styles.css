@@ -1863,7 +1863,7 @@ button:hover {
 
 /* Insight Guide Modal */
 .insight-guide-modal {
-  max-width: 380px;
+  max-width: 30em;
 }
 
 .insight-guide-modal .modal-body {
