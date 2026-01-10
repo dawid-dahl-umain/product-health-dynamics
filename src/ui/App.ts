@@ -3,6 +3,7 @@ import { Filler } from "chart.js";
 import annotationPlugin from "chartjs-plugin-annotation";
 import zoomPlugin from "chartjs-plugin-zoom";
 import "hammerjs";
+import mermaid from "mermaid";
 
 import {
   chartOptions,
@@ -77,6 +78,21 @@ export class ProductHealthApp {
     this.storage = new LocalStorageAdapter(createDefaultAppData);
     this.simulations = this.storage.getSimulations();
     this.globalConfig = this.storage.getGlobalConfig();
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "dark",
+      themeVariables: {
+        darkMode: true,
+        background: "#0f172a",
+        primaryColor: "#1e40af",
+        primaryTextColor: "#fff",
+        primaryBorderColor: "#60a5fa",
+        lineColor: "#94a3b8",
+        secondaryColor: "#9a3412",
+        tertiaryColor: "#166534",
+      },
+    });
 
     setChartClickHandler((developerName, changeNumber, healthValue) => {
       this.openPHInsightModal(developerName, changeNumber, healthValue);
@@ -874,6 +890,10 @@ export class ProductHealthApp {
 
         target.classList.add("active");
         document.getElementById(`tab-${tabId}`)?.classList.add("active");
+
+        if (tabId === "model") {
+          this.renderMermaidDiagram();
+        }
       });
     });
 
@@ -894,6 +914,48 @@ export class ProductHealthApp {
     document
       .getElementById("help-guide-modal-overlay")
       ?.classList.remove("visible");
+  }
+
+  private mermaidRendered = false;
+  private mermaidZoom = 100;
+
+  private async renderMermaidDiagram(): Promise<void> {
+    if (this.mermaidRendered) return;
+
+    const container = document.querySelector(".mermaid-container .mermaid");
+    if (!container) return;
+
+    await mermaid.run({ nodes: [container as HTMLElement] });
+    this.mermaidRendered = true;
+    this.bindMermaidZoomControls();
+  }
+
+  private bindMermaidZoomControls(): void {
+    const zoomIn = document.getElementById("mermaid-zoom-in");
+    const zoomOut = document.getElementById("mermaid-zoom-out");
+    const zoomReset = document.getElementById("mermaid-zoom-reset");
+
+    zoomIn?.addEventListener("click", () =>
+      this.setMermaidZoom(this.mermaidZoom + 25)
+    );
+    zoomOut?.addEventListener("click", () =>
+      this.setMermaidZoom(this.mermaidZoom - 25)
+    );
+    zoomReset?.addEventListener("click", () => this.setMermaidZoom(100));
+  }
+
+  private setMermaidZoom(level: number): void {
+    this.mermaidZoom = Math.max(50, Math.min(200, level));
+
+    const inner = document.getElementById("mermaid-inner");
+    const levelDisplay = document.getElementById("mermaid-zoom-level");
+
+    if (inner) {
+      inner.style.transform = `scale(${this.mermaidZoom / 100})`;
+    }
+    if (levelDisplay) {
+      levelDisplay.textContent = `${this.mermaidZoom}%`;
+    }
   }
 
   private scheduleAnnotationPositionUpdate(value: number): void {

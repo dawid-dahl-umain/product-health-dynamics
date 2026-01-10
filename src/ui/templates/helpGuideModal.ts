@@ -8,6 +8,72 @@ type HelpGuideModalProps = {
 const GITHUB_REPO_URL =
   "https://github.com/dawid-dahl-umain/product-health-dynamics";
 
+const MODEL_DIAGRAM = `flowchart LR
+    subgraph inputs ["INPUTS (you choose)"]
+        direction TB
+        ER["<b>Engineering Rigor</b><br/>How disciplined is the developer?<br/><i>0 = vibe coding, 1 = senior engineer</i>"]
+        SC["<b>System Complexity</b><br/>How complex is the system?<br/><i>0.25 = blog, 0.85 = enterprise</i>"]
+    end
+
+    subgraph derived ["DERIVED"]
+        direction TB
+        BI["<b>Base Impact</b><br/>Does each change<br/>help or hurt on average?"]
+        BS["<b>Base Sigma</b><br/>How predictable<br/>are the outcomes?"]
+        MH["<b>Max Product Health</b><br/>Best sustainable<br/>quality level"]
+    end
+
+    subgraph loop ["DEVELOPMENT CYCLE ⟳ (repeats each commit)"]
+        direction TB
+        PH["<b>Current Product Health</b><br/>How easy is the code<br/>to change right now?<br/><i>1 = nightmare, 10 = dream</i>"]
+
+        subgraph state ["System Dynamics"]
+            direction LR
+            TR["<b>Traction</b><br/>How well do<br/>improvements land?<br/><i>Low at bad PH, high at good PH</i>"]
+            FR["<b>Fragility</b><br/>How severely does<br/>damage cascade?<br/><i>High at bad PH, low at good PH</i>"]
+        end
+
+        CE(("<b>Change</b><br/><b>Event</b><br/>roll the dice"))
+        NPH["<b>New Product Health</b><br/>Better, worse,<br/>or same?"]
+
+        PH -->|"PH affects"| TR & FR
+        TR -->|"gates improvement"| CE
+        FR -->|"amplifies damage"| CE
+        CE -->|"produces"| NPH
+        NPH -.->|"becomes next"| PH
+    end
+
+    style state fill:none,stroke:#22d3ee,stroke-width:2px,stroke-dasharray: 5 5
+
+    AC["<b>Accumulated</b><br/><b>Complexity</b><br/>Grows with each change<br/><i>hard to outpace, even for seniors</i>"]
+    TC["<b>Time Cost</b><br/>How long does each<br/>change take?<br/><i>1x when healthy, 3x when degraded</i>"]
+
+    ER -->|"determines"| BI & BS & MH
+    SC -->|"harder to improve"| BI
+    SC -->|"amplifies"| FR
+    SC -->|"slows recovery"| TR
+    SC -->|"faster buildup"| AC
+    BI & BS & MH -->|"feed into"| CE
+    AC -->|"drags down"| CE
+    PH -->|"determines"| TC
+
+    style inputs fill:none,stroke:#4ade80,stroke-width:2px
+    style derived fill:none,stroke:#fb923c,stroke-width:2px
+    style loop fill:none,stroke:#60a5fa,stroke-width:2px
+
+    classDef inputNode fill:#166534,stroke:#4ade80,color:#fff
+    classDef derivedNode fill:#9a3412,stroke:#fb923c,color:#fff
+    classDef loopNode fill:#1e40af,stroke:#60a5fa,color:#fff
+    classDef stateNode fill:#0e7490,stroke:#22d3ee,color:#fff
+    classDef timeNode fill:#581c87,stroke:#a855f7,color:#fff
+    classDef eventNode fill:#0f172a,stroke:#60a5fa,color:#fff
+
+    class ER,SC inputNode
+    class BI,BS,MH derivedNode
+    class PH,NPH loopNode
+    class TR,FR stateNode
+    class CE eventNode
+    class AC,TC timeNode`;
+
 const buildQuickStartTab = (): string => `
   <div class="help-section">
     <h3>What is this?</h3>
@@ -45,9 +111,26 @@ const buildGlossaryTab = (): string => `
         <dt>Product Health (PH)</dt>
         <dd>A quality score from 1-10. At 10, changes are easy. At 1, every change is a battle.</dd>
       </div>
-      <div class="glossary-item">
+      <div class="glossary-item glossary-item-expanded">
         <dt>Engineering Rigor (ER)</dt>
-        <dd>How carefully changes are made. High rigor = tests, reviews, planning. Low rigor = quick fixes and hoping for the best.</dd>
+        <dd>
+          How well complexity is managed.
+          <ul class="glossary-inline-list">
+            <li><strong>High rigor:</strong> modular design, clean abstractions, loose coupling, sophisticated test strategies</li>
+            <li><strong>Low rigor:</strong> quick fixes that create tangled dependencies</li>
+          </ul>
+          <div class="glossary-detail">
+            <p>Simple code keeps concerns separate; you can reason about each part on its own. 
+            Tangled code forces you to understand everything to change anything.</p>
+            <ul>
+              <li><strong>Modularity</strong> – self-contained pieces that can be changed independently</li>
+              <li><strong>Abstraction</strong> – hiding complexity behind simple interfaces</li>
+              <li><strong>Cohesion</strong> – related things grouped together</li>
+              <li><strong>Separation of concerns</strong> – each part handles one responsibility</li>
+              <li><strong>Loose coupling</strong> – minimal dependencies between parts</li>
+            </ul>
+          </div>
+        </dd>
       </div>
       <div class="glossary-item">
         <dt>System Complexity (SC)</dt>
@@ -122,6 +205,35 @@ const buildCustomerImpactTab = (): string => {
   `;
 };
 
+const buildModelTab = (): string => `
+  <div class="help-section model-section">
+    <h3>How the Simulation Works</h3>
+    <p>
+      For those curious about the mechanics. This diagram shows how your inputs 
+      flow through the model to produce the charts you see.
+    </p>
+    
+    <div class="mermaid-zoom-controls">
+      <button class="zoom-btn" id="mermaid-zoom-out" title="Zoom out">−</button>
+      <span class="zoom-level" id="mermaid-zoom-level">100%</span>
+      <button class="zoom-btn" id="mermaid-zoom-in" title="Zoom in">+</button>
+      <button class="zoom-btn zoom-reset" id="mermaid-zoom-reset" title="Reset zoom">Reset</button>
+    </div>
+    
+    <div class="mermaid-container" id="mermaid-container">
+      <div class="mermaid-inner" id="mermaid-inner">
+        <pre class="mermaid">${MODEL_DIAGRAM}</pre>
+      </div>
+    </div>
+
+    <div class="help-tip">
+      <strong>Reading the diagram:</strong> Green boxes are your inputs, orange are 
+      calculated from inputs, blue is the main simulation loop that runs for each 
+      code change.
+    </div>
+  </div>
+`;
+
 export const buildHelpGuideModal = ({
   isVisible,
 }: HelpGuideModalProps): string => {
@@ -139,6 +251,7 @@ export const buildHelpGuideModal = ({
           <button class="help-tab active" data-tab="quick-start">Quick Start</button>
           <button class="help-tab" data-tab="glossary">Glossary</button>
           <button class="help-tab" data-tab="customer-impact">Customer Impact</button>
+          <button class="help-tab" data-tab="model">Model</button>
         </div>
 
         <div class="help-tab-content">
@@ -151,9 +264,11 @@ export const buildHelpGuideModal = ({
           <div class="help-tab-panel" id="tab-customer-impact">
             ${buildCustomerImpactTab()}
           </div>
+          <div class="help-tab-panel" id="tab-model">
+            ${buildModelTab()}
+          </div>
         </div>
       </div>
     </div>
   `;
 };
-
