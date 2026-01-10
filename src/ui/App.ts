@@ -28,6 +28,7 @@ import {
   buildComplexityDescription,
   buildGlobalSettingsModal,
   buildPHInsightModal,
+  buildInsightGuideModal,
   getComplexityLevel,
 } from "./templates";
 import type {
@@ -43,6 +44,7 @@ Chart.register(annotationPlugin, zoomPlugin, Filler);
 type UIState = {
   settingsOpen: boolean;
   globalSettingsOpen: boolean;
+  insightGuideOpen: boolean;
   editingTabId: string | null;
   phInsight: {
     visible: boolean;
@@ -59,6 +61,7 @@ export class ProductHealthApp {
   private uiState: UIState = {
     settingsOpen: false,
     globalSettingsOpen: false,
+    insightGuideOpen: false,
     editingTabId: null,
     phInsight: null,
   };
@@ -136,6 +139,9 @@ export class ProductHealthApp {
         changeNumber: this.uiState.phInsight?.changeNumber ?? 0,
         healthValue: this.uiState.phInsight?.healthValue ?? 8,
       })}
+      ${buildInsightGuideModal({
+        isVisible: this.uiState.insightGuideOpen,
+      })}
     `;
   }
 
@@ -146,6 +152,7 @@ export class ProductHealthApp {
     this.bindDeveloperEvents();
     this.bindChartControls();
     this.bindGlobalSettingsEvents();
+    this.bindInsightGuideEvents();
   }
 
   private bindHeaderEvents(): void {
@@ -601,6 +608,7 @@ export class ProductHealthApp {
 
   private bindChartControls(): void {
     const resetZoom = () => this.chart?.resetZoom();
+    const resimulate = () => this.recomputeChart();
 
     const showAll = () => {
       if (!this.chart) return;
@@ -641,6 +649,9 @@ export class ProductHealthApp {
     };
 
     document.getElementById("reset-zoom")?.addEventListener("click", resetZoom);
+    document
+      .getElementById("resimulate")
+      ?.addEventListener("click", resimulate);
     document.getElementById("show-all")?.addEventListener("click", showAll);
     document.getElementById("clear-all")?.addEventListener("click", clearAll);
     document
@@ -654,8 +665,14 @@ export class ProductHealthApp {
       .getElementById("reset-zoom-mobile")
       ?.addEventListener("click", resetZoom);
     document
+      .getElementById("resimulate-mobile")
+      ?.addEventListener("click", resimulate);
+    document
       .getElementById("show-all-mobile")
-      ?.addEventListener("click", showAll);
+      ?.addEventListener("click", () => {
+        showAll();
+        this.closeMobileControlsDropdown();
+      });
     document
       .getElementById("clear-all-mobile")
       ?.addEventListener("click", () => {
@@ -815,6 +832,35 @@ export class ProductHealthApp {
         this.recomputeChart();
       }
     });
+  }
+
+  private bindInsightGuideEvents(): void {
+    document
+      .getElementById("open-insight-guide")
+      ?.addEventListener("click", () => {
+        this.uiState.insightGuideOpen = true;
+        document
+          .getElementById("insight-guide-modal-overlay")
+          ?.classList.add("visible");
+      });
+
+    document
+      .getElementById("close-insight-guide-modal")
+      ?.addEventListener("click", () => this.closeInsightGuide());
+
+    document
+      .getElementById("insight-guide-modal-overlay")
+      ?.addEventListener("click", (e) => {
+        if ((e.target as HTMLElement).id === "insight-guide-modal-overlay")
+          this.closeInsightGuide();
+      });
+  }
+
+  private closeInsightGuide(): void {
+    this.uiState.insightGuideOpen = false;
+    document
+      .getElementById("insight-guide-modal-overlay")
+      ?.classList.remove("visible");
   }
 
   private scheduleAnnotationPositionUpdate(value: number): void {

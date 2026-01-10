@@ -11,4 +11,5 @@ export {
   getComplexityLevel,
 } from "./chartControls";
 export { buildGlobalSettingsModal } from "./globalSettingsModal";
-export { buildPHInsightModal } from "./phInsightModal";
+export { buildPHInsightModal, buildPHInsightCard } from "./phInsightModal";
+export { buildInsightGuideModal } from "./insightGuideModal";

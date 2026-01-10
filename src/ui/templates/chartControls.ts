@@ -1,23 +1,31 @@
 export const buildChartControls = (): string => `
   <div class="controls">
     <div class="controls-desktop">
-      <button id="reset-zoom">Reset View</button>
-      <button id="show-all">Show All</button>
-      <button id="clear-all">Clear All</button>
-      <button id="toggle-developers" title="Show only developers">Devs Only</button>
-      <button id="toggle-handoffs" title="Show only handoffs">Handoffs Only</button>
+      <div class="control-group">
+        <button id="reset-zoom">Reset View</button>
+        <button id="resimulate">Resimulate</button>
+      </div>
+      <div class="control-divider"></div>
+      <div class="control-group">
+        <button id="show-all">Show All</button>
+        <button id="clear-all">Clear All</button>
+        <button id="toggle-developers" title="Show only developers">Devs Only</button>
+        <button id="toggle-handoffs" title="Show only handoffs">Handoffs Only</button>
+      </div>
     </div>
     <div class="controls-mobile">
       <button id="reset-zoom-mobile">Reset View</button>
-      <button id="show-all-mobile">Show All</button>
-      <button id="controls-more" class="controls-more-btn">More ▾</button>
+      <button id="resimulate-mobile">Resimulate</button>
+      <button id="controls-more" class="controls-more-btn">Filters ▾</button>
       <div class="controls-dropdown" id="controls-dropdown">
+        <div class="dropdown-header">Visibility Filters</div>
+        <button id="show-all-mobile">Show All</button>
         <button id="clear-all-mobile">Clear All</button>
         <button id="toggle-developers-mobile">Devs Only</button>
         <button id="toggle-handoffs-mobile">Handoffs Only</button>
       </div>
     </div>
-    <span class="hint">Click legend to toggle / Scroll to zoom / Drag to pan</span>
+    <span class="hint">Click chart for insights / Click legend to toggle / Scroll to zoom</span>
   </div>
 `;
 
@@ -57,11 +65,17 @@ export const buildComplexityDescription = ({
   const level = getComplexityLevel(systemComplexity);
   return `
     <div class="complexity-info">
-      <span class="complexity-badge" style="--badge-color: ${level.color}">
-        <span class="complexity-dot"></span>
-        ${level.label}
-      </span>
-      <span class="complexity-description">${description}</span>
+      <div class="complexity-main">
+        <span class="complexity-badge" style="--badge-color: ${level.color}">
+          <span class="complexity-dot"></span>
+          ${level.label}
+        </span>
+        <span class="complexity-description">${description}</span>
+      </div>
+      <button class="chart-tip" id="open-insight-guide" title="Learn about customer insights">
+        <span class="tip-icon">💡</span>
+        <span class="tip-text">Click chart to explore</span>
+      </button>
     </div>
   `;
 };

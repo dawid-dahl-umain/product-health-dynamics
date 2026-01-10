@@ -203,17 +203,83 @@ const getBottomLine = (health: number): string => {
   return "Urgent intervention required.";
 };
 
+type PHInsightCardProps = {
+  developerName: string;
+  changeNumber: number;
+  healthValue: number;
+  showSource?: boolean;
+};
+
+/**
+ * Reusable card content for displaying customer satisfaction insights.
+ * Used by both the actual modal and the guide preview.
+ */
+export const buildPHInsightCard = ({
+  developerName,
+  changeNumber,
+  healthValue,
+  showSource = true,
+}: PHInsightCardProps): string => {
+  const insight = getBusinessInsight(healthValue);
+  const barWidth = getHealthBarWidth(healthValue);
+  const bottomLine = getBottomLine(healthValue);
+  const displayValue = roundToOneDecimal(healthValue);
+
+  return `
+    <div class="ph-insight-context">
+      <span class="ph-insight-developer">${developerName}</span>
+      <span class="ph-insight-divider">·</span>
+      <span class="ph-insight-change">Change ${changeNumber}</span>
+    </div>
+    
+    <div class="ph-health-gauge">
+      <div class="ph-health-bar-bg">
+        <div class="ph-health-bar-fill" style="width: ${barWidth}%; background: ${
+    insight.gradient
+  }"></div>
+      </div>
+      <div class="ph-health-score">
+        <span class="ph-health-value" style="color: ${
+          insight.zoneColor
+        }">${displayValue.toFixed(1)}</span>
+        <span class="ph-health-max">/ 10</span>
+      </div>
+    </div>
+
+    <div class="ph-zone-badge" style="background: ${insight.zoneColor}">
+      <span class="ph-zone-emoji">${insight.zoneEmoji}</span>
+      ${insight.zone}
+    </div>
+    
+    <div class="ph-insight-details">
+      <div class="ph-insight-row">
+        <span class="ph-insight-label">Customer reality</span>
+        <span class="ph-insight-text">${insight.customerReality}</span>
+      </div>
+      <div class="ph-insight-row">
+        <span class="ph-insight-label">Business consequence</span>
+        <span class="ph-insight-text">${insight.businessConsequence}</span>
+      </div>
+    </div>
+
+    <p class="ph-bottom-line" style="color: ${
+      insight.zoneColor
+    }">${bottomLine}</p>
+    ${
+      showSource && insight.sourceNote
+        ? `<p class="ph-source-note">${insight.sourceNote}</p>`
+        : ""
+    }
+  `;
+};
+
 export const buildPHInsightModal = ({
   isVisible,
   developerName,
   changeNumber,
   healthValue,
 }: PHInsightModalProps): string => {
-  const insight = getBusinessInsight(healthValue);
   const confetti = getConfettiLevel(healthValue);
-  const barWidth = getHealthBarWidth(healthValue);
-  const bottomLine = getBottomLine(healthValue);
-  const displayValue = roundToOneDecimal(healthValue);
 
   return `
     <div class="modal-overlay ${
@@ -225,52 +291,7 @@ export const buildPHInsightModal = ({
           <button class="modal-close" id="close-ph-insight-modal">${ICON_CLOSE}</button>
         </div>
         <div class="modal-body">
-          <div class="ph-insight-context">
-            <span class="ph-insight-developer">${developerName}</span>
-            <span class="ph-insight-divider">·</span>
-            <span class="ph-insight-change">Change ${changeNumber}</span>
-          </div>
-          
-          <div class="ph-health-gauge">
-            <div class="ph-health-bar-bg">
-              <div class="ph-health-bar-fill" style="width: ${barWidth}%; background: ${
-    insight.gradient
-  }"></div>
-            </div>
-            <div class="ph-health-score">
-              <span class="ph-health-value" style="color: ${
-                insight.zoneColor
-              }">${displayValue.toFixed(1)}</span>
-              <span class="ph-health-max">/ 10</span>
-            </div>
-          </div>
-
-          <div class="ph-zone-badge" style="background: ${insight.zoneColor}">
-            <span class="ph-zone-emoji">${insight.zoneEmoji}</span>
-            ${insight.zone}
-          </div>
-          
-          <div class="ph-insight-details">
-            <div class="ph-insight-row">
-              <span class="ph-insight-label">Customer reality</span>
-              <span class="ph-insight-text">${insight.customerReality}</span>
-            </div>
-            <div class="ph-insight-row">
-              <span class="ph-insight-label">Business consequence</span>
-              <span class="ph-insight-text">${
-                insight.businessConsequence
-              }</span>
-            </div>
-          </div>
-
-          <p class="ph-bottom-line" style="color: ${
-            insight.zoneColor
-          }">${bottomLine}</p>
-          ${
-            insight.sourceNote
-              ? `<p class="ph-source-note">${insight.sourceNote}</p>`
-              : ""
-          }
+          ${buildPHInsightCard({ developerName, changeNumber, healthValue })}
         </div>
       </div>
     </div>
