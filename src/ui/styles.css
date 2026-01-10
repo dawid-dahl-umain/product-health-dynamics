@@ -1876,15 +1876,18 @@ button:hover {
   line-height: 1.6;
   margin-bottom: 20px;
   margin-top: 0px;
+  text-align: center;
 }
 
 .guide-popup-preview {
-  background: var(--bg-hover);
+  background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 16px;
   margin-bottom: 24px;
+  margin-inline: auto;
   text-align: center;
+  max-width: 360px;
+  overflow: hidden;
 }
 
 .guide-legend {
@@ -1919,6 +1922,7 @@ button:hover {
   padding-top: 16px;
   border-top: 1px solid var(--border);
   margin: 0;
+  text-align: center;
 }
 
 /* Confetti Animation */

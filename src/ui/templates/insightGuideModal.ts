@@ -1,5 +1,5 @@
 import { ICON_CLOSE } from "./icons";
-import { buildPHInsightCard } from "./phInsightModal";
+import { buildPHInsightModalContent } from "./phInsightModal";
 
 type InsightGuideModalProps = {
   isVisible: boolean;
@@ -8,11 +8,12 @@ type InsightGuideModalProps = {
 export const buildInsightGuideModal = ({
   isVisible,
 }: InsightGuideModalProps): string => {
-  const exampleCard = buildPHInsightCard({
-    developerName: "Senior Engineer",
-    changeNumber: 847,
-    healthValue: 7.2,
-    showSource: false,
+  const exampleCard = buildPHInsightModalContent({
+    developerName: "Senior Developer",
+    changeNumber: 677,
+    healthValue: 8.8,
+    showSource: true,
+    showClose: false,
   });
 
   return `
@@ -26,7 +27,7 @@ export const buildInsightGuideModal = ({
         </div>
         <div class="modal-body">
           <p class="guide-intro">
-            Product Health measures software quality. Click any point to see how it affects customers.
+            Product Health measures software quality. Click any point in the chart to see how it affects customers.
           </p>
 
           <div class="guide-popup-preview">

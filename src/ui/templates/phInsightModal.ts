@@ -273,6 +273,37 @@ export const buildPHInsightCard = ({
   `;
 };
 
+/**
+ * Builds the content of the insight modal (header + body).
+ * Shared between the actual modal and the guide preview.
+ */
+export const buildPHInsightModalContent = ({
+  developerName,
+  changeNumber,
+  healthValue,
+  showSource = true,
+  showClose = true,
+}: PHInsightCardProps & { showClose?: boolean }): string => {
+  return `
+    <div class="modal-header">
+      <h2>What Your Customers Feel</h2>
+      ${
+        showClose
+          ? `<button class="modal-close" id="close-ph-insight-modal">${ICON_CLOSE}</button>`
+          : ""
+      }
+    </div>
+    <div class="modal-body">
+      ${buildPHInsightCard({
+        developerName,
+        changeNumber,
+        healthValue,
+        showSource,
+      })}
+    </div>
+  `;
+};
+
 export const buildPHInsightModal = ({
   isVisible,
   developerName,
@@ -286,13 +317,11 @@ export const buildPHInsightModal = ({
       isVisible ? "visible" : ""
     }" id="ph-insight-modal-overlay" data-confetti="${confetti}">
       <div class="modal ph-insight-modal">
-        <div class="modal-header">
-          <h2>What Your Customers Feel</h2>
-          <button class="modal-close" id="close-ph-insight-modal">${ICON_CLOSE}</button>
-        </div>
-        <div class="modal-body">
-          ${buildPHInsightCard({ developerName, changeNumber, healthValue })}
-        </div>
+        ${buildPHInsightModalContent({
+          developerName,
+          changeNumber,
+          healthValue,
+        })}
       </div>
     </div>
   `;
