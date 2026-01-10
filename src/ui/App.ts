@@ -860,6 +860,21 @@ export class ProductHealthApp {
       });
 
     document
+      .getElementById("toggle-guide-preview")
+      ?.addEventListener("click", () => {
+        const toggle = document.getElementById("toggle-guide-preview");
+        const container = document.getElementById("guide-preview-container");
+        const isCollapsed = container?.classList.toggle("collapsed");
+        toggle?.classList.toggle("active", !isCollapsed);
+        const span = toggle?.querySelector("span");
+        if (span) {
+          span.textContent = isCollapsed
+            ? "Show Example Insight"
+            : "Hide Example";
+        }
+      });
+
+    document
       .getElementById("close-insight-guide-modal")
       ?.addEventListener("click", () => this.closeInsightGuide());
 

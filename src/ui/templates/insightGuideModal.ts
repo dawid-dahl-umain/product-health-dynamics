@@ -1,4 +1,4 @@
-import { ICON_CLOSE } from "./icons";
+import { ICON_CLOSE, ICON_CHEVRON_DOWN } from "./icons";
 import { buildPHInsightModalContent } from "./phInsightModal";
 
 type InsightGuideModalProps = {
@@ -22,7 +22,7 @@ export const buildInsightGuideModal = ({
     }" id="insight-guide-modal-overlay">
       <div class="modal insight-guide-modal">
         <div class="modal-header">
-          <h2>Click the Chart to Explore</h2>
+          <h2>💡 Click the Chart to Explore</h2>
           <button class="modal-close" id="close-insight-guide-modal">${ICON_CLOSE}</button>
         </div>
         <div class="modal-body">
@@ -30,8 +30,14 @@ export const buildInsightGuideModal = ({
             Product Health measures software quality. Click any point in the chart to see how it affects customers.
           </p>
 
-          <div class="guide-popup-preview">
-            ${exampleCard}
+          <div class="guide-preview-section">
+            <button class="guide-preview-toggle" id="toggle-guide-preview">
+              <span>Show Example Insight</span>
+              <span class="toggle-icon">${ICON_CHEVRON_DOWN}</span>
+            </button>
+            <div class="guide-popup-preview collapsed" id="guide-preview-container">
+              ${exampleCard}
+            </div>
           </div>
 
           <div class="guide-legend">
