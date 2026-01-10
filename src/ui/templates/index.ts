@@ -12,4 +12,4 @@ export {
 } from "./chartControls";
 export { buildGlobalSettingsModal } from "./globalSettingsModal";
 export { buildPHInsightModal, buildPHInsightCard } from "./phInsightModal";
-export { buildInsightGuideModal } from "./insightGuideModal";
+export { buildHelpGuideModal } from "./helpGuideModal";

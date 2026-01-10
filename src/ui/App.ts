@@ -29,7 +29,7 @@ import {
   buildComplexityDescription,
   buildGlobalSettingsModal,
   buildPHInsightModal,
-  buildInsightGuideModal,
+  buildHelpGuideModal,
   getComplexityLevel,
 } from "./templates";
 import type {
@@ -45,7 +45,7 @@ Chart.register(annotationPlugin, zoomPlugin, Filler);
 type UIState = {
   settingsOpen: boolean;
   globalSettingsOpen: boolean;
-  insightGuideOpen: boolean;
+  helpGuideOpen: boolean;
   editingTabId: string | null;
   phInsight: {
     visible: boolean;
@@ -62,7 +62,7 @@ export class ProductHealthApp {
   private uiState: UIState = {
     settingsOpen: false,
     globalSettingsOpen: false,
-    insightGuideOpen: false,
+    helpGuideOpen: false,
     editingTabId: null,
     phInsight: null,
   };
@@ -144,8 +144,8 @@ export class ProductHealthApp {
         changeNumber: this.uiState.phInsight?.changeNumber ?? 0,
         healthValue: this.uiState.phInsight?.healthValue ?? 8,
       })}
-      ${buildInsightGuideModal({
-        isVisible: this.uiState.insightGuideOpen,
+      ${buildHelpGuideModal({
+        isVisible: this.uiState.helpGuideOpen,
       })}
     `;
   }
@@ -157,7 +157,7 @@ export class ProductHealthApp {
     this.bindDeveloperEvents();
     this.bindChartControls();
     this.bindGlobalSettingsEvents();
-    this.bindInsightGuideEvents();
+    this.bindHelpGuideEvents();
   }
 
   private bindHeaderEvents(): void {
@@ -849,47 +849,50 @@ export class ProductHealthApp {
     });
   }
 
-  private bindInsightGuideEvents(): void {
+  private bindHelpGuideEvents(): void {
     document
       .getElementById("open-insight-guide")
       ?.addEventListener("click", () => {
-        this.uiState.insightGuideOpen = true;
+        this.uiState.helpGuideOpen = true;
         document
-          .getElementById("insight-guide-modal-overlay")
+          .getElementById("help-guide-modal-overlay")
           ?.classList.add("visible");
       });
 
-    document
-      .getElementById("toggle-guide-preview")
-      ?.addEventListener("click", () => {
-        const toggle = document.getElementById("toggle-guide-preview");
-        const container = document.getElementById("guide-preview-container");
-        const isCollapsed = container?.classList.toggle("collapsed");
-        toggle?.classList.toggle("active", !isCollapsed);
-        const span = toggle?.querySelector("span");
-        if (span) {
-          span.textContent = isCollapsed
-            ? "Show Example Insight"
-            : "Hide Example";
-        }
+    document.querySelectorAll(".help-tab").forEach((tab) => {
+      tab.addEventListener("click", (e) => {
+        const target = e.currentTarget as HTMLElement;
+        const tabId = target.dataset.tab;
+        if (!tabId) return;
+
+        document
+          .querySelectorAll(".help-tab")
+          .forEach((t) => t.classList.remove("active"));
+        document
+          .querySelectorAll(".help-tab-panel")
+          .forEach((p) => p.classList.remove("active"));
+
+        target.classList.add("active");
+        document.getElementById(`tab-${tabId}`)?.classList.add("active");
       });
+    });
 
     document
-      .getElementById("close-insight-guide-modal")
-      ?.addEventListener("click", () => this.closeInsightGuide());
+      .getElementById("close-help-guide-modal")
+      ?.addEventListener("click", () => this.closeHelpGuide());
 
     document
-      .getElementById("insight-guide-modal-overlay")
+      .getElementById("help-guide-modal-overlay")
       ?.addEventListener("click", (e) => {
-        if ((e.target as HTMLElement).id === "insight-guide-modal-overlay")
-          this.closeInsightGuide();
+        if ((e.target as HTMLElement).id === "help-guide-modal-overlay")
+          this.closeHelpGuide();
       });
   }
 
-  private closeInsightGuide(): void {
-    this.uiState.insightGuideOpen = false;
+  private closeHelpGuide(): void {
+    this.uiState.helpGuideOpen = false;
     document
-      .getElementById("insight-guide-modal-overlay")
+      .getElementById("help-guide-modal-overlay")
       ?.classList.remove("visible");
   }
 

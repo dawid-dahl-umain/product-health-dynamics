@@ -1637,6 +1637,7 @@ button:hover {
   .complexity-main {
     flex-wrap: wrap;
     gap: 8px;
+    padding-right: 50px;
   }
 
   .chart-tip {
@@ -1864,122 +1865,6 @@ button:hover {
   opacity: 1;
 }
 
-/* Insight Guide Modal */
-.insight-guide-modal {
-  max-width: 30em;
-}
-
-.insight-guide-modal .modal-body {
-  padding: 20px;
-}
-
-.guide-intro {
-  font-size: 0.95rem;
-  color: var(--text);
-  line-height: 1.6;
-  margin-bottom: 20px;
-  margin-top: 0px;
-  text-align: center;
-}
-
-.guide-preview-section {
-  margin-bottom: 24px;
-}
-
-.guide-preview-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 12px;
-  background: var(--bg-hover);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.guide-preview-toggle:hover {
-  background: var(--border);
-}
-
-.guide-preview-toggle .toggle-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  transition: transform 0.3s ease;
-}
-
-.guide-preview-toggle .toggle-icon svg {
-  width: 100%;
-  height: 100%;
-}
-
-.guide-preview-toggle.active .toggle-icon {
-  transform: rotate(180deg);
-}
-
-.guide-popup-preview {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  margin-top: 12px;
-  margin-inline: auto;
-  text-align: center;
-  max-width: 360px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.guide-popup-preview.collapsed {
-  max-height: 0;
-  margin-top: 0;
-  border-color: transparent;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.guide-legend {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.guide-legend-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.guide-legend-term {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.guide-legend-desc {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
-
-.guide-footer {
-  font-size: 0.85rem;
-  color: var(--text-dim);
-  line-height: 1.5;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-  margin: 0;
-  text-align: center;
-}
-
 /* Confetti Animation */
 .confetti-container {
   position: fixed;
@@ -2014,5 +1899,235 @@ button:hover {
   100% {
     opacity: 0;
     transform: translateY(100vh) rotate(720deg);
+  }
+}
+
+/* Help Guide Modal */
+.help-guide-overlay {
+  padding: 24px;
+}
+
+.help-guide-modal {
+  max-width: 520px;
+  max-height: calc(100dvh - 48px);
+  height: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.help-guide-modal .modal-header {
+  flex-shrink: 0;
+}
+
+.help-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.help-tab {
+  flex: 1;
+  padding: 10px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.help-tab:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.help-tab.active {
+  background: var(--accent-muted);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.help-tab-content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.help-tab-panel {
+  display: none;
+  padding: 20px;
+}
+
+.help-tab-panel.active {
+  display: block;
+}
+
+.help-section h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 8px 0;
+}
+
+.help-section h3:not(:first-child) {
+  margin-top: 20px;
+}
+
+.help-section p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0 0 12px 0;
+}
+
+.help-list {
+  margin: 0 0 16px 0;
+  padding-left: 20px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.help-list li {
+  margin-bottom: 6px;
+}
+
+.help-list strong {
+  color: var(--text);
+}
+
+.help-tip {
+  background: var(--accent-muted);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.help-tip strong {
+  color: var(--accent);
+}
+
+.help-glossary {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.help-glossary.compact {
+  gap: 8px;
+}
+
+.glossary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.help-glossary.compact .glossary-item {
+  padding-bottom: 8px;
+}
+
+.glossary-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.glossary-item dt {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.glossary-item dd {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.help-link-section {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.help-link-section p {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.help-repo-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.help-repo-link:hover {
+  opacity: 0.8;
+}
+
+.help-preview-card {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin: 16px 0;
+  overflow: hidden;
+}
+
+.help-footer-note {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  text-align: center;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* Mobile: Make help guide fullscreen */
+@media (max-width: 600px) {
+  .help-guide-overlay {
+    padding: 16px;
+    align-items: center;
+  }
+
+  .help-guide-modal {
+    max-width: none;
+    max-height: calc(100dvh - 32px);
+    height: auto;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    margin: 0;
+  }
+
+  .help-tabs {
+    padding: 12px 12px;
+  }
+
+  .help-tab {
+    padding: 8px 10px;
+    font-size: 0.75rem;
+  }
+
+  .help-tab-panel {
+    padding: 16px;
   }
 }

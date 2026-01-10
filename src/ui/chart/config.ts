@@ -86,7 +86,7 @@ export const chartOptions: ChartOptions<"line"> = {
       type: "linear",
       title: {
         display: true,
-        text: "Change events",
+        text: "Code changes →",
         color: chartColors.text,
         font: { size: 11, weight: 600 },
       },

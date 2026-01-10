@@ -72,9 +72,9 @@ export const buildComplexityDescription = ({
         </span>
         <span class="complexity-description">${description}</span>
       </div>
-      <button class="chart-tip" id="open-insight-guide" title="Learn about customer insights">
-        <span class="tip-icon">💡</span>
-        <span class="tip-text">Click chart to explore</span>
+      <button class="chart-tip" id="open-insight-guide" title="Open guide">
+        <span class="tip-icon">📖</span>
+        <span class="tip-text">Guide</span>
       </button>
     </div>
   `;

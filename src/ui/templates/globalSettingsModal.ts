@@ -14,11 +14,14 @@ export const buildGlobalSettingsModal = ({
 }: GlobalSettingsModalProps): string => {
   const visibilityAll = globalConfig.defaultVisibility === "all";
   const annotationPosition = globalConfig.shapeScaleAnnotationPosition ?? 0;
-  const annotationLabel = globalConfig.shapeScaleAnnotationLabel ?? "Shape → Scale";
+  const annotationLabel =
+    globalConfig.shapeScaleAnnotationLabel ?? "Shape → Scale";
   const simulationRuns = globalConfig.simulationRuns ?? 100;
 
   return `
-    <div class="modal-overlay ${isVisible ? "visible" : ""}" id="global-modal-overlay">
+    <div class="modal-overlay ${
+      isVisible ? "visible" : ""
+    }" id="global-modal-overlay">
       <div class="modal">
         <div class="modal-header">
           <h2>Global Settings</h2>
@@ -31,15 +34,17 @@ export const buildGlobalSettingsModal = ({
               <div class="modal-hint">Show 80% confidence intervals around the average</div>
             </div>
             <label class="toggle">
-              <input type="checkbox" id="visibility-toggle" ${visibilityAll ? "checked" : ""} />
+              <input type="checkbox" id="visibility-toggle" ${
+                visibilityAll ? "checked" : ""
+              } />
               <span class="toggle-slider"></span>
             </label>
           </div>
 
           <div class="modal-row modal-row-vertical">
             <div class="modal-row-label">
-              <span>Monte Carlo Runs</span>
-              <span class="modal-hint">Number of simulations to average (max 800). Higher values are smoother but slower.</span>
+              <span>Simulation Runs</span>
+              <span class="modal-hint">How many times to run the simulation (max 800). Higher = smoother lines but slower.</span>
             </div>
             <div class="modal-row-inputs">
               <input 
@@ -91,4 +96,3 @@ export const buildGlobalSettingsModal = ({
     </div>
   `;
 };
-
