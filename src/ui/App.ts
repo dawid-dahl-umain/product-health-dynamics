@@ -934,6 +934,10 @@ export class ProductHealthApp {
     const zoomIn = document.getElementById("mermaid-zoom-in");
     const zoomOut = document.getElementById("mermaid-zoom-out");
     const zoomReset = document.getElementById("mermaid-zoom-reset");
+    const panLeft = document.getElementById("mermaid-pan-left");
+    const panRight = document.getElementById("mermaid-pan-right");
+    const panUp = document.getElementById("mermaid-pan-up");
+    const panDown = document.getElementById("mermaid-pan-down");
 
     zoomIn?.addEventListener("click", () =>
       this.setMermaidZoom(this.mermaidZoom + 25)
@@ -941,7 +945,28 @@ export class ProductHealthApp {
     zoomOut?.addEventListener("click", () =>
       this.setMermaidZoom(this.mermaidZoom - 25)
     );
-    zoomReset?.addEventListener("click", () => this.setMermaidZoom(100));
+    zoomReset?.addEventListener("click", () => {
+      this.setMermaidZoom(100);
+      this.resetMermaidPan();
+    });
+
+    const panStep = 80;
+    panLeft?.addEventListener("click", () => this.panMermaid(-panStep, 0));
+    panRight?.addEventListener("click", () => this.panMermaid(panStep, 0));
+    panUp?.addEventListener("click", () => this.panMermaid(0, -panStep));
+    panDown?.addEventListener("click", () => this.panMermaid(0, panStep));
+  }
+
+  private panMermaid(dx: number, dy: number): void {
+    const container = document.getElementById("mermaid-container");
+    if (!container) return;
+    container.scrollBy({ left: dx, top: dy, behavior: "smooth" });
+  }
+
+  private resetMermaidPan(): void {
+    const container = document.getElementById("mermaid-container");
+    if (!container) return;
+    container.scrollTo({ left: 0, top: 0, behavior: "smooth" });
   }
 
   private setMermaidZoom(level: number): void {

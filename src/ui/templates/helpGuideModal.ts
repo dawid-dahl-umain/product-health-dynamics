@@ -213,11 +213,19 @@ const buildModelTab = (): string => `
       flow through the model to produce the charts you see.
     </p>
     
-    <div class="mermaid-zoom-controls">
-      <button class="zoom-btn" id="mermaid-zoom-out" title="Zoom out">−</button>
-      <span class="zoom-level" id="mermaid-zoom-level">100%</span>
-      <button class="zoom-btn" id="mermaid-zoom-in" title="Zoom in">+</button>
-      <button class="zoom-btn zoom-reset" id="mermaid-zoom-reset" title="Reset zoom">Reset</button>
+    <div class="mermaid-controls">
+      <div class="mermaid-zoom-controls">
+        <button class="zoom-btn" id="mermaid-zoom-out" title="Zoom out">−</button>
+        <span class="zoom-level" id="mermaid-zoom-level">100%</span>
+        <button class="zoom-btn" id="mermaid-zoom-in" title="Zoom in">+</button>
+        <button class="zoom-btn zoom-reset" id="mermaid-zoom-reset" title="Reset">Reset</button>
+      </div>
+      <div class="mermaid-pan-controls">
+        <button class="zoom-btn pan-btn" id="mermaid-pan-left" title="Pan left">←</button>
+        <button class="zoom-btn pan-btn" id="mermaid-pan-up" title="Pan up">↑</button>
+        <button class="zoom-btn pan-btn" id="mermaid-pan-down" title="Pan down">↓</button>
+        <button class="zoom-btn pan-btn" id="mermaid-pan-right" title="Pan right">→</button>
+      </div>
     </div>
     
     <div class="mermaid-container" id="mermaid-container">
@@ -229,10 +237,10 @@ const buildModelTab = (): string => `
     <div class="help-tip">
       <strong>Reading the diagram:</strong>
       <ul>
-        <li><strong>Green:</strong> your inputs</li>
-        <li><strong>Orange:</strong> calculated from inputs</li>
-        <li><strong>Blue:</strong> the simulation loop (runs for each code change)</li>
-        <li><strong>Purple:</strong> time-related factors (complexity accumulation and time cost)</li>
+        <li><span class="color-label color-green">Green:</span> your inputs</li>
+        <li><span class="color-label color-orange">Orange:</span> calculated from inputs</li>
+        <li><span class="color-label color-blue">Blue:</span> the simulation loop (runs for each code change)</li>
+        <li><span class="color-label color-purple">Purple:</span> time-related factors (complexity accumulation and time cost)</li>
       </ul>
     </div>
   </div>
