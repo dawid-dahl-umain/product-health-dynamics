@@ -74,18 +74,19 @@ The following are Lehman's exact wordings as published in his papers:
 | -------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------- |
 | `accumulatedComplexity`          | Law 2: Increasing Complexity | Formalizes the observation that complexity grows with each change unless actively reduced |
 | Negative `baseImpact` for low ER | Law 7: Declining Quality     | Formalizes the observation that quality declines without rigorous maintenance             |
-| `systemState` feedback loop      | Law 8: Feedback System       | Formalizes the observation that current state affects future outcomes                     |
+| Traction/fragility feedback      | Law 8: Feedback System       | Current PH affects how well improvements land and how severely damage cascades            |
+| Quartic floor `(1-SC)^4`         | Laws 2 + 8                   | Simple systems have less coupling, so complexity effects are naturally bounded            |
 | The compounding effect           | Laws 2 + 7 + 8               | Formalizes the accelerating decay pattern Lehman observed in unmaintained systems         |
 
 ### The Nature of the Formalization
 
 This model takes Lehman's qualitative statements and assigns them mathematical form:
 
-| Lehman's Exact Words                                                                                                                  | Model's Formalization                                            |
-| ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| "...its complexity, reflecting deteriorating structure, increases unless work is done to maintain or reduce it." [\[1\]](#references) | `complexityDrift = -(base + growth × changeCount) × systemState` |
-| "The quality of an E-type system will appear to be declining unless it is rigorously maintained..." [\[2\]](#references)              | `μ = ER × 2.4 - 1.2` (negative below ER=0.5)                     |
-| "E-type evolution processes constitute multi-level, multi-loop, multi-agent feedback systems..." [\[2\]](#references)                 | `systemState = sigmoid(PH - 5)` modifies all calculations        |
+| Lehman's Exact Words                                                                                                                  | Model's Formalization                                                                 |
+| ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| "...its complexity, reflecting deteriorating structure, increases unless work is done to maintain or reduce it." [\[1\]](#references) | `complexityDrift = -(base + growth × changeCount) × systemState × SC`                 |
+| "The quality of an E-type system will appear to be declining unless it is rigorously maintained..." [\[2\]](#references)              | `μ = 2.4 × (ER - breakeven)` where `breakeven = 0.25 + 0.00109 × exp(6.4 × SC)`       |
+| "E-type evolution processes constitute multi-level, multi-loop, multi-agent feedback systems..." [\[2\]](#references)                 | Traction (`n^1.5`) and fragility (`(1-n)² × SC`) modify impact; floor uses `(1-SC)^4` |
 
 **Important:** The formulas in the right column are this model's contribution. Lehman did not provide mathematical formulas; he provided qualitative observations. The formulas are one possible way to capture the dynamics he described.
 
@@ -93,13 +94,15 @@ This model takes Lehman's qualitative statements and assigns them mathematical f
 
 The specific parameter values in this model are **calibration choices**, not empirically derived constants:
 
-| Parameter              | Value   | Basis                                               |
-| ---------------------- | ------- | --------------------------------------------------- |
-| Sigmoid steepness      | 1.5     | Chosen to produce a reasonable transition curve     |
-| Impact slope           | 2.4     | Chosen to place breakeven at ER=0.5                 |
-| Complexity growth rate | 0.00005 | Tuned so seniors show ~5% decline over 1000 changes |
+| Parameter              | Value   | Basis                                                         |
+| ---------------------- | ------- | ------------------------------------------------------------- |
+| Impact slope           | 2.4     | Produces breakeven at ER=0.5 for enterprise systems (SC=0.85) |
+| Traction exponent      | 1.5     | Creates slow improvement at low PH, faster at high PH         |
+| Fragility exponent     | 2.0     | Creates stability at high PH, fragility at low PH             |
+| Quartic floor exponent | 4       | Makes simple systems remain tractable even at low PH          |
+| Complexity growth rate | 0.00005 | Tuned so seniors show ~5% decline over 1000 changes           |
 
-These values could reasonably be different (e.g., steepness of 1.2 or 1.8) and the qualitative story would remain similar. The model's value is in **relative comparisons** (low rigor degrades faster than high rigor) rather than exact predictions.
+These values could reasonably be different (e.g., exponents of 1.2 or 2.5) and the qualitative story would remain similar. The model's value is in **relative comparisons** (low rigor degrades faster than high rigor) rather than exact predictions.
 
 ---
 
@@ -126,21 +129,21 @@ Beyond Lehman's qualitative laws, several empirical studies provide quantitative
 
 **Finding:** Code review effectiveness
 
-- Formal code inspections detect approximately **60% of defects**
-- Informal reviews detect fewer than **50%**
-- Traditional testing alone detects approximately **30%**
-- **Source:** IEEE/ACM literature on code review
+- Formal code inspections consistently outperform informal reviews and testing alone for defect detection
+- The relative effectiveness varies by study, but the ordering (formal inspection > informal review > testing alone) is robust
+- **Source:** Software engineering literature on defect detection methods
 
 **Finding:** Test-Driven Development impact
 
-- TDD practices associated with approximately **40% reduction** in defects during later development stages
-- **Source:** Empirical Software Engineering studies
+- TDD practices are associated with reduced defect rates in later development stages
+- Effect sizes vary across studies depending on context and measurement methodology
+- **Source:** Empirical Software Engineering literature
 
 **Finding:** Test coverage correlation
 
 - "The Relation of Test-Related Factors to Software Quality: A Case Study on Apache Systems"
 - Test size and test code quality significantly related to post-release defect rates
-- **Source:** Empirical Software Engineering, Springer
+- **Source:** Catolino, G., et al. (2020). Empirical Software Engineering, Springer. doi:10.1007/s10664-020-09891-y
 
 ### Evidence for "Larger Well-Maintained Systems Have Lower Defect Density"
 
@@ -217,9 +220,9 @@ If asked "Did you just make this up?", you can honestly respond:
 
 ### Supporting Literature
 
-**[8]** IEEE/ACM studies on code review effectiveness (60% defect detection rate for formal inspections).
+**[8]** Software engineering literature on code review and inspection effectiveness. Key finding: formal inspections consistently outperform informal reviews and testing alone for defect detection.
 
-**[9]** Empirical studies on Test-Driven Development (~40% defect reduction).
+**[9]** Empirical studies on Test-Driven Development. Key finding: TDD is associated with reduced defect rates, though effect sizes vary by context.
 
 ---
 
@@ -246,5 +249,6 @@ When presenting, be clear that this is a useful analogy for intuition, not a cla
 ## Document History
 
 - **Created:** December 2025
+- **Updated:** January 2026 (aligned with exponential breakeven and quartic floor model changes)
 - **Purpose:** Provide honest grounding for the Product Health Dynamics model
 - **Audience:** Technical leadership, skeptical reviewers

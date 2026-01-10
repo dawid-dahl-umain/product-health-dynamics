@@ -8,6 +8,7 @@ import {
   chartOptions,
   buildDatasetsForSimulation,
   setChartClickHandler,
+  setVisibilityChangeHandler,
 } from "./chart";
 import { LocalStorageAdapter } from "./storage";
 import {
@@ -79,6 +80,10 @@ export class ProductHealthApp {
 
     setChartClickHandler((developerName, changeNumber, healthValue) => {
       this.openPHInsightModal(developerName, changeNumber, healthValue);
+    });
+
+    setVisibilityChangeHandler(() => {
+      this.saveVisibilityState();
     });
   }
 
@@ -335,6 +340,7 @@ export class ProductHealthApp {
         name: `${sim.name} (copy)`,
         developers: newDevelopers,
         handoffs: newHandoffs,
+        hiddenDatasetIndices: undefined,
       };
       this.simulations.push(newSim);
       this.storage.saveSimulation(newSim);
@@ -469,6 +475,7 @@ export class ProductHealthApp {
         (h) =>
           h.fromDeveloperId !== developerId && h.toDeveloperId !== developerId
       );
+      this.clearVisibilityState();
       this.storage.saveSimulation(sim);
       card?.remove();
       this.recomputeChart();
@@ -484,6 +491,7 @@ export class ProductHealthApp {
         color: getNextColor(usedColors),
       };
       sim.developers.push(newDeveloper);
+      this.clearVisibilityState();
       this.storage.saveSimulation(sim);
       document
         .getElementById("developer-list")
@@ -548,6 +556,7 @@ export class ProductHealthApp {
       if (!handoffId) return;
 
       sim.handoffs = sim.handoffs.filter((h) => h.id !== handoffId);
+      this.clearVisibilityState();
       this.storage.saveSimulation(sim);
       card?.remove();
       this.recomputeChart();
@@ -567,6 +576,7 @@ export class ProductHealthApp {
         atChange: Math.round(sim.nChanges * 0.2),
       };
       sim.handoffs.push(newHandoff);
+      this.clearVisibilityState();
       this.storage.saveSimulation(sim);
       document
         .getElementById("handoff-list")
@@ -599,6 +609,7 @@ export class ProductHealthApp {
         this.activeSimulation.developers = newDevelopers;
         this.activeSimulation.handoffs = newHandoffs;
         this.activeSimulation.startingHealth = defaultSim.startingHealth;
+        this.activeSimulation.hiddenDatasetIndices = undefined;
         this.storage.saveSimulation(this.activeSimulation);
         this.render();
         this.recomputeChart();
@@ -616,6 +627,7 @@ export class ProductHealthApp {
         this.chart!.getDatasetMeta(i).hidden = false;
       });
       this.chart.update();
+      this.saveVisibilityState();
     };
 
     const clearAll = () => {
@@ -624,6 +636,7 @@ export class ProductHealthApp {
         this.chart!.getDatasetMeta(i).hidden = true;
       });
       this.chart.update();
+      this.saveVisibilityState();
     };
 
     const toggleDevelopers = () => {
@@ -635,6 +648,7 @@ export class ProductHealthApp {
         this.chart!.getDatasetMeta(i).hidden = !isDeveloper;
       });
       this.chart.update();
+      this.saveVisibilityState();
     };
 
     const toggleHandoffs = () => {
@@ -646,6 +660,7 @@ export class ProductHealthApp {
         this.chart!.getDatasetMeta(i).hidden = isDeveloper;
       });
       this.chart.update();
+      this.saveVisibilityState();
     };
 
     document.getElementById("reset-zoom")?.addEventListener("click", resetZoom);
@@ -1075,7 +1090,39 @@ export class ProductHealthApp {
         options: chartOptions,
       });
 
+      this.restoreVisibilityState();
       this.updateChartAnnotation();
     }, 10);
+  }
+
+  private saveVisibilityState(): void {
+    if (!this.chart) return;
+    const hiddenIndices: number[] = [];
+    this.chart.data.datasets.forEach((_, i) => {
+      if (this.chart!.getDatasetMeta(i).hidden) {
+        hiddenIndices.push(i);
+      }
+    });
+    const sim = this.activeSimulation;
+    sim.hiddenDatasetIndices = hiddenIndices;
+    this.storage.saveSimulation(sim);
+  }
+
+  private clearVisibilityState(): void {
+    const sim = this.activeSimulation;
+    if (sim.hiddenDatasetIndices) {
+      sim.hiddenDatasetIndices = undefined;
+      this.storage.saveSimulation(sim);
+    }
+  }
+
+  private restoreVisibilityState(): void {
+    if (!this.chart) return;
+    const sim = this.activeSimulation;
+    const hiddenIndices = sim.hiddenDatasetIndices ?? [];
+    this.chart.data.datasets.forEach((_, i) => {
+      this.chart!.getDatasetMeta(i).hidden = hiddenIndices.includes(i);
+    });
+    this.chart.update("none");
   }
 }

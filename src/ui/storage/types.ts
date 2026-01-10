@@ -22,6 +22,7 @@ export type Simulation = {
   complexityDescription?: string;
   nChanges: number;
   startingHealth: number;
+  hiddenDatasetIndices?: number[];
 };
 
 export type GlobalConfig = {

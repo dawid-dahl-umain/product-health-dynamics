@@ -14,9 +14,14 @@ export type ChartClickHandler = (
 ) => void;
 
 let onChartClickHandler: ChartClickHandler | null = null;
+let onVisibilityChangeHandler: (() => void) | null = null;
 
 export const setChartClickHandler = (handler: ChartClickHandler | null) => {
   onChartClickHandler = handler;
+};
+
+export const setVisibilityChangeHandler = (handler: (() => void) | null) => {
+  onVisibilityChangeHandler = handler;
 };
 
 const handleChartClick = (
@@ -58,6 +63,7 @@ const onLegendClick = (
   }
 
   chart.update();
+  onVisibilityChangeHandler?.();
 };
 
 export const chartOptions: ChartOptions<"line"> = {

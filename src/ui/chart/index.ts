@@ -1,4 +1,8 @@
 export { chartColors, hexToRgba } from "./colors";
-export { chartOptions, setChartClickHandler } from "./config";
+export {
+  chartOptions,
+  setChartClickHandler,
+  setVisibilityChangeHandler,
+} from "./config";
 export { buildDatasetsForSimulation, type Dataset } from "./datasets";
 
