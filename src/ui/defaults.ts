@@ -18,7 +18,7 @@ const createDefaultDevelopers = (): DeveloperConfig[] => [
   {
     id: "guardrails",
     name: "AI with Guardrails",
-    engineeringRigor: 0.4,
+    engineeringRigor: 0.35,
     color: DEVELOPER_PALETTE[1],
   },
   {
