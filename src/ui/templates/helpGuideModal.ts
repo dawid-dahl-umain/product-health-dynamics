@@ -227,9 +227,13 @@ const buildModelTab = (): string => `
     </div>
 
     <div class="help-tip">
-      <strong>Reading the diagram:</strong> Green = your inputs, orange = calculated 
-      from inputs, blue = the simulation loop (runs for each code change), 
-      purple = time-related factors (complexity accumulation and time cost).
+      <strong>Reading the diagram:</strong>
+      <ul>
+        <li><strong>Green:</strong> your inputs</li>
+        <li><strong>Orange:</strong> calculated from inputs</li>
+        <li><strong>Blue:</strong> the simulation loop (runs for each code change)</li>
+        <li><strong>Purple:</strong> time-related factors (complexity accumulation and time cost)</li>
+      </ul>
     </div>
   </div>
 `;

@@ -2016,6 +2016,18 @@ button:hover {
   color: var(--accent);
 }
 
+.help-tip ul {
+  margin: 8px 0 0 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.help-tip li {
+  line-height: 1.4;
+}
+
 .help-glossary {
   margin: 0;
   display: flex;
