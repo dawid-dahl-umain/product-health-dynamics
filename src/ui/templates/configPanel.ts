@@ -46,7 +46,7 @@ export const buildConfigPanel = ({
               />
               <span class="complexity-value" id="complexity-value">${scValue}</span>
             </div>
-            <span class="config-hint">How interconnected and difficult to change</span>
+            <span class="config-hint">How complex and novel are the system requirements?</span>
           </div>
           <input 
             type="text" 

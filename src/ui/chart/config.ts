@@ -128,6 +128,33 @@ export const chartOptions: ChartOptions<"line"> = {
         padding: 24,
         filter: (item) =>
           !item.text.includes("(p10)") && !item.text.includes("(p90)"),
+        generateLabels: (chart) => {
+          const datasets = chart.data.datasets;
+          return datasets
+            .map((dataset, datasetIndex) => {
+              const meta = chart.getDatasetMeta(datasetIndex);
+              const isHidden = meta.hidden ?? false;
+              
+              return {
+                text: dataset.label || "",
+                fillStyle: typeof dataset.backgroundColor === "string" 
+                  ? dataset.backgroundColor 
+                  : chartColors.textLight,
+                strokeStyle: typeof dataset.borderColor === "string"
+                  ? dataset.borderColor
+                  : chartColors.textLight,
+                lineWidth: dataset.borderWidth || 2,
+                hidden: isHidden,
+                datasetIndex: datasetIndex,
+                fontColor: chartColors.textLight,
+                pointStyle: dataset.pointStyle,
+                textDecoration: isHidden ? "line-through" : undefined,
+              };
+            })
+            .filter((item) =>
+              !item.text.includes("(p10)") && !item.text.includes("(p90)")
+            );
+        },
       },
     },
     tooltip: {

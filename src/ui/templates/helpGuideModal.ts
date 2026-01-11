@@ -12,7 +12,7 @@ const MODEL_DIAGRAM = `flowchart LR
     subgraph inputs ["INPUTS (you choose)"]
         direction TB
         ER["<b>Engineering Rigor</b><br/>How disciplined is the developer?<br/><i>0 = vibe coding, 1 = senior engineer</i>"]
-        SC["<b>System Complexity</b><br/>How complex is the system?<br/><i>0.25 = blog, 0.85 = enterprise</i>"]
+        SC["<b>System Complexity</b><br/>How complex are the system requirements?<br/><i>0.25 = blog, 0.85 = enterprise</i>"]
     end
 
     subgraph derived ["DERIVED"]
@@ -114,13 +114,13 @@ const buildGlossaryTab = (): string => `
       <div class="glossary-item glossary-item-expanded">
         <dt>Engineering Rigor (ER)</dt>
         <dd>
-          How well complexity is managed.
+          How well a human or AI agent manages complexity over time.
           <ul class="glossary-inline-list">
             <li><strong>High rigor:</strong> modular design, clean abstractions, loose coupling, sophisticated test strategies</li>
             <li><strong>Low rigor:</strong> quick fixes that create tangled dependencies</li>
           </ul>
           <div class="glossary-detail">
-            <p>Simple code keeps concerns separate; you can reason about each part on its own. 
+            <p>Well-structured code keeps concerns separate; you can reason about each part on its own. 
             Tangled code forces you to understand everything to change anything.</p>
             <ul>
               <li><strong>Modularity</strong> – self-contained pieces that can be changed independently</li>
@@ -134,7 +134,7 @@ const buildGlossaryTab = (): string => `
       </div>
       <div class="glossary-item">
         <dt>System Complexity (SC)</dt>
-        <dd>How many moving parts the system has. A simple blog is forgiving; enterprise software punishes mistakes.</dd>
+        <dd>How complex the problem domain is. Simple systems use off-the-shelf solutions; complex ones require tailored architectures and specialized domain logic.</dd>
       </div>
       <div class="glossary-item">
         <dt>Shaded Areas</dt>

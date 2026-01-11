@@ -22,13 +22,14 @@ export class ProductHealthModel {
   public readonly engineeringRigor: number;
 
   /**
-   * The inherent complexity of the system being worked on (0-1 scale).
-   * Determines how much the "entropy dynamics" (systemState feedback) affect the system.
+   * The inherent complexity of the problem being solved (0-1 scale).
+   * Represents how complex the requirements are and how much custom work is needed.
+   * A blog can use off-the-shelf tools; enterprise software requires bespoke solutions.
    *
-   * In a simple system (low SC), there's less coupling possible, so:
-   * - The system never becomes as "frozen" even at low PH
+   * In the model, SC determines how forgiving the system is:
+   * - Simple systems never become as "frozen" even at low PH
    * - Damage doesn't cascade as severely
-   * - Recovery is faster (easier to untangle)
+   * - Recovery is faster (less intricate logic to untangle)
    *
    * Mathematically: floor = (1-SC)^4; effectiveState = floor + (1-floor) × rawState
    * The quartic decay provides a tractability floor for simple systems.

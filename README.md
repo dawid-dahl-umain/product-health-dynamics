@@ -38,7 +38,7 @@ A simulation that predicts how software quality evolves based on **engineering r
 
 - **Product Health (PH)** measures how easy code is to change (1 = nightmare, 10 = trivial).
 - Every code change can help, hurt, or do nothing. The outcome depends on **Engineering Rigor (ER)**: the skill and discipline of whoever makes the change.
-- **System Complexity (SC)** determines how forgiving the system is. A blog is forgiving; an enterprise platform is not.
+- **System Complexity (SC)** represents how complex the system's requirements are. A blog can use off-the-shelf tools; enterprise software needs custom solutions.
 - **High PH protects you.** In a healthy codebase, even low-rigor changes are caught by tests, monitoring, and modular boundaries. Damage is contained.
 - **Low PH punishes you.** In a coupled codebase, mistakes cascade. The same change causes 10-100x more damage.
 - **Decay accelerates.** A healthy codebase drifts slowly, then suddenly falls apart once safety nets erode.
@@ -49,15 +49,15 @@ A simulation that predicts how software quality evolves based on **engineering r
 
 ## Core Concepts
 
-| Term                       | Definition                                    | Plain Meaning                                               |
-| -------------------------- | --------------------------------------------- | ----------------------------------------------------------- |
-| **Product Health (PH)**    | Software quality on a 1-10 scale              | How hard or easy changes feel right now                     |
-| **Engineering Rigor (ER)** | Discipline applied to changes (0-1 scale)     | The difference between a calculated move and a gamble       |
-| **System Complexity (SC)** | Inherent architectural complexity (0-1 scale) | How many moving parts? How tightly coupled by nature?       |
-| **Traction**               | How well improvements land (from PH and SC)   | Healthy = changes land effectively. Degraded = changes slip |
-| **Fragility**              | How severely damage cascades (from PH and SC) | Healthy = mistakes contained. Degraded = mistakes cascade   |
-| **Change Event**           | A single modification to the codebase         | One commit, one roll of the dice                            |
-| **Time Cost**              | How long a change takes relative to baseline  | Healthy = 1x, Degraded = up to 3x                           |
+| Term                       | Definition                                    | Plain Meaning                                                                                       |
+| -------------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **Product Health (PH)**    | Software quality on a 1-10 scale              | How hard or easy changes feel right now                                                             |
+| **Engineering Rigor (ER)** | Discipline applied to changes (0-1 scale)     | The difference between a calculated move and a gamble                                               |
+| **System Complexity (SC)** | Inherent problem complexity (0-1 scale)       | How complex are the requirements? Can you use off-the-shelf tools, or do you need custom solutions? |
+| **Traction**               | How well improvements land (from PH and SC)   | Healthy = changes land effectively. Degraded = changes slip                                         |
+| **Fragility**              | How severely damage cascades (from PH and SC) | Healthy = mistakes contained. Degraded = mistakes cascade                                           |
+| **Change Event**           | A single modification to the codebase         | One commit, one roll of the dice                                                                    |
+| **Time Cost**              | How long a change takes relative to baseline  | Healthy = 1x, Degraded = up to 3x                                                                   |
 
 ---
 
@@ -70,7 +70,7 @@ flowchart LR
     subgraph inputs ["INPUTS (you choose)"]
         direction TB
         ER["<b>Engineering Rigor</b><br/>How disciplined is the developer?<br/><i>0 = vibe coding, 1 = senior engineer</i>"]
-        SC["<b>System Complexity</b><br/>How complex is the system?<br/><i>0.25 = blog, 0.85 = enterprise</i>"]
+        SC["<b>System Complexity</b><br/>How complex are the system requirements?<br/><i>0.25 = blog, 0.85 = enterprise</i>"]
     end
 
     subgraph derived ["DERIVED"]
@@ -145,14 +145,14 @@ The model has two inputs. Everything else is derived.
 | Base Sigma  | `σ = 0.1 + 0.7 × (1 - ER)`     | Outcome unpredictability      |
 | Max Health  | `maxPH = 5 + 5 × ER`           | Sustainable ceiling           |
 
-**System Complexity (SC)** scales the difficulty exponentially:
+**System Complexity (SC)** represents how complex the requirements are: can you use off-the-shelf tools, or do you need custom solutions? SC scales the difficulty exponentially:
 
-| SC                | Breakeven ER | Meaning                                |
-| ----------------- | ------------ | -------------------------------------- |
-| 0.25 (blog)       | 0.26         | Even juniors maintain it               |
-| 0.50 (CRUD)       | 0.28         | Some discipline required               |
-| 0.85 (enterprise) | 0.50         | Only skilled engineers sustain quality |
-| 1.00 (extreme)    | 0.91         | Only near-perfect rigor works          |
+| SC                                     | Breakeven ER | Meaning                                |
+| -------------------------------------- | ------------ | -------------------------------------- |
+| 0.25 (blog)                            | 0.26         | Even juniors maintain it               |
+| 0.50 (standard SaaS)                   | 0.28         | Some discipline required               |
+| 0.85 (bespoke enterprise domain)       | 0.50         | Only skilled engineers sustain quality |
+| 1.00 (novel, futuristic problem space) | 0.91         | Only near-perfect rigor has a chance   |
 
 The breakeven formula uses exponential scaling to capture how complexity compounds:
 
@@ -160,7 +160,7 @@ The breakeven formula uses exponential scaling to capture how complexity compoun
 breakevenER = 0.25 + 0.00109 × exp(6.4 × SC)
 ```
 
-This ensures SC=0.85 (enterprise) requires the same rigor as traditional large systems, while SC=1.0 represents extreme inherent complexity (e.g., quantum computing, brain-computer interfaces) where only exceptional engineers can function.
+This ensures SC=0.85 (complex enterprise business rules) requires the same rigor as traditional large systems, while SC=1.0 represents novel problem spaces (e.g., no existing solutions to leverage) where only exceptional engineers can function.
 
 ### Traction and Fragility
 
@@ -297,12 +297,12 @@ This creates asymmetric confidence bands:
 
 ## Complexity Profiles
 
-| Profile    | SC   | Example                                    | Character                                |
-| ---------- | ---- | ------------------------------------------ | ---------------------------------------- |
-| Simple     | 0.25 | Blog, landing page                         | Very forgiving; most agents can maintain |
-| Medium     | 0.50 | CRUD backend with auth                     | Some discipline required                 |
-| Enterprise | 0.85 | Complex domain, many integrations          | Only high ER sustains quality            |
-| Extreme    | 1.00 | Quantum systems, brain-computer interfaces | Only ER=0.95+ can function               |
+| Profile    | SC   | Example                                                         | Character                                |
+| ---------- | ---- | --------------------------------------------------------------- | ---------------------------------------- |
+| Simple     | 0.25 | Blog, landing page, Off-the-shelf tools suffice                 | Very forgiving; most agents can maintain |
+| Medium     | 0.50 | Standard CRUD SaaS, libraries handle most logic                 | Some discipline required                 |
+| Enterprise | 0.85 | Complex business rules, bespoke domain logic, many integrations | Only high ER sustains quality            |
+| Extreme    | 1.00 | Novel problem space, no existing solutions                      | Only ER=0.95+ can function               |
 
 ---
 

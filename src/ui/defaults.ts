@@ -59,7 +59,7 @@ export const createDefaultSimulations = (): Simulation[] => [
     developers: createDefaultDevelopers(),
     handoffs: createDefaultHandoffs(),
     systemComplexity: 0.25,
-    complexityDescription: "Blog, landing page, basic CMS",
+    complexityDescription: "Off-the-shelf tools suffice (blog, marketing site)",
     nChanges: 1000,
     startingHealth: 8,
   },
@@ -69,7 +69,7 @@ export const createDefaultSimulations = (): Simulation[] => [
     developers: createDefaultDevelopers(),
     handoffs: createDefaultHandoffs(),
     systemComplexity: 0.5,
-    complexityDescription: "CRUD backend with auth, moderate business logic",
+    complexityDescription: "Standard SaaS app, libraries handle most logic",
     nChanges: 1000,
     startingHealth: 8,
   },
@@ -79,7 +79,7 @@ export const createDefaultSimulations = (): Simulation[] => [
     developers: createDefaultDevelopers(),
     handoffs: createDefaultHandoffs(),
     systemComplexity: 0.85,
-    complexityDescription: "Complex architecture, many integrations",
+    complexityDescription: "Complex business rules, bespoke domain logic",
     nChanges: 1000,
     startingHealth: 8,
   },
@@ -106,5 +106,5 @@ export { getNextColor } from "./chart/colors";
 export const getDefaultComplexityDescription = (sc: number): string => {
   if (sc <= 0.3) return "Simple system (blog, landing page)";
   if (sc <= 0.6) return "Moderate system (CRUD backend, auth)";
-  return "Complex system (enterprise, many integrations)";
+  return "Complex system (enterprise, bespoke solutions, many integrations)";
 };

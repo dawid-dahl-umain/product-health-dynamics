@@ -2165,11 +2165,20 @@ button:hover {
 }
 
 .help-preview-card {
-  background: var(--bg-base);
+  background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: 12px;
   margin: 16px 0;
   overflow: hidden;
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.help-preview-card .modal-body {
+  padding: 20px;
+  text-align: center;
 }
 
 .help-footer-note {

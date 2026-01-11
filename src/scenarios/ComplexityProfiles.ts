@@ -1,31 +1,33 @@
 /**
- * System Complexity profiles representing different types of software systems.
+ * System Complexity profiles representing different types of problems.
  *
- * System Complexity (SC) scales all change effects in the model.
- * Higher complexity = larger impacts (both positive damage and improvement).
- * Lower complexity = smaller, slower changes.
+ * System Complexity (SC) represents how complex the requirements are
+ * and how much custom work is needed vs. using off-the-shelf solutions.
  *
- * The value is a multiplier on the change delta:
- *   ΔPH_effective = SC × ΔPH_base
+ * In the model, SC scales how forgiving the system is:
+ * - Higher SC = mistakes cascade more, recovery is harder
+ * - Lower SC = more forgiving, easier to recover
  */
 export const ComplexityProfiles = {
-  /** Simple system: blog, landing page, basic CMS. Slow dynamics, forgiving. */
+  /** Simple: off-the-shelf tools suffice, minimal custom logic. */
   simple: {
     systemComplexity: 0.25,
     label: "Simple System",
-    description: "Blog, landing page, basic CMS",
+    description:
+      "Off-the-shelf tools suffice (blog, marketing site, basic CMS)",
   },
-  /** Medium system: CRUD backend with auth, moderate business logic. */
+  /** Medium: standard patterns with some custom business logic. */
   medium: {
     systemComplexity: 0.5,
     label: "Medium System",
-    description: "CRUD backend with auth, moderate business logic",
+    description: "Standard SaaS app, libraries handle most logic",
   },
-  /** Enterprise system: complex architecture and domain, many integrations. Current default. */
+  /** Enterprise: complex requirements, bespoke domain logic. */
   enterprise: {
     systemComplexity: 0.85,
     label: "Enterprise System",
-    description: "Complex architecture and domain, many integrations",
+    description:
+      "Complex business rules, bespoke domain logic, many integrations",
   },
 } as const;
 

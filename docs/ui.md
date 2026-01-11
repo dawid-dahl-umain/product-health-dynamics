@@ -37,16 +37,16 @@ Toggle with the **Configure** button in the header.
 
 #### System Configuration
 
-- **Complexity**: Slider (`0.1` to `1.0`) representing inherent architectural difficulty.
+- **Complexity**: Slider (`0.1` to `1.0`) representing how complex the requirements are. Can you use off-the-shelf tools, or do you need custom solutions?
 - **Starting Health**: Initial Product Health (1-10).
 - **Changes**: Select simulation length (`250`, `500`, `1,000`, or `2,000` changes).
 
 **Complexity Guide:**
 
-- `0.1 - 0.3`: **Simple** (Blog, landing page) — Highly forgiving.
-- `0.3 - 0.6`: **Moderate** (CRUD backend) — Requires baseline discipline.
-- `0.6 - 0.85`: **Enterprise** (Complex architecture, many integrations) — Punishes low rigor.
-- `0.85 - 1.0`: **Extreme** (Cutting-edge systems) — Only highest rigor can maintain.
+- `0.1 - 0.3`: **Simple** (Off-the-shelf tools suffice) — Highly forgiving.
+- `0.3 - 0.6`: **Moderate** (Standard patterns, some custom logic) — Requires baseline discipline.
+- `0.6 - 0.85`: **Enterprise** (Complex business rules, bespoke domain logic) — Punishes low rigor.
+- `0.85 - 1.0`: **Extreme** (Novel problem space, no existing solutions) — Only highest rigor can maintain.
 
 #### Developer Management
 
