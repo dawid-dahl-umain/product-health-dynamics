@@ -27,6 +27,7 @@ const createTestAppData = (): AppData => ({
     shapeScaleAnnotationPosition: 0,
     shapeScaleAnnotationLabel: "Shape → Scale",
     simulationRuns: 50,
+    showTrajectoriesByDefault: true,
   },
 });
 
@@ -92,6 +93,7 @@ describe("LocalStorageAdapter", () => {
           shapeScaleAnnotationPosition: 0,
           shapeScaleAnnotationLabel: "Shape → Scale",
           simulationRuns: 50,
+          showTrajectoriesByDefault: true,
         },
       };
       mockStorage.getItem.mockReturnValue(JSON.stringify(storedData));
@@ -234,6 +236,7 @@ describe("LocalStorageAdapter", () => {
           shapeScaleAnnotationPosition: 0,
           shapeScaleAnnotationLabel: "Shape → Scale",
           simulationRuns: 50,
+          showTrajectoriesByDefault: true,
         },
       });
       const adapter = new LocalStorageAdapter(dataWithTwo);
@@ -270,6 +273,7 @@ describe("LocalStorageAdapter", () => {
         shapeScaleAnnotationPosition: 0,
         shapeScaleAnnotationLabel: "Shape → Scale",
         simulationRuns: 50,
+        showTrajectoriesByDefault: true,
       };
 
       // When
@@ -342,6 +346,7 @@ describe("LocalStorageAdapter", () => {
           shapeScaleAnnotationPosition: 0,
           shapeScaleAnnotationLabel: "Shape → Scale",
           simulationRuns: 50,
+          showTrajectoriesByDefault: true,
         },
       };
 
