@@ -153,7 +153,9 @@ export const chartOptions: ChartOptions<"line"> = {
           return datasets
             .map((dataset, datasetIndex) => {
               const meta = chart.getDatasetMeta(datasetIndex);
-              const isHidden = meta.hidden ?? false;
+              // Check both meta and dataset hidden state for accuracy
+              const isHidden =
+                meta.hidden ?? (dataset as { hidden?: boolean }).hidden ?? false;
               
               return {
                 text: dataset.label || "",

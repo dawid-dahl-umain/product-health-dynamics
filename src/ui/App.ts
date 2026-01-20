@@ -647,7 +647,7 @@ export class ProductHealthApp {
         if (isBand) {
           this.chart!.getDatasetMeta(i).hidden = !showBands;
         } else {
-          this.chart!.getDatasetMeta(i).hidden = false;
+        this.chart!.getDatasetMeta(i).hidden = false;
         }
       });
       this.chart.update();
@@ -1278,18 +1278,34 @@ export class ProductHealthApp {
     if (!this.chart) return;
     const sim = this.activeSimulation;
     const showBands = this.globalConfig.defaultVisibility === "all";
+    const showTrajectories = this.globalConfig.showTrajectoriesByDefault;
 
-    if (sim.hiddenDatasetIndices === undefined) return;
+    const hasOverrides = sim.hiddenDatasetIndices !== undefined;
+    const hiddenIndices = sim.hiddenDatasetIndices ?? [];
 
-    const hiddenIndices = sim.hiddenDatasetIndices;
     this.chart.data.datasets.forEach((_, i) => {
       const isBand = i % 3 !== 2;
       const manuallyHidden = hiddenIndices.includes(i);
 
       if (isBand) {
-        this.chart!.getDatasetMeta(i).hidden = manuallyHidden || !showBands;
+        // Bands are hidden if:
+        // 1. Manually hidden
+        // 2. Global bands toggle is OFF
+        // 3. Global trajectories toggle is OFF (bands can't exist without trajectories)
+        // 4. The parent trajectory is manually hidden
+        const groupStart = Math.floor(i / 3) * 3;
+        const trajectoryManuallyHidden = hiddenIndices.includes(groupStart + 2);
+        
+        this.chart!.getDatasetMeta(i).hidden = 
+          manuallyHidden || 
+          !showBands || 
+          !showTrajectories || 
+          trajectoryManuallyHidden;
       } else {
-        this.chart!.getDatasetMeta(i).hidden = manuallyHidden;
+        // Trajectories follow manual override. 
+        // If no overrides exist yet, they follow the global default trajectories toggle.
+        const defaultHidden = !hasOverrides && !showTrajectories;
+        this.chart!.getDatasetMeta(i).hidden = manuallyHidden || defaultHidden;
       }
     });
     this.chart.update("none");
