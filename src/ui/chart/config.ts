@@ -13,8 +13,17 @@ export type ChartClickHandler = (
   yValue: number
 ) => void;
 
+export type ChartVisibilityState = {
+  showConfidenceBands: boolean;
+  showTrajectoriesByDefault: boolean;
+};
+
 let onChartClickHandler: ChartClickHandler | null = null;
 let onVisibilityChangeHandler: (() => void) | null = null;
+let chartVisibilityState: ChartVisibilityState = {
+  showConfidenceBands: true,
+  showTrajectoriesByDefault: true,
+};
 
 export const setChartClickHandler = (handler: ChartClickHandler | null) => {
   onChartClickHandler = handler;
@@ -22,6 +31,10 @@ export const setChartClickHandler = (handler: ChartClickHandler | null) => {
 
 export const setVisibilityChangeHandler = (handler: (() => void) | null) => {
   onVisibilityChangeHandler = handler;
+};
+
+export const updateChartVisibilityState = (state: ChartVisibilityState) => {
+  chartVisibilityState = state;
 };
 
 const handleChartClick = (
@@ -58,9 +71,16 @@ const onLegendClick = (
   const isCurrentlyHidden =
     firstMeta.hidden ?? (firstDataset as { hidden?: boolean }).hidden ?? false;
 
-  for (let i = 0; i < 3; i++) {
-    chart.getDatasetMeta(groupStart + i).hidden = !isCurrentlyHidden;
+  const newHidden = !isCurrentlyHidden;
+
+  // p90 and p10 bands
+  for (let i = 0; i < 2; i++) {
+    chart.getDatasetMeta(groupStart + i).hidden =
+      newHidden || !chartVisibilityState.showConfidenceBands;
   }
+
+  // Main trajectory
+  chart.getDatasetMeta(groupStart + 2).hidden = newHidden;
 
   chart.update();
   onVisibilityChangeHandler?.();
@@ -143,11 +163,13 @@ export const chartOptions: ChartOptions<"line"> = {
                 strokeStyle: typeof dataset.borderColor === "string"
                   ? dataset.borderColor
                   : chartColors.textLight,
-                lineWidth: dataset.borderWidth || 2,
+                lineWidth: typeof dataset.borderWidth === "number"
+                  ? dataset.borderWidth
+                  : 2,
                 hidden: isHidden,
                 datasetIndex: datasetIndex,
                 fontColor: chartColors.textLight,
-                pointStyle: dataset.pointStyle,
+                pointStyle: (dataset as any).pointStyle,
                 textDecoration: isHidden ? "line-through" : undefined,
               };
             })

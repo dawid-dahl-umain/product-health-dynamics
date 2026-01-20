@@ -9,6 +9,7 @@ import {
   chartOptions,
   buildDatasetsForSimulation,
   setChartClickHandler,
+  updateChartVisibilityState,
   setVisibilityChangeHandler,
 } from "./chart";
 import { LocalStorageAdapter } from "./storage";
@@ -639,8 +640,15 @@ export class ProductHealthApp {
 
     const showAll = () => {
       if (!this.chart) return;
+      const showBands = this.globalConfig.defaultVisibility === "all";
+
       this.chart.data.datasets.forEach((_, i) => {
-        this.chart!.getDatasetMeta(i).hidden = false;
+        const isBand = i % 3 !== 2;
+        if (isBand) {
+          this.chart!.getDatasetMeta(i).hidden = !showBands;
+        } else {
+          this.chart!.getDatasetMeta(i).hidden = false;
+        }
       });
       this.chart.update();
       this.saveVisibilityState();
@@ -659,9 +667,21 @@ export class ProductHealthApp {
       if (!this.chart) return;
       const sim = this.activeSimulation;
       const developerCount = sim.developers.length * 3;
+      const showBands = this.globalConfig.defaultVisibility === "all";
+
       this.chart.data.datasets.forEach((_, i) => {
         const isDeveloper = i < developerCount;
-        this.chart!.getDatasetMeta(i).hidden = !isDeveloper;
+        const isBand = i % 3 !== 2;
+
+        if (isDeveloper) {
+          if (isBand) {
+            this.chart!.getDatasetMeta(i).hidden = !showBands;
+          } else {
+            this.chart!.getDatasetMeta(i).hidden = false;
+          }
+        } else {
+          this.chart!.getDatasetMeta(i).hidden = true;
+        }
       });
       this.chart.update();
       this.saveVisibilityState();
@@ -671,9 +691,21 @@ export class ProductHealthApp {
       if (!this.chart) return;
       const sim = this.activeSimulation;
       const developerCount = sim.developers.length * 3;
+      const showBands = this.globalConfig.defaultVisibility === "all";
+
       this.chart.data.datasets.forEach((_, i) => {
         const isDeveloper = i < developerCount;
-        this.chart!.getDatasetMeta(i).hidden = isDeveloper;
+        const isBand = i % 3 !== 2;
+
+        if (!isDeveloper) {
+          if (isBand) {
+            this.chart!.getDatasetMeta(i).hidden = !showBands;
+          } else {
+            this.chart!.getDatasetMeta(i).hidden = false;
+          }
+        } else {
+          this.chart!.getDatasetMeta(i).hidden = true;
+        }
       });
       this.chart.update();
       this.saveVisibilityState();
@@ -764,6 +796,8 @@ export class ProductHealthApp {
           .checked
           ? "all"
           : "averages-only";
+        
+        this.resetAllSimulationsVisibilityOverrides();
         this.storage.saveGlobalConfig(this.globalConfig);
         this.recomputeChart();
       });
@@ -1178,6 +1212,11 @@ export class ProductHealthApp {
     const container = document.getElementById("chart-container");
     if (!container) return;
 
+    updateChartVisibilityState({
+      showConfidenceBands: this.globalConfig.defaultVisibility === "all",
+      showTrajectoriesByDefault: this.globalConfig.showTrajectoriesByDefault,
+    });
+
     container.innerHTML = `<div class="loading"><div class="loading-spinner"></div>Computing simulations...</div>`;
 
     setTimeout(() => {
@@ -1238,11 +1277,20 @@ export class ProductHealthApp {
   private restoreVisibilityState(): void {
     if (!this.chart) return;
     const sim = this.activeSimulation;
+    const showBands = this.globalConfig.defaultVisibility === "all";
+
     if (sim.hiddenDatasetIndices === undefined) return;
 
     const hiddenIndices = sim.hiddenDatasetIndices;
     this.chart.data.datasets.forEach((_, i) => {
-      this.chart!.getDatasetMeta(i).hidden = hiddenIndices.includes(i);
+      const isBand = i % 3 !== 2;
+      const manuallyHidden = hiddenIndices.includes(i);
+
+      if (isBand) {
+        this.chart!.getDatasetMeta(i).hidden = manuallyHidden || !showBands;
+      } else {
+        this.chart!.getDatasetMeta(i).hidden = manuallyHidden;
+      }
     });
     this.chart.update("none");
   }
