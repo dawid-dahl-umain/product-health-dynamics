@@ -65,22 +65,25 @@ const onLegendClick = (
   const clickedIndex = legendItem.datasetIndex;
   if (clickedIndex === undefined) return;
 
-  const groupStart = clickedIndex - 2;
-  const firstMeta = chart.getDatasetMeta(groupStart);
-  const firstDataset = chart.data.datasets[groupStart];
+  // Legend items represent the main trajectory (indices 2, 5, 8...)
+  const trajectoryMeta = chart.getDatasetMeta(clickedIndex);
+  const trajectoryDataset = chart.data.datasets[clickedIndex];
   const isCurrentlyHidden =
-    firstMeta.hidden ?? (firstDataset as { hidden?: boolean }).hidden ?? false;
+    trajectoryMeta.hidden ??
+    (trajectoryDataset as { hidden?: boolean }).hidden ??
+    false;
 
-  const newHidden = !isCurrentlyHidden;
+  const shouldHideGroup = !isCurrentlyHidden;
+  const groupStart = clickedIndex - 2;
 
   // p90 and p10 bands
   for (let i = 0; i < 2; i++) {
     chart.getDatasetMeta(groupStart + i).hidden =
-      newHidden || !chartVisibilityState.showConfidenceBands;
+      shouldHideGroup || !chartVisibilityState.showConfidenceBands;
   }
 
   // Main trajectory
-  chart.getDatasetMeta(groupStart + 2).hidden = newHidden;
+  chart.getDatasetMeta(clickedIndex).hidden = shouldHideGroup;
 
   chart.update();
   onVisibilityChangeHandler?.();

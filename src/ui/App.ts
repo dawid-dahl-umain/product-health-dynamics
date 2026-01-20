@@ -1288,24 +1288,21 @@ export class ProductHealthApp {
       const manuallyHidden = hiddenIndices.includes(i);
 
       if (isBand) {
-        // Bands are hidden if:
-        // 1. Manually hidden
-        // 2. Global bands toggle is OFF
-        // 3. Global trajectories toggle is OFF (bands can't exist without trajectories)
-        // 4. The parent trajectory is manually hidden
         const groupStart = Math.floor(i / 3) * 3;
-        const trajectoryManuallyHidden = hiddenIndices.includes(groupStart + 2);
-        
-        this.chart!.getDatasetMeta(i).hidden = 
-          manuallyHidden || 
-          !showBands || 
-          !showTrajectories || 
+        const trajectoryIndex = groupStart + 2;
+        const trajectoryManuallyHidden = hiddenIndices.includes(trajectoryIndex);
+        const shouldHideBand =
+          manuallyHidden ||
+          !showBands ||
+          !showTrajectories ||
           trajectoryManuallyHidden;
+
+        this.chart!.getDatasetMeta(i).hidden = shouldHideBand;
       } else {
-        // Trajectories follow manual override. 
-        // If no overrides exist yet, they follow the global default trajectories toggle.
-        const defaultHidden = !hasOverrides && !showTrajectories;
-        this.chart!.getDatasetMeta(i).hidden = manuallyHidden || defaultHidden;
+        const fallbackHiddenState = !hasOverrides && !showTrajectories;
+        const shouldHideTrajectory = manuallyHidden || fallbackHiddenState;
+
+        this.chart!.getDatasetMeta(i).hidden = shouldHideTrajectory;
       }
     });
     this.chart.update("none");
