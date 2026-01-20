@@ -1908,7 +1908,7 @@ button:hover {
 }
 
 .help-guide-modal {
-  max-width: 520px;
+  max-width: 640px;
   max-height: calc(100dvh - 48px);
   height: auto;
   display: flex;

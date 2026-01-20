@@ -91,6 +91,7 @@ export const createDefaultGlobalConfig = (): GlobalConfig => ({
   shapeScaleAnnotationPosition: 0,
   shapeScaleAnnotationLabel: "Shape → Scale",
   simulationRuns: 100,
+  showTrajectoriesByDefault: true,
 });
 
 export const createDefaultAppData = (): AppData => ({

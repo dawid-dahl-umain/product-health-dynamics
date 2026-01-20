@@ -17,6 +17,7 @@ export const buildGlobalSettingsModal = ({
   const annotationLabel =
     globalConfig.shapeScaleAnnotationLabel ?? "Shape → Scale";
   const simulationRuns = globalConfig.simulationRuns ?? 100;
+  const showTrajectoriesByDefault = globalConfig.showTrajectoriesByDefault ?? true;
 
   return `
     <div class="modal-overlay ${
@@ -36,6 +37,19 @@ export const buildGlobalSettingsModal = ({
             <label class="toggle">
               <input type="checkbox" id="visibility-toggle" ${
                 visibilityAll ? "checked" : ""
+              } />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="modal-row">
+            <div>
+              <span>Show trajectories by default</span>
+              <div class="modal-hint">Initial visibility for all simulation paths</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="trajectories-visibility-toggle" ${
+                showTrajectoriesByDefault ? "checked" : ""
               } />
               <span class="toggle-slider"></span>
             </label>

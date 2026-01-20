@@ -31,6 +31,7 @@ export type GlobalConfig = {
   shapeScaleAnnotationPosition: number;
   shapeScaleAnnotationLabel: string;
   simulationRuns: number;
+  showTrajectoriesByDefault: boolean;
 };
 
 export type AppData = {

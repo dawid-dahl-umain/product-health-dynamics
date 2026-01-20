@@ -769,6 +769,19 @@ export class ProductHealthApp {
       });
 
     document
+      .getElementById("trajectories-visibility-toggle")
+      ?.addEventListener("change", (e) => {
+        this.globalConfig.showTrajectoriesByDefault = (
+          e.target as HTMLInputElement
+        ).checked;
+        
+        this.resetAllSimulationsVisibilityOverrides();
+
+        this.storage.saveGlobalConfig(this.globalConfig);
+        this.recomputeChart();
+      });
+
+    document
       .getElementById("shape-scale-slider")
       ?.addEventListener("input", (e) => {
         const value = parseInt((e.target as HTMLInputElement).value, 10);
@@ -940,10 +953,10 @@ export class ProductHealthApp {
     const panDown = document.getElementById("mermaid-pan-down");
 
     zoomIn?.addEventListener("click", () =>
-      this.setMermaidZoom(this.mermaidZoom + 25)
+      this.setMermaidZoom(this.mermaidZoom + 100)
     );
     zoomOut?.addEventListener("click", () =>
-      this.setMermaidZoom(this.mermaidZoom - 25)
+      this.setMermaidZoom(this.mermaidZoom - 100)
     );
     zoomReset?.addEventListener("click", () => {
       this.setMermaidZoom(100);
@@ -970,7 +983,7 @@ export class ProductHealthApp {
   }
 
   private setMermaidZoom(level: number): void {
-    this.mermaidZoom = Math.max(50, Math.min(400, level));
+    this.mermaidZoom = Math.max(100, Math.min(600, level));
 
     const inner = document.getElementById("mermaid-inner");
     const levelDisplay = document.getElementById("mermaid-zoom-level");
@@ -1178,7 +1191,8 @@ export class ProductHealthApp {
           startingHealth: sim.startingHealth ?? 8,
           nSimulations: this.globalConfig.simulationRuns ?? 100,
         },
-        this.globalConfig.defaultVisibility
+        this.globalConfig.defaultVisibility,
+        this.globalConfig.showTrajectoriesByDefault
       );
 
       container.innerHTML = `<canvas id="trend" aria-label="Product Health trajectories" role="img"></canvas>`;
@@ -1224,10 +1238,19 @@ export class ProductHealthApp {
   private restoreVisibilityState(): void {
     if (!this.chart) return;
     const sim = this.activeSimulation;
-    const hiddenIndices = sim.hiddenDatasetIndices ?? [];
+    if (sim.hiddenDatasetIndices === undefined) return;
+
+    const hiddenIndices = sim.hiddenDatasetIndices;
     this.chart.data.datasets.forEach((_, i) => {
       this.chart!.getDatasetMeta(i).hidden = hiddenIndices.includes(i);
     });
     this.chart.update("none");
+  }
+
+  private resetAllSimulationsVisibilityOverrides(): void {
+    this.simulations.forEach((sim) => {
+      sim.hiddenDatasetIndices = undefined;
+      this.storage.saveSimulation(sim);
+    });
   }
 }

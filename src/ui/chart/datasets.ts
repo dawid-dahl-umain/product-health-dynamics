@@ -140,6 +140,7 @@ const statsToDatasets = (
   color: string,
   stats: ReturnType<typeof summarizeRuns>,
   defaultVisibility: "all" | "averages-only",
+  showTrajectoriesByDefault: boolean = true,
   handoffInfo?: { atChange: number; fromColor: string; toColor: string }
 ): Dataset[] => {
   const avgPoints = stats.averageTrajectory.map((value, index) => ({
@@ -155,7 +156,7 @@ const statsToDatasets = (
     y: value,
   }));
 
-  const hideBands = defaultVisibility === "averages-only";
+  const hideBands = defaultVisibility === "averages-only" || !showTrajectoriesByDefault;
 
   const getSegmentOptions = (isBand: boolean) => {
     if (!handoffInfo) return undefined;
@@ -218,7 +219,7 @@ const statsToDatasets = (
       tension: 0.25,
       pointRadius: 0,
       pointStyle: legendIcon,
-      hidden: false,
+      hidden: !showTrajectoriesByDefault,
       segment: getSegmentOptions(false),
     },
   ];
@@ -228,7 +229,8 @@ export const buildDatasetsForSimulation = (
   developers: DeveloperConfig[],
   handoffs: HandoffConfig[],
   options: SimulationOptions,
-  defaultVisibility: "all" | "averages-only" = "all"
+  defaultVisibility: "all" | "averages-only" = "all",
+  showTrajectoriesByDefault: boolean = true
 ): Dataset[] => {
   const developerLookup = new Map(developers.map((a) => [a.id, a]));
 
@@ -238,7 +240,8 @@ export const buildDatasetsForSimulation = (
       developer.name,
       developer.color,
       stats,
-      defaultVisibility
+      defaultVisibility,
+      showTrajectoriesByDefault
     );
   });
 
@@ -261,6 +264,7 @@ export const buildDatasetsForSimulation = (
       "#ccc",
       stats,
       defaultVisibility,
+      showTrajectoriesByDefault,
       handoffInfo
     );
   });
