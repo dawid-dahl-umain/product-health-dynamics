@@ -1291,11 +1291,10 @@ export class ProductHealthApp {
         const groupStart = Math.floor(i / 3) * 3;
         const trajectoryIndex = groupStart + 2;
         const trajectoryManuallyHidden = hiddenIndices.includes(trajectoryIndex);
+        const isTrajectoryActuallyHidden =
+          trajectoryManuallyHidden || (!hasOverrides && !showTrajectories);
         const shouldHideBand =
-          manuallyHidden ||
-          !showBands ||
-          !showTrajectories ||
-          trajectoryManuallyHidden;
+          manuallyHidden || !showBands || isTrajectoryActuallyHidden;
 
         this.chart!.getDatasetMeta(i).hidden = shouldHideBand;
       } else {
